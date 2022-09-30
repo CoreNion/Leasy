@@ -1,4 +1,4 @@
-package com.example.mimosa
+package com.corenion.mimosa
 
 import io.flutter.embedding.android.FlutterActivity
 
