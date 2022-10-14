@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mimosa/pages/create.dart';
 import 'package:mimosa/pages/top.dart';
 
 import 'pages/setting.dart';
@@ -67,6 +68,11 @@ class _HomeState extends ConsumerState<Home> {
             label: 'Home',
           ),
           NavigationDestination(
+            icon: Icon(Icons.add),
+            selectedIcon: Icon(Icons.add),
+            label: '問題を作成',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.settings),
             selectedIcon: Icon(Icons.settings),
             label: '設定',
@@ -78,6 +84,7 @@ class _HomeState extends ConsumerState<Home> {
         index: globalIndex.state,
         children: const <Widget>[
           TopPage(),
+          CreateSubjectPage(),
           SettingPage(),
         ],
       ),
