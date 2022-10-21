@@ -3,13 +3,16 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/pages/create.dart';
 import 'package:mimosa/pages/top.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'pages/setting.dart';
 
 final titleTextProvider = StateProvider((_) => 'Mimosa');
 final pageIndexProvider = StateProvider((_) => 0);
 
-void main() {
+void main() async {
+  sqfliteFfiInit();
+
   runApp(const ProviderScope(
     child: MyApp(),
   ));
