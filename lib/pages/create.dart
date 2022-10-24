@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/db_helper.dart';
 
+import 'top.dart';
+
 class CreateSubjectPage extends StatefulHookConsumerWidget {
   const CreateSubjectPage({super.key});
 
@@ -43,6 +45,12 @@ class _CreateSubjectStatePage extends ConsumerState<CreateSubjectPage> {
                       if (_formKey.currentState!.validate()) {
                         DataBaseHelper.createSubject(_title);
                       }
+
+                      // TopのWidgetを更新
+                      TopPage.createSubjectListWidget().then((list) {
+                        ref.watch(subjectListWidgetProvider.notifier).state =
+                            list;
+                      });
                     },
                     child: const Text("教科を作成"),
                   ))
