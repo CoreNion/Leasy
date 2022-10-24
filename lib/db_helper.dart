@@ -17,11 +17,6 @@ class DataBaseHelper {
   /// DataBaseから教科名を取得する
   static Future<List<String>> getSubjectTitles() async {
     _db ??= await _createDB();
-    _db!.insert(
-        "Subjects",
-        SubjectsModel(title: "Added : ${DateTime.now().toIso8601String()}")
-            .toMap());
-
     final titlesMap = await _db!.query('Subjects', columns: ["title"]);
 
     List<String> titles = [];
@@ -29,6 +24,12 @@ class DataBaseHelper {
       titles.add(map["title"].toString());
     }
     return titles;
+  }
+
+  /// 初期の教科を作成する
+  static void createSubject(String title) async {
+    _db ??= await _createDB();
+    _db!.insert("Subjects", SubjectsModel(title: title).toMap());
   }
 }
 
