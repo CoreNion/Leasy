@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mimosa/pages/subject/overview.dart';
 import '../db_helper.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
@@ -14,40 +15,52 @@ class TopPage extends StatefulHookConsumerWidget {
 
   /// 教科Widget生成する
   static Widget createSubjectWidget(String title) {
-    return Stack(
-      alignment: Alignment.topLeft,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 15, left: 15),
-          child: MaterialButton(
-            minWidth: double.infinity,
-            height: 150,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            onPressed: null,
-            onLongPress: () {},
-            color: Colors.blueAccent,
-            child: Text(
-              title,
+    return Builder(
+      builder: (context) => Stack(
+        alignment: Alignment.topLeft,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 15, left: 15),
+            child: MaterialButton(
+              minWidth: double.infinity,
+              height: 150,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              onPressed: (() => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (builder) => SubjectOverview(title: title)))),
+              onLongPress: () {},
+              color: Colors.blueAccent,
+              child: Text(
+                title,
+              ),
             ),
           ),
-        ),
-        Positioned(
-          child: CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.red,
-            child: IconButton(
-              icon: const Icon(Icons.remove),
-              color: Colors.black,
-              onPressed: () async {
-                await DataBaseHelper.removeSubject(title);
-                print("removed");
-              },
-              splashRadius: 0.1,
+          Positioned(
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.red,
+              child: IconButton(
+                icon: const Icon(Icons.remove),
+                color: Colors.black,
+                onPressed: () async {
+                  await DataBaseHelper.removeSubject(title);
+
+                  StateProvider(((ref) {
+                    final refrashList = ref.watch(subjectListWidgetProvider);
+                    refrashList.removeAt(1);
+                    ref.watch(subjectListWidgetProvider.notifier).state = [
+                      ...refrashList
+                    ];
+                  }));
+                },
+                splashRadius: 0.1,
+              ),
             ),
-          ),
-        )
-      ],
+          )
+        ],
+      ),
     );
   }
 }
