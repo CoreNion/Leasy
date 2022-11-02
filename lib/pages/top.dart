@@ -12,28 +12,43 @@ class TopPage extends StatefulHookConsumerWidget {
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _TopPageState();
 
-  /// 教科リストを生成する
-  static Future<List<Widget>> createSubjectListWidget() async {
-    final titles = await DataBaseHelper.getSubjectTitles();
-    List<Widget> subjectListWidget = [];
-
-    for (var title in titles) {
-      subjectListWidget.add(
+  /// 教科Widget生成する
+  static Widget createSubjectWidget(String title) {
+    return Stack(
+      alignment: Alignment.topLeft,
+      children: [
         Container(
-          height: 150,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            border: Border.all(),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            title,
+          margin: const EdgeInsets.only(top: 15, left: 15),
+          child: MaterialButton(
+            minWidth: double.infinity,
+            height: 150,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            onPressed: null,
+            onLongPress: () {},
+            color: Colors.blueAccent,
+            child: Text(
+              title,
+            ),
           ),
         ),
-      );
-    }
-
-    return subjectListWidget;
+        Positioned(
+          child: CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.red,
+            child: IconButton(
+              icon: const Icon(Icons.remove),
+              color: Colors.black,
+              onPressed: () async {
+                await DataBaseHelper.removeSubject(title);
+                print("removed");
+              },
+              splashRadius: 0.1,
+            ),
+          ),
+        )
+      ],
+    );
   }
 }
 
@@ -42,8 +57,15 @@ class _TopPageState extends ConsumerState<TopPage> {
   void initState() {
     super.initState();
 
-    TopPage.createSubjectListWidget().then((list) {
-      ref.watch(subjectListWidgetProvider.notifier).state = list;
+    DataBaseHelper.getSubjectTitles().then((titles) {
+      for (var title in titles) {
+        setState(() {
+          ref
+              .watch(subjectListWidgetProvider.notifier)
+              .state
+              .add(TopPage.createSubjectWidget(title));
+        });
+      }
     });
   }
 
@@ -52,7 +74,7 @@ class _TopPageState extends ConsumerState<TopPage> {
     final subjectList = ref.watch(subjectListWidgetProvider);
 
     return ResponsiveGridList(
-      minItemWidth: 250,
+      minItemWidth: 270,
       horizontalGridMargin: 20,
       horizontalGridSpacing: 30,
       verticalGridSpacing: 30,

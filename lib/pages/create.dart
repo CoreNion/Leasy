@@ -46,11 +46,11 @@ class _CreateSubjectStatePage extends ConsumerState<CreateSubjectPage> {
                         DataBaseHelper.createSubject(_title);
                       }
 
-                      // TopのWidgetを更新
-                      TopPage.createSubjectListWidget().then((list) {
-                        ref.watch(subjectListWidgetProvider.notifier).state =
-                            list;
-                      });
+                      final refrashList = ref.watch(subjectListWidgetProvider);
+                      refrashList.add(TopPage.createSubjectWidget(_title));
+                      ref.watch(subjectListWidgetProvider.notifier).state = [
+                        ...refrashList
+                      ];
                     },
                     child: const Text("教科を作成"),
                   ))

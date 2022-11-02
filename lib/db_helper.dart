@@ -31,6 +31,12 @@ class DataBaseHelper {
     _db ??= await _createDB();
     _db!.insert("Subjects", SubjectsModel(title: title).toMap());
   }
+
+  /// DataBaseから教科を削除する
+  static Future<int> removeSubject(String title) async {
+    _db ??= await _createDB();
+    return _db!.delete("Subjects", where: "title='$title'");
+  }
 }
 
 class SubjectsModel {
