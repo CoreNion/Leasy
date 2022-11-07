@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mimosa/db_helper.dart';
 
 class SubjectOverview extends StatefulHookConsumerWidget {
   final String title;
@@ -12,7 +13,7 @@ class SubjectOverview extends StatefulHookConsumerWidget {
 
 class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
   final _formKey = GlobalKey<FormState>();
-  String _title = "";
+  String _sectionTitle = "";
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +31,13 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                 onPressed: (() => Navigator.pop(context)),
                                 child: const Text("キャンセル")),
                             TextButton(
-                                onPressed: (() {
+                                onPressed: (() async {
                                   if (_formKey.currentState!.validate()) {
-                                    print(_title);
+                                    await DataBaseHelper.createSection(
+                                        widget.title, _sectionTitle);
+                                    print(await DataBaseHelper.getSectionTitles(
+                                        widget.title));
+
                                     Navigator.pop(context);
                                   }
                                 }),
@@ -49,7 +54,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                   if (value == null || value.isEmpty) {
                                     return "セクション名を入力してください";
                                   } else {
-                                    _title = value;
+                                    _sectionTitle = value;
                                     return null;
                                   }
                                 },
