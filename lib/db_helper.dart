@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
@@ -66,6 +64,13 @@ class DataBaseHelper {
       titles.add(map["title"].toString());
     }
     return titles;
+  }
+
+  /// DataBaseから一致したセクションを削除する
+  static Future<int> removeSection(String subjectName, String title) async {
+    _db ??= await _createDB();
+    return _db!
+        .delete("Sections", where: "subject='$subjectName' AND title='$title'");
   }
 }
 

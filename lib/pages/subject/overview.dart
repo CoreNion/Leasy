@@ -108,8 +108,16 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                     itemCount: _sectionList.length,
                     itemBuilder: ((context, index) => Dismissible(
                         key: Key(_sectionList[index]),
-                        onDismissed: (direction) {
-                          // wip
+                        onDismissed: (direction) async {
+                          await DataBaseHelper.removeSection(
+                              widget.title, _sectionList[index]);
+
+                          setState(() {
+                            _sectionList.removeAt(index);
+                          });
+
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('削除しました')));
                         },
                         confirmDismiss: (direction) async {
                           return await showDialog(
