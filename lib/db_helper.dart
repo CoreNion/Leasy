@@ -44,12 +44,16 @@ class DataBaseHelper {
   /// セクションを作成
   static Future<int> createSection(String subjectName, String title) async {
     _db ??= await _createDB();
+    int tableID = DateTime.now().millisecondsSinceEpoch;
+
+    // 問題集のTableを作成
+    await _db!.execute(
+        "CREATE TABLE Section_$tableID(question text, choice1 text, choice2 text, choice3 text, choice4 text)");
+
+    // セクション一覧にIDなどを記録
     return _db!.insert(
         "Sections",
-        SectionsModel(
-                subject: subjectName,
-                title: title,
-                tableID: DateTime.now().millisecondsSinceEpoch)
+        SectionsModel(subject: subjectName, title: title, tableID: tableID)
             .toMap());
   }
 
@@ -74,6 +78,7 @@ class DataBaseHelper {
   }
 }
 
+/// 教科一覧のモデル
 class SubjectsModel {
   /// 教科名
   final String title;
@@ -89,6 +94,7 @@ class SubjectsModel {
   }
 }
 
+/// セクション一覧のモデル
 class SectionsModel {
   /// 所属教科
   final String subject;
@@ -105,6 +111,39 @@ class SectionsModel {
   Map<String, Object?> toMap() {
     {
       return {'subject': subject, 'title': title, 'tableID': tableID};
+    }
+  }
+}
+
+/// セクション(問題集)のモデル
+class SectionModel {
+  /// 問題文
+  final String question;
+
+  final String choice1;
+
+  final String choice2;
+
+  final String choice3;
+
+  final String choice4;
+
+  SectionModel(
+      {required this.question,
+      required this.choice1,
+      required this.choice2,
+      required this.choice3,
+      required this.choice4});
+
+  Map<String, Object?> toMap() {
+    {
+      return {
+        'question': question,
+        'choice1': choice1,
+        'choice2': choice2,
+        'choice3': choice3,
+        'choice4': choice4,
+      };
     }
   }
 }
