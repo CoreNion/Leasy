@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.corenion.mimosa">
    <application
-        android:label="Mimosa"
+        android:label="Leasy"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

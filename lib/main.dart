@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'pages/setting.dart';
 
-final titleTextProvider = StateProvider((_) => 'Mimosa');
+final titleTextProvider = StateProvider((_) => 'Leasy');
 final pageIndexProvider = StateProvider((_) => 0);
 
 void main() async {
@@ -25,7 +25,7 @@ class MyApp extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DynamicColorBuilder(
         builder: ((lightDynamic, darkDynamic) => MaterialApp(
-              title: 'Mimosa',
+              title: 'Leasy',
               theme: ThemeData(
                   colorScheme: lightDynamic != null
                       ? lightDynamic.harmonized()
