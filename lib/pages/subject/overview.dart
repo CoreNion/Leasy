@@ -49,13 +49,16 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                             TextButton(
                                 onPressed: (() async {
                                   if (_formKey.currentState!.validate()) {
-                                    await DataBaseHelper.createSection(
-                                        widget.title, _createdSectionTitle);
+                                    final nav = Navigator.of(context);
+
+                                    final id =
+                                        await DataBaseHelper.createSection(
+                                            widget.title, _createdSectionTitle);
                                     setState(() {
+                                      _sectionListID.add(id);
                                       _sectionListStr.add(_createdSectionTitle);
                                     });
-
-                                    Navigator.pop(context);
+                                    nav.pop();
                                   }
                                 }),
                                 child: const Text("決定")),
