@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/db_helper.dart';
+import 'section/overview.dart';
 
 class SubjectOverview extends StatefulHookConsumerWidget {
   final String title;
@@ -164,6 +165,13 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                         ),
                         child: ListTile(
                           title: Text(_sectionListStr[index]),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: ((context) => SectionPage(
+                                        sectionID: _sectionListID[index],
+                                        sectionTitle: _sectionListStr[index],
+                                      )))),
                         )))),
               ]),
             )));
