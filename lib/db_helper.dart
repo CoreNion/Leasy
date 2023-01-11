@@ -88,6 +88,31 @@ class DataBaseHelper {
     return _db!
         .delete("Sections", where: "subject='$subjectName' AND tableID='$id'");
   }
+
+  // セクションの問題を作成する
+  static void createQuestion(int sectionID, QuestionModel question) async {
+    _db ??= await _createDB();
+    _db!.insert("Section_$sectionID", question.toMap());
+  }
+
+  /// セクションの問題を削除
+  static Future<void> removeQuestion(int sectionID, String questionStr) async {
+    _db ??= await _createDB();
+    _db!.delete("Section_$sectionID", where: "question='$questionStr'");
+  }
+
+  /// セクションの問題文一覧を取得
+  static Future<List<String>> getQuestionsStrs(int sectionID) async {
+    _db ??= await _createDB();
+    final idsMap =
+        await _db!.query('Section_$sectionID', columns: ["question"]);
+
+    List<String> questions = [];
+    for (var map in idsMap) {
+      questions.add(map.cast()["question"]);
+    }
+    return questions;
+  }
 }
 
 /// 教科一覧のモデル
@@ -127,8 +152,8 @@ class SectionsModel {
   }
 }
 
-/// セクション(問題集)のモデル
-class SectionModel {
+/// セクションの問題集のモデル
+class QuestionModel {
   /// 問題文
   final String question;
 
@@ -140,7 +165,7 @@ class SectionModel {
 
   final String choice4;
 
-  SectionModel(
+  QuestionModel(
       {required this.question,
       required this.choice1,
       required this.choice2,

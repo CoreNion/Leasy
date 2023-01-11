@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../../../db_helper.dart';
 
 class SectionPage extends StatefulHookConsumerWidget {
   final int sectionID;
@@ -19,9 +20,41 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   final List<String> _questionListStr = <String>[];
 
   @override
+  void initState() {
+    super.initState();
+
+    // 保存されている問題をリストに追加
+    DataBaseHelper.getQuestionsStrs(widget.sectionID).then((questions) async {
+      for (var question in questions) {
+        setState(() => _questionListStr.add(question));
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text(widget.sectionTitle)),
+        appBar: AppBar(
+          title: Text(widget.sectionTitle),
+          actions: <Widget>[
+            IconButton(
+                onPressed: (() {
+                  final question =
+                      DateTime.now().millisecondsSinceEpoch.toString();
+                  DataBaseHelper.createQuestion(
+                      widget.sectionID,
+                      QuestionModel(
+                          question: question,
+                          choice1: "choice1",
+                          choice2: "choice2",
+                          choice3: "choice3",
+                          choice4: "choice4"));
+
+                  setState(() => _questionListStr.add(question));
+                }),
+                icon: const Icon(Icons.add))
+          ],
+        ),
         body: Padding(
           padding: const EdgeInsets.all(7.0),
           child: SingleChildScrollView(
@@ -51,7 +84,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                   itemBuilder: ((context, index) => Dismissible(
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
-                          //await DataBaseHelper.removeSection(widget.subjectName, _questionListStr[index]);
+                          await DataBaseHelper.removeQuestion(
+                              widget.sectionID, _questionListStr[index]);
 
                           setState(() {
                             _questionListStr.removeAt(index);
