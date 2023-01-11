@@ -57,24 +57,33 @@ class DataBaseHelper {
             .toMap());
   }
 
-  /// Sections DataBaseから教科に所属しているセクションを取得する
-  static Future<List<String>> getSectionTitles(String subjectName) async {
+  /// Sections DataBaseから教科に所属しているセクションIDを取得する
+  static Future<List<int>> getSectionIDs(String subjectName) async {
+    _db ??= await _createDB();
+    final idsMap = await _db!.query('Sections',
+        columns: ["tableID"], where: "subject='$subjectName'");
+
+    List<int> ids = [];
+    for (var map in idsMap) {
+      ids.add(map.cast()["tableID"]);
+    }
+    return ids;
+  }
+
+  /// セクションIDからタイトルを取得
+  static Future<String> sectionIDtoTitle(int id) async {
     _db ??= await _createDB();
     final titlesMap = await _db!
-        .query('Sections', columns: ["title"], where: "subject='$subjectName'");
+        .query('Sections', columns: ["title"], where: "tableID='$id'");
 
-    List<String> titles = [];
-    for (var map in titlesMap) {
-      titles.add(map["title"].toString());
-    }
-    return titles;
+    return titlesMap.first["title"].toString();
   }
 
   /// DataBaseから一致したセクションを削除する
-  static Future<int> removeSection(String subjectName, String title) async {
+  static Future<int> removeSection(String subjectName, int id) async {
     _db ??= await _createDB();
     return _db!
-        .delete("Sections", where: "subject='$subjectName' AND title='$title'");
+        .delete("Sections", where: "subject='$subjectName' AND tableID='$id'");
   }
 }
 

@@ -14,16 +14,19 @@ class SubjectOverview extends StatefulHookConsumerWidget {
 class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
   final _formKey = GlobalKey<FormState>();
   String _createdSectionTitle = "";
-  final List<String> _sectionList = <String>[];
+  final List<String> _sectionListStr = <String>[];
+  final List<int> _sectionListID = <int>[];
 
   @override
   void initState() {
     super.initState();
 
     // 保存されているセクションをリストに追加
-    DataBaseHelper.getSectionTitles(widget.title).then((titles) {
-      for (var title in titles) {
-        setState(() => _sectionList.add(title));
+    DataBaseHelper.getSectionIDs(widget.title).then((ids) async {
+      for (var id in ids) {
+        _sectionListID.add(id);
+        final title = await DataBaseHelper.sectionIDtoTitle(id);
+        setState(() => _sectionListStr.add(title));
       }
     });
   }
@@ -49,7 +52,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                     await DataBaseHelper.createSection(
                                         widget.title, _createdSectionTitle);
                                     setState(() {
-                                      _sectionList.add(_createdSectionTitle);
+                                      _sectionListStr.add(_createdSectionTitle);
                                     });
 
                                     Navigator.pop(context);
@@ -97,7 +100,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                   ],
                 ),
                 Text(
-                  "セクション数:${_sectionList.length}",
+                  "セクション数:${_sectionListID.length}",
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 15),
                 ),
@@ -105,15 +108,17 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                 ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: _sectionList.length,
+                    itemCount: _sectionListID.length,
                     itemBuilder: ((context, index) => Dismissible(
-                        key: Key(_sectionList[index]),
+                        key: Key(_sectionListStr[index]),
                         onDismissed: (direction) async {
                           await DataBaseHelper.removeSection(
-                              widget.title, _sectionList[index]);
+                              widget.title, _sectionListID[index]);
+
+                          _sectionListID.removeAt(index);
 
                           setState(() {
-                            _sectionList.removeAt(index);
+                            _sectionListStr.removeAt(index);
                           });
 
                           ScaffoldMessenger.of(context)
@@ -124,7 +129,8 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                             context: context,
                             builder: (context) {
                               return AlertDialog(
-                                title: Text('${_sectionList[index]}を削除しますか？'),
+                                title:
+                                    Text('${_sectionListStr[index]}を削除しますか？'),
                                 content: const Text('この操作は取り消せません。'),
                                 actions: [
                                   SimpleDialogOption(
@@ -154,7 +160,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                           ),
                         ),
                         child: ListTile(
-                          title: Text(_sectionList[index]),
+                          title: Text(_sectionListStr[index]),
                         )))),
               ]),
             )));
