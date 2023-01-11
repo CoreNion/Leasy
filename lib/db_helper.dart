@@ -82,6 +82,9 @@ class DataBaseHelper {
   /// DataBaseから一致したセクションを削除する
   static Future<int> removeSection(String subjectName, int id) async {
     _db ??= await _createDB();
+    // セクションの問題集を削除
+    _db!.execute("DROP TABLE Section_$id");
+    // セクション一覧から削除
     return _db!
         .delete("Sections", where: "subject='$subjectName' AND tableID='$id'");
   }
