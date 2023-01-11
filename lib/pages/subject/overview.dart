@@ -170,6 +170,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                               MaterialPageRoute(
                                   builder: ((context) => SectionPage(
                                         sectionID: _sectionListID[index],
+                                        subjectName: widget.title,
                                         sectionTitle: _sectionListStr[index],
                                       )))),
                         )))),
