@@ -47,7 +47,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                 onPressed: ((() => showBarModalBottomSheet(
                     context: context,
                     shape: shape,
-                    builder: (builder) => const SectionManagePage()))),
+                    builder: (builder) =>
+                        SectionManagePage(sectionID: widget.sectionID)))),
                 icon: const Icon(Icons.add)),
           ],
         ),
@@ -129,8 +130,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                             onTap: ((() => showBarModalBottomSheet(
                                 context: context,
                                 shape: shape,
-                                builder: (builder) =>
-                                    const SectionManagePage())))),
+                                builder: (builder) => SectionManagePage(
+                                    sectionID: widget.sectionID))))),
                       ))),
             ],
           )),
