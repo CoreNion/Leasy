@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import '../../../db_helper.dart';
+import './manage.dart';
 
 class SectionPage extends StatefulHookConsumerWidget {
   final int sectionID;
@@ -31,6 +33,10 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     });
   }
 
+  final shape = const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,21 +44,11 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           title: Text(widget.sectionTitle),
           actions: <Widget>[
             IconButton(
-                onPressed: (() {
-                  final question =
-                      DateTime.now().millisecondsSinceEpoch.toString();
-                  DataBaseHelper.createQuestion(
-                      widget.sectionID,
-                      QuestionModel(
-                          question: question,
-                          choice1: "choice1",
-                          choice2: "choice2",
-                          choice3: "choice3",
-                          choice4: "choice4"));
-
-                  setState(() => _questionListStr.add(question));
-                }),
-                icon: const Icon(Icons.add))
+                onPressed: ((() => showBarModalBottomSheet(
+                    context: context,
+                    shape: shape,
+                    builder: (builder) => const SectionManagePage()))),
+                icon: const Icon(Icons.add)),
           ],
         ),
         body: Padding(
@@ -130,7 +126,11 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         ),
                         child: ListTile(
                             title: Text(_questionListStr[index]),
-                            onTap: () => null),
+                            onTap: ((() => showBarModalBottomSheet(
+                                context: context,
+                                shape: shape,
+                                builder: (builder) =>
+                                    const SectionManagePage())))),
                       ))),
             ],
           )),
