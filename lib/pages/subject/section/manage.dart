@@ -48,12 +48,13 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
               icon: const Icon(Icons.expand_more)),
           actions: [
             IconButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     // DBに作成
-                    DataBaseHelper.createQuestion(
+                    await DataBaseHelper.createQuestion(
                         widget.sectionID,
                         MiQuestionModel(
+                            id: DateTime.now().millisecondsSinceEpoch,
                             question: question,
                             choice1: choices[0],
                             choice2: choices[1],

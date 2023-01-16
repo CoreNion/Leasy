@@ -19,6 +19,7 @@ class SectionPage extends StatefulHookConsumerWidget {
 }
 
 class _SectionPageState extends ConsumerState<SectionPage> {
+  final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
 
   @override
@@ -28,6 +29,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     // 保存されている問題をリストに追加
     DataBaseHelper.getMiQuestions(widget.sectionID).then((questions) async {
       for (var question in questions) {
+        _questionListID.add(question.id);
         setState(() => _questionListStr.add(question.question));
       }
     });
@@ -82,8 +84,9 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
                           await DataBaseHelper.removeQuestion(
-                              widget.sectionID, _questionListStr[index]);
+                              widget.sectionID, _questionListID[index]);
 
+                          _questionListID.removeAt(index);
                           setState(() {
                             _questionListStr.removeAt(index);
                           });

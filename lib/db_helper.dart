@@ -48,7 +48,7 @@ class DataBaseHelper {
 
     // 問題集のTableを作成
     await _db!.execute(
-        "CREATE TABLE Section_$tableID(question text, choice1 text, choice2 text, choice3 text, choice4 text)");
+        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text)");
 
     // セクション一覧にIDなどを記録
     return _db!.insert(
@@ -90,15 +90,16 @@ class DataBaseHelper {
   }
 
   // セクションの問題を作成する
-  static void createQuestion(int sectionID, MiQuestionModel question) async {
+  static Future<void> createQuestion(
+      int sectionID, MiQuestionModel question) async {
     _db ??= await _createDB();
     _db!.insert("Section_$sectionID", question.toMap());
   }
 
   /// セクションの問題を削除
-  static Future<void> removeQuestion(int sectionID, String questionStr) async {
+  static Future<void> removeQuestion(int sectionID, int questionID) async {
     _db ??= await _createDB();
-    _db!.delete("Section_$sectionID", where: "question='$questionStr'");
+    _db!.delete("Section_$sectionID", where: "id='$questionID'");
   }
 
   /// セクションのMiQuestion一覧を取得
@@ -153,7 +154,8 @@ class SectionsModel {
 
 /// セクションの問題集(MiQuestion)のモデル
 class MiQuestionModel {
-  /// 問題文
+  final int id;
+
   final String question;
 
   final String choice1;
@@ -165,7 +167,8 @@ class MiQuestionModel {
   final String choice4;
 
   MiQuestionModel(
-      {required this.question,
+      {required this.id,
+      required this.question,
       required this.choice1,
       required this.choice2,
       required this.choice3,
@@ -174,6 +177,7 @@ class MiQuestionModel {
   Map<String, Object?> toMap() {
     {
       return {
+        'id': id,
         'question': question,
         'choice1': choice1,
         'choice2': choice2,
@@ -185,6 +189,7 @@ class MiQuestionModel {
 
   static MiQuestionModel toModel(Map<String, Object?> map) {
     return MiQuestionModel(
+        id: map["id"] as int,
         question: map["question"].toString(),
         choice1: map["choice1"].toString(),
         choice2: map["choice2"].toString(),
