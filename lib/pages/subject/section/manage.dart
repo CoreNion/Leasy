@@ -20,12 +20,13 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   late String question;
   final List<String> choices = List.filled(4, "");
 
-  TextFormField selectField(int number) {
+  TextFormField selectField(int number, String? text) {
     return TextFormField(
       decoration: InputDecoration(
           labelText: "$number番目の選択肢",
           icon: const Icon(Icons.dashboard),
           hintText: "選択肢に表示される文を入力"),
+      controller: TextEditingController(text: text),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "選択肢に表示される文を入力してください";
@@ -75,9 +76,14 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                 children: <Widget>[
                   TextFormField(
                     decoration: const InputDecoration(
-                        labelText: "問題文",
-                        icon: Icon(Icons.title),
-                        hintText: "問題を入力"),
+                      labelText: "問題文",
+                      icon: Icon(Icons.title),
+                      hintText: "問題を入力",
+                    ),
+                    controller: TextEditingController(
+                        text: widget.miQuestion != null
+                            ? widget.miQuestion!.question
+                            : null),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "問題文を入力してください";
@@ -87,10 +93,10 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                       }
                     },
                   ),
-                  selectField(1),
-                  selectField(2),
-                  selectField(3),
-                  selectField(4)
+                  selectField(1, widget.miQuestion?.choice1),
+                  selectField(2, widget.miQuestion?.choice2),
+                  selectField(3, widget.miQuestion?.choice3),
+                  selectField(4, widget.miQuestion?.choice4)
                 ],
               ),
             )));

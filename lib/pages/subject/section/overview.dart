@@ -130,11 +130,19 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         ),
                         child: ListTile(
                             title: Text(_questionListStr[index]),
-                            onTap: ((() => showBarModalBottomSheet(
-                                context: context,
-                                shape: shape,
-                                builder: (builder) => SectionManagePage(
-                                    sectionID: widget.sectionID))))),
+                            onTap: ((() async {
+                              final question =
+                                  await DataBaseHelper.getMiQuestion(
+                                      widget.sectionID, _questionListID[index]);
+
+                              showBarModalBottomSheet(
+                                  context: context,
+                                  shape: shape,
+                                  builder: (builder) => SectionManagePage(
+                                        sectionID: widget.sectionID,
+                                        miQuestion: question,
+                                      ));
+                            }))),
                       ))),
             ],
           )),
