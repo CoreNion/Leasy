@@ -39,6 +39,26 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
   );
 
+  /// Manageの結果からリストを更新する関数
+  void updateList(List<dynamic>? manageResult) {
+    // 何らかの変更があった場合のみ更新
+    if (manageResult is List) {
+      final checkIndex = _questionListID.indexOf(manageResult[0]);
+      // IDが存在する場合はタイトルのみ変更
+      if (checkIndex != -1) {
+        setState(() {
+          _questionListStr[checkIndex] = manageResult[1];
+        });
+      } else {
+        // IDが存在しない場合はIDなどを追加
+        _questionListID.add(manageResult.first);
+        setState(() {
+          _questionListStr.add(manageResult[1]);
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,18 +68,12 @@ class _SectionPageState extends ConsumerState<SectionPage> {
             IconButton(
                 onPressed: ((() {
                   showBarModalBottomSheet(
-                          context: context,
-                          shape: shape,
-                          builder: (builder) =>
-                              SectionManagePage(sectionID: widget.sectionID))
-                      .then((newQuestion) {
-                    if (newQuestion is List) {
-                      _questionListID.add(newQuestion.first);
-                      setState(() {
-                        _questionListStr.add(newQuestion[1]);
-                      });
-                    }
-                  });
+                      context: context,
+                      shape: shape,
+                      builder: (builder) =>
+                          SectionManagePage(sectionID: widget.sectionID)).then(
+                    (value) => updateList(value),
+                  );
                 })),
                 icon: const Icon(Icons.add)),
           ],
@@ -145,13 +159,14 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                   await DataBaseHelper.getMiQuestion(
                                       widget.sectionID, _questionListID[index]);
 
-                              showBarModalBottomSheet(
+                              final res = await showBarModalBottomSheet(
                                   context: context,
                                   shape: shape,
                                   builder: (builder) => SectionManagePage(
                                         sectionID: widget.sectionID,
                                         miQuestion: question,
                                       ));
+                              updateList(res);
                             }))),
                       ))),
             ],

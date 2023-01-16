@@ -51,19 +51,29 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
             IconButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    final id = DateTime.now().millisecondsSinceEpoch;
-                    // DBに作成
-                    await DataBaseHelper.createQuestion(
-                        widget.sectionID,
-                        MiQuestion(
-                            id: id,
-                            question: question,
-                            choice1: choices[0],
-                            choice2: choices[1],
-                            choice3: choices[2],
-                            choice4: choices[3]));
+                    final miQuestion = MiQuestion(
+                        id: widget.miQuestion != null
+                            ? widget.miQuestion!.id
+                            : DateTime.now().millisecondsSinceEpoch,
+                        question: question,
+                        choice1: choices[0],
+                        choice2: choices[1],
+                        choice3: choices[2],
+                        choice4: choices[3]);
 
-                    Navigator.pop(context, [id, question]);
+                    if (widget.miQuestion != null) {
+                      await DataBaseHelper.updateMiQuestion(
+                          widget.sectionID, widget.miQuestion!.id, miQuestion);
+
+                      Navigator.pop(context, [widget.miQuestion!.id, question]);
+                    } else {
+                      final id = DateTime.now().millisecondsSinceEpoch;
+                      // DBに作成
+                      await DataBaseHelper.createQuestion(
+                          widget.sectionID, miQuestion);
+
+                      Navigator.pop(context, [id, question]);
+                    }
                   }
                 },
                 icon: const Icon(Icons.save))

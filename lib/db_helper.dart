@@ -119,6 +119,12 @@ class DataBaseHelper {
 
     return MiQuestion.toModel(miQuestionsMaps.first);
   }
+
+  static Future<int> updateMiQuestion(
+      int sectionID, int id, MiQuestion question) async {
+    return _db!
+        .update("Section_$sectionID", question.toMap(), where: "id='$id'");
+  }
 }
 
 /// 教科一覧のモデル
