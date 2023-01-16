@@ -90,7 +90,7 @@ class DataBaseHelper {
   }
 
   // セクションの問題を作成する
-  static void createQuestion(int sectionID, QuestionModel question) async {
+  static void createQuestion(int sectionID, MiQuestionModel question) async {
     _db ??= await _createDB();
     _db!.insert("Section_$sectionID", question.toMap());
   }
@@ -102,13 +102,13 @@ class DataBaseHelper {
   }
 
   /// セクションのMiQuestion一覧を取得
-  static Future<List<QuestionModel>> getMiQuestions(int sectionID) async {
+  static Future<List<MiQuestionModel>> getMiQuestions(int sectionID) async {
     _db ??= await _createDB();
     final miQuestionsMaps = (await _db!.query('Section_$sectionID'));
 
-    final miList = <QuestionModel>[];
+    final miList = <MiQuestionModel>[];
     for (var map in miQuestionsMaps) {
-      miList.add(QuestionModel.toModel(map));
+      miList.add(MiQuestionModel.toModel(map));
     }
     return miList;
   }
@@ -152,7 +152,7 @@ class SectionsModel {
 }
 
 /// セクションの問題集(MiQuestion)のモデル
-class QuestionModel {
+class MiQuestionModel {
   /// 問題文
   final String question;
 
@@ -164,7 +164,7 @@ class QuestionModel {
 
   final String choice4;
 
-  QuestionModel(
+  MiQuestionModel(
       {required this.question,
       required this.choice1,
       required this.choice2,
@@ -183,8 +183,8 @@ class QuestionModel {
     }
   }
 
-  static QuestionModel toModel(Map<String, Object?> map) {
-    return QuestionModel(
+  static MiQuestionModel toModel(Map<String, Object?> map) {
+    return MiQuestionModel(
         question: map["question"].toString(),
         choice1: map["choice1"].toString(),
         choice2: map["choice2"].toString(),

@@ -5,7 +5,7 @@ import '../../../db_helper.dart';
 
 class SectionManagePage extends StatefulHookConsumerWidget {
   final int sectionID;
-  final QuestionModel? miQuestion;
+  final MiQuestionModel? miQuestion;
 
   const SectionManagePage(
       {super.key, required this.sectionID, this.miQuestion});
@@ -53,7 +53,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                     // DBに作成
                     DataBaseHelper.createQuestion(
                         widget.sectionID,
-                        QuestionModel(
+                        MiQuestionModel(
                             question: question,
                             choice1: choices[0],
                             choice2: choices[1],
