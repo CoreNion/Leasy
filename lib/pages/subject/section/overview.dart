@@ -46,11 +46,21 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           title: Text(widget.sectionTitle),
           actions: <Widget>[
             IconButton(
-                onPressed: ((() => showBarModalBottomSheet(
-                    context: context,
-                    shape: shape,
-                    builder: (builder) =>
-                        SectionManagePage(sectionID: widget.sectionID)))),
+                onPressed: ((() {
+                  showBarModalBottomSheet(
+                          context: context,
+                          shape: shape,
+                          builder: (builder) =>
+                              SectionManagePage(sectionID: widget.sectionID))
+                      .then((newQuestion) {
+                    if (newQuestion is List) {
+                      _questionListID.add(newQuestion.first);
+                      setState(() {
+                        _questionListStr.add(newQuestion[1]);
+                      });
+                    }
+                  });
+                })),
                 icon: const Icon(Icons.add)),
           ],
         ),
