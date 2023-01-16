@@ -26,9 +26,9 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     super.initState();
 
     // 保存されている問題をリストに追加
-    DataBaseHelper.getQuestionsStrs(widget.sectionID).then((questions) async {
+    DataBaseHelper.getMiQuestions(widget.sectionID).then((questions) async {
       for (var question in questions) {
-        setState(() => _questionListStr.add(question));
+        setState(() => _questionListStr.add(question.question));
       }
     });
   }

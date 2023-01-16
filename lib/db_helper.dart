@@ -101,17 +101,16 @@ class DataBaseHelper {
     _db!.delete("Section_$sectionID", where: "question='$questionStr'");
   }
 
-  /// セクションの問題文一覧を取得
-  static Future<List<String>> getQuestionsStrs(int sectionID) async {
+  /// セクションのMiQuestion一覧を取得
+  static Future<List<QuestionModel>> getMiQuestions(int sectionID) async {
     _db ??= await _createDB();
-    final idsMap =
-        await _db!.query('Section_$sectionID', columns: ["question"]);
+    final miQuestionsMaps = (await _db!.query('Section_$sectionID'));
 
-    List<String> questions = [];
-    for (var map in idsMap) {
-      questions.add(map.cast()["question"]);
+    final miList = <QuestionModel>[];
+    for (var map in miQuestionsMaps) {
+      miList.add(QuestionModel.toModel(map));
     }
-    return questions;
+    return miList;
   }
 }
 
@@ -152,7 +151,7 @@ class SectionsModel {
   }
 }
 
-/// セクションの問題集のモデル
+/// セクションの問題集(MiQuestion)のモデル
 class QuestionModel {
   /// 問題文
   final String question;
@@ -182,5 +181,14 @@ class QuestionModel {
         'choice4': choice4,
       };
     }
+  }
+
+  static QuestionModel toModel(Map<String, Object?> map) {
+    return QuestionModel(
+        question: map["question"].toString(),
+        choice1: map["choice1"].toString(),
+        choice2: map["choice2"].toString(),
+        choice3: map["choice3"].toString(),
+        choice4: map["choice4"].toString());
   }
 }
