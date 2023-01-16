@@ -32,7 +32,7 @@ class DataBaseHelper {
   /// 初期の教科を作成する
   static void createSubject(String title) async {
     _db ??= await _createDB();
-    _db!.insert("Subjects", SubjectsModel(title: title).toMap());
+    _db!.insert("Subjects", Subject(title: title).toMap());
   }
 
   /// DataBaseから教科を削除する
@@ -51,10 +51,8 @@ class DataBaseHelper {
         "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text)");
 
     // セクション一覧にIDなどを記録
-    return _db!.insert(
-        "Sections",
-        SectionsModel(subject: subjectName, title: title, tableID: tableID)
-            .toMap());
+    return _db!.insert("Sections",
+        Section(subject: subjectName, title: title, tableID: tableID).toMap());
   }
 
   /// Sections DataBaseから教科に所属しているセクションIDを取得する
@@ -90,8 +88,7 @@ class DataBaseHelper {
   }
 
   // セクションの問題を作成する
-  static Future<void> createQuestion(
-      int sectionID, MiQuestionModel question) async {
+  static Future<void> createQuestion(int sectionID, MiQuestion question) async {
     _db ??= await _createDB();
     _db!.insert("Section_$sectionID", question.toMap());
   }
@@ -103,33 +100,33 @@ class DataBaseHelper {
   }
 
   /// セクションのMiQuestion一覧を取得
-  static Future<List<MiQuestionModel>> getMiQuestions(int sectionID) async {
+  static Future<List<MiQuestion>> getMiQuestions(int sectionID) async {
     _db ??= await _createDB();
     final miQuestionsMaps = await _db!.query('Section_$sectionID');
 
-    final miList = <MiQuestionModel>[];
+    final miList = <MiQuestion>[];
     for (var map in miQuestionsMaps) {
-      miList.add(MiQuestionModel.toModel(map));
+      miList.add(MiQuestion.toModel(map));
     }
     return miList;
   }
 
   /// IDからMiQuestionを返す
-  static Future<MiQuestionModel> getMiQuestion(int sectionID, int id) async {
+  static Future<MiQuestion> getMiQuestion(int sectionID, int id) async {
     _db ??= await _createDB();
     final miQuestionsMaps =
         await _db!.query('Section_$sectionID', where: "id='$id'");
 
-    return MiQuestionModel.toModel(miQuestionsMaps.first);
+    return MiQuestion.toModel(miQuestionsMaps.first);
   }
 }
 
 /// 教科一覧のモデル
-class SubjectsModel {
+class Subject {
   /// 教科名
   final String title;
 
-  SubjectsModel({required this.title});
+  Subject({required this.title});
 
   Map<String, Object?> toMap() {
     {
@@ -141,7 +138,7 @@ class SubjectsModel {
 }
 
 /// セクション一覧のモデル
-class SectionsModel {
+class Section {
   /// 所属教科
   final String subject;
 
@@ -151,8 +148,7 @@ class SectionsModel {
   /// テーブルのID
   final int tableID;
 
-  SectionsModel(
-      {required this.title, required this.tableID, required this.subject});
+  Section({required this.title, required this.tableID, required this.subject});
 
   Map<String, Object?> toMap() {
     {
@@ -162,7 +158,7 @@ class SectionsModel {
 }
 
 /// セクションの問題集(MiQuestion)のモデル
-class MiQuestionModel {
+class MiQuestion {
   final int id;
 
   final String question;
@@ -175,7 +171,7 @@ class MiQuestionModel {
 
   final String choice4;
 
-  MiQuestionModel(
+  MiQuestion(
       {required this.id,
       required this.question,
       required this.choice1,
@@ -196,8 +192,8 @@ class MiQuestionModel {
     }
   }
 
-  static MiQuestionModel toModel(Map<String, Object?> map) {
-    return MiQuestionModel(
+  static MiQuestion toModel(Map<String, Object?> map) {
+    return MiQuestion(
         id: map["id"] as int,
         question: map["question"].toString(),
         choice1: map["choice1"].toString(),
