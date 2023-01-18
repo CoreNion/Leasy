@@ -18,22 +18,25 @@ class SectionManagePage extends StatefulHookConsumerWidget {
 
 class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   final _formKey = GlobalKey<FormState>();
-  late String question;
-  final List<String> choices = List.filled(4, "");
-  late int answerNum;
+  late MiQuestion? mi;
 
-  TextFormField selectField(int number, String? text) {
+  late String fieldQuestion;
+  final List<String> fieldChoices = List.filled(4, "");
+  late List<TextEditingController> fieldTextEdits = [];
+  late int fieldAnswerNum;
+
+  TextFormField _selectField(int number) {
     return TextFormField(
       decoration: InputDecoration(
           labelText: "$number番目の選択肢",
           icon: const Icon(Icons.dashboard),
           hintText: "選択肢に表示される文を入力"),
-      controller: TextEditingController(text: text),
+      controller: fieldTextEdits[number],
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "選択肢に表示される文を入力してください";
         } else {
-          choices[number - 1] = value;
+          fieldChoices[number - 1] = value;
           return null;
         }
       },
@@ -41,12 +44,24 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    answerNum = widget.miQuestion != null ? widget.miQuestion!.answer : 1;
+  void initState() {
+    super.initState();
+    mi = widget.miQuestion;
 
+    // フィールドなどを初期化
+    fieldTextEdits.add(TextEditingController(text: mi?.question));
+    fieldTextEdits.add(TextEditingController(text: mi?.choice1));
+    fieldTextEdits.add(TextEditingController(text: mi?.choice2));
+    fieldTextEdits.add(TextEditingController(text: mi?.choice3));
+    fieldTextEdits.add(TextEditingController(text: mi?.choice4));
+    fieldAnswerNum = mi != null ? mi!.answer : 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.miQuestion != null ? "問題の編集" : "問題を新規作成する"),
+          title: Text(mi != null ? "問題の編集" : "問題を新規作成する"),
           automaticallyImplyLeading: false,
           leading: IconButton(
               onPressed: (() => Navigator.of(context).pop()),
@@ -56,28 +71,28 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final miQuestion = MiQuestion(
-                        id: widget.miQuestion != null
-                            ? widget.miQuestion!.id
+                        id: mi != null
+                            ? mi!.id
                             : DateTime.now().millisecondsSinceEpoch,
-                        question: question,
-                        choice1: choices[0],
-                        choice2: choices[1],
-                        choice3: choices[2],
-                        choice4: choices[3],
-                        answer: answerNum);
+                        question: fieldQuestion,
+                        choice1: fieldChoices[0],
+                        choice2: fieldChoices[1],
+                        choice3: fieldChoices[2],
+                        choice4: fieldChoices[3],
+                        answer: fieldAnswerNum);
 
-                    if (widget.miQuestion != null) {
+                    if (mi != null) {
                       await DataBaseHelper.updateMiQuestion(
-                          widget.sectionID, widget.miQuestion!.id, miQuestion);
+                          widget.sectionID, mi!.id, miQuestion);
 
-                      Navigator.pop(context, [widget.miQuestion!.id, question]);
+                      Navigator.pop(context, [mi!.id, fieldQuestion]);
                     } else {
                       final id = DateTime.now().millisecondsSinceEpoch;
                       // DBに作成
                       await DataBaseHelper.createQuestion(
                           widget.sectionID, miQuestion);
 
-                      Navigator.pop(context, [id, question]);
+                      Navigator.pop(context, [id, fieldQuestion]);
                     }
                   }
                 },
@@ -96,23 +111,20 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                       icon: Icon(Icons.title),
                       hintText: "問題を入力",
                     ),
-                    controller: TextEditingController(
-                        text: widget.miQuestion != null
-                            ? widget.miQuestion!.question
-                            : null),
+                    controller: fieldTextEdits[0],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "問題文を入力してください";
                       } else {
-                        question = value;
+                        fieldQuestion = value;
                         return null;
                       }
                     },
                   ),
-                  selectField(1, widget.miQuestion?.choice1),
-                  selectField(2, widget.miQuestion?.choice2),
-                  selectField(3, widget.miQuestion?.choice3),
-                  selectField(4, widget.miQuestion?.choice4),
+                  _selectField(1),
+                  _selectField(2),
+                  _selectField(3),
+                  _selectField(4),
                   Container(
                     margin: const EdgeInsets.only(top: 10),
                     child: TextButton.icon(
@@ -124,7 +136,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                                 changeToFirst: true,
                                 onConfirm: (Picker picker, List value) {
                                   setState(() {
-                                    answerNum =
+                                    fieldAnswerNum =
                                         picker.getSelectedValues().first;
                                   });
                                 },
@@ -138,7 +150,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                       },
                       icon: const Icon(Icons.check),
                       label: Text(
-                        "正解の選択肢: $answerNum番",
+                        "正解の選択肢: $fieldAnswerNum番",
                         style: const TextStyle(fontSize: 20),
                       ),
                     ),
