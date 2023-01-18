@@ -59,7 +59,8 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                         choice1: choices[0],
                         choice2: choices[1],
                         choice3: choices[2],
-                        choice4: choices[3]);
+                        choice4: choices[3],
+                        answer: 1);
 
                     if (widget.miQuestion != null) {
                       await DataBaseHelper.updateMiQuestion(

@@ -48,7 +48,7 @@ class DataBaseHelper {
 
     // 問題集のTableを作成
     await _db!.execute(
-        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text)");
+        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int)");
 
     // セクション一覧にIDなどを記録
     return _db!.insert("Sections",
@@ -177,13 +177,16 @@ class MiQuestion {
 
   final String choice4;
 
+  final int answer;
+
   MiQuestion(
       {required this.id,
       required this.question,
       required this.choice1,
       required this.choice2,
       required this.choice3,
-      required this.choice4});
+      required this.choice4,
+      required this.answer});
 
   Map<String, Object?> toMap() {
     {
@@ -194,6 +197,7 @@ class MiQuestion {
         'choice2': choice2,
         'choice3': choice3,
         'choice4': choice4,
+        'answer': answer,
       };
     }
   }
@@ -205,6 +209,7 @@ class MiQuestion {
         choice1: map["choice1"].toString(),
         choice2: map["choice2"].toString(),
         choice3: map["choice3"].toString(),
-        choice4: map["choice4"].toString());
+        choice4: map["choice4"].toString(),
+        answer: map["answer"] as int);
   }
 }
