@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_picker/flutter_picker.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../db_helper.dart';
@@ -19,6 +20,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   final _formKey = GlobalKey<FormState>();
   late String question;
   final List<String> choices = List.filled(4, "");
+  late int answerNum;
 
   TextFormField selectField(int number, String? text) {
     return TextFormField(
@@ -40,6 +42,8 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
 
   @override
   Widget build(BuildContext context) {
+    answerNum = widget.miQuestion != null ? widget.miQuestion!.answer : 1;
+
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.miQuestion != null ? "問題の編集" : "問題を新規作成する"),
@@ -60,7 +64,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                         choice2: choices[1],
                         choice3: choices[2],
                         choice4: choices[3],
-                        answer: 1);
+                        answer: answerNum);
 
                     if (widget.miQuestion != null) {
                       await DataBaseHelper.updateMiQuestion(
@@ -108,7 +112,37 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                   selectField(1, widget.miQuestion?.choice1),
                   selectField(2, widget.miQuestion?.choice2),
                   selectField(3, widget.miQuestion?.choice3),
-                  selectField(4, widget.miQuestion?.choice4)
+                  selectField(4, widget.miQuestion?.choice4),
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Picker(
+                                adapter: NumberPickerAdapter(data: [
+                                  const NumberPickerColumn(begin: 1, end: 4),
+                                ]),
+                                changeToFirst: true,
+                                onConfirm: (Picker picker, List value) {
+                                  setState(() {
+                                    answerNum =
+                                        picker.getSelectedValues().first;
+                                  });
+                                },
+                                backgroundColor:
+                                    Theme.of(context).dialogBackgroundColor,
+                                textStyle:
+                                    Theme.of(context).textTheme.headline6,
+                                cancelText: "キャンセル",
+                                confirmText: "決定")
+                            .showModal(context);
+                      },
+                      icon: const Icon(Icons.check),
+                      label: Text(
+                        "正解の選択肢: $answerNum番",
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                  )
                 ],
               ),
             )));
