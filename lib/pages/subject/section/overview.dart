@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mimosa/pages/subject/section/study.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import '../../../db_helper.dart';
 import './manage.dart';
@@ -85,17 +86,25 @@ class _SectionPageState extends ConsumerState<SectionPage> {
             children: <Widget>[
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
+                children: <Widget>[
                   Padding(
-                      padding: EdgeInsets.all(7.0),
+                      padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
-                        onPressed: null,
-                        child: Text("続きから学習を開始する"),
+                        onPressed: _questionListID.isNotEmpty
+                            ? () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => SectionStudyPage(
+                                    sectionID: widget.sectionID,
+                                    sectionTitle: widget.sectionTitle,
+                                  ),
+                                ))
+                            : null,
+                        child: const Text("学習を開始する"),
                       )),
                   Padding(
-                      padding: EdgeInsets.all(7.0),
+                      padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
-                          onPressed: null, child: Text("テストを開始する"))),
+                          onPressed: null, child: const Text("テストを開始する"))),
                 ],
               ),
               const Divider(),
