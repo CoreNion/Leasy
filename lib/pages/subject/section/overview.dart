@@ -22,17 +22,19 @@ class SectionPage extends StatefulHookConsumerWidget {
 class _SectionPageState extends ConsumerState<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
+  late List<MiQuestion> miQuestions;
 
   @override
   void initState() {
     super.initState();
 
     // 保存されている問題をリストに追加
-    DataBaseHelper.getMiQuestions(widget.sectionID).then((questions) async {
+    DataBaseHelper.getMiQuestions(widget.sectionID).then((questions) {
       for (var question in questions) {
         _questionListID.add(question.id);
         setState(() => _questionListStr.add(question.question));
       }
+      miQuestions = questions;
     });
   }
 
@@ -96,6 +98,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                   builder: (context) => SectionStudyPage(
                                     sectionID: widget.sectionID,
                                     sectionTitle: widget.sectionTitle,
+                                    miQuestions: miQuestions,
                                   ),
                                 ))
                             : null,
