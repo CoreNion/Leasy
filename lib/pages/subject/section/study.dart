@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/db_helper.dart';
+import 'package:status_alert/status_alert.dart';
 
 class SectionStudyPage extends StatefulHookConsumerWidget {
   final int sectionID;
@@ -71,11 +74,46 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                 ),
               ),
               Expanded(
-                child: Container(
-                  color: Colors.blue,
-                ),
-                flex: 3,
-              )
+                  flex: 3,
+                  child: Column(
+                    children: currentMi.choices
+                        .asMap()
+                        .entries
+                        .map((entry) => Expanded(
+                                child: Container(
+                              margin: const EdgeInsets.only(top: 5, bottom: 5),
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                child: Text(
+                                  "${entry.key + 1}: ${entry.value}",
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                onPressed: () {
+                                  if (currentMi.answer == entry.key + 1) {
+                                    StatusAlert.show(
+                                      context,
+                                      duration: const Duration(seconds: 2),
+                                      title: '正解！',
+                                      configuration: const IconConfiguration(
+                                          icon: Icons.check_circle),
+                                      maxWidth: 260,
+                                    );
+                                  } else {
+                                    StatusAlert.show(
+                                      context,
+                                      duration: const Duration(seconds: 4),
+                                      title: '不正解',
+                                      subtitle: '正解は${currentMi.answer}番です',
+                                      configuration: const IconConfiguration(
+                                          icon: Icons.close),
+                                      maxWidth: 260,
+                                    );
+                                  }
+                                },
+                              ),
+                            )))
+                        .toList(),
+                  )),
             ],
           ),
         ),
