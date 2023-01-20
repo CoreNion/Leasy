@@ -50,10 +50,10 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
 
     // フィールドなどを初期化
     fieldTextEdits.add(TextEditingController(text: mi?.question));
-    fieldTextEdits.add(TextEditingController(text: mi?.choice1));
-    fieldTextEdits.add(TextEditingController(text: mi?.choice2));
-    fieldTextEdits.add(TextEditingController(text: mi?.choice3));
-    fieldTextEdits.add(TextEditingController(text: mi?.choice4));
+    for (var i = 0; i < (mi != null ? mi!.choices.length : 3); i++) {
+      fieldTextEdits.add(TextEditingController(text: mi?.choices[i]));
+    }
+
     fieldAnswerNum = mi != null ? mi!.answer : 1;
   }
 
@@ -75,10 +75,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                             ? mi!.id
                             : DateTime.now().millisecondsSinceEpoch,
                         question: fieldQuestion,
-                        choice1: fieldChoices[0],
-                        choice2: fieldChoices[1],
-                        choice3: fieldChoices[2],
-                        choice4: fieldChoices[3],
+                        choices: fieldChoices,
                         answer: fieldAnswerNum);
 
                     if (mi != null) {

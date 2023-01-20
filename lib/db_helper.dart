@@ -90,7 +90,7 @@ class DataBaseHelper {
   // セクションの問題を作成する
   static Future<void> createQuestion(int sectionID, MiQuestion question) async {
     _db ??= await _createDB();
-    _db!.insert("Section_$sectionID", question.toMap());
+    _db!.insert("Section_$sectionID", question.toTableMap());
   }
 
   /// セクションの問題を削除
@@ -106,7 +106,7 @@ class DataBaseHelper {
 
     final miList = <MiQuestion>[];
     for (var map in miQuestionsMaps) {
-      miList.add(MiQuestion.toModel(map));
+      miList.add(MiQuestion.tableMapToModel(map));
     }
     return miList;
   }
@@ -117,13 +117,13 @@ class DataBaseHelper {
     final miQuestionsMaps =
         await _db!.query('Section_$sectionID', where: "id='$id'");
 
-    return MiQuestion.toModel(miQuestionsMaps.first);
+    return MiQuestion.tableMapToModel(miQuestionsMaps.first);
   }
 
   static Future<int> updateMiQuestion(
       int sectionID, int id, MiQuestion question) async {
     return _db!
-        .update("Section_$sectionID", question.toMap(), where: "id='$id'");
+        .update("Section_$sectionID", question.toTableMap(), where: "id='$id'");
   }
 }
 
@@ -169,47 +169,42 @@ class MiQuestion {
 
   final String question;
 
-  final String choice1;
-
-  final String choice2;
-
-  final String choice3;
-
-  final String choice4;
+  final List<String> choices;
 
   final int answer;
 
   MiQuestion(
       {required this.id,
       required this.question,
-      required this.choice1,
-      required this.choice2,
-      required this.choice3,
-      required this.choice4,
+      required this.choices,
       required this.answer});
 
-  Map<String, Object?> toMap() {
+  // DataBaseの形式のMapに変換する関数
+  Map<String, Object?> toTableMap() {
     {
       return {
         'id': id,
         'question': question,
-        'choice1': choice1,
-        'choice2': choice2,
-        'choice3': choice3,
-        'choice4': choice4,
+        'choice1': choices[0],
+        'choice2': choices[1],
+        'choice3': choices[2],
+        'choice4': choices[3],
         'answer': answer,
       };
     }
   }
 
-  static MiQuestion toModel(Map<String, Object?> map) {
+  // DataBaseの形式のMapからModelに変換する関数
+  static MiQuestion tableMapToModel(Map<String, Object?> map) {
     return MiQuestion(
         id: map["id"] as int,
         question: map["question"].toString(),
-        choice1: map["choice1"].toString(),
-        choice2: map["choice2"].toString(),
-        choice3: map["choice3"].toString(),
-        choice4: map["choice4"].toString(),
+        choices: [
+          map["choice1"].toString(),
+          map["choice2"].toString(),
+          map["choice3"].toString(),
+          map["choice4"].toString()
+        ],
         answer: map["answer"] as int);
   }
 }
