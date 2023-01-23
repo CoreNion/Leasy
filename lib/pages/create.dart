@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mimosa/db_helper.dart';
-import 'package:mimosa/pages/subject/overview.dart';
-
-import 'top.dart';
+import '../db_helper.dart';
 
 class CreateSubjectPage extends StatefulHookConsumerWidget {
   const CreateSubjectPage({super.key});
@@ -47,20 +44,8 @@ class _CreateSubjectStatePage extends ConsumerState<CreateSubjectPage> {
                         // DBに作成
                         DataBaseHelper.createSubject(_title);
 
-                        // トップの教科リストの更新
-                        final refrashList =
-                            ref.watch(subjectListWidgetProvider);
-                        refrashList.add(TopPage.createSubjectWidget(_title));
-                        ref.watch(subjectListWidgetProvider.notifier).state = [
-                          ...refrashList
-                        ];
-
-                        // 教科ページへ移動
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) =>
-                                    SubjectOverview(title: _title))));
+                        // タイトルを報告しながら、元のページに戻る
+                        Navigator.pop(context, _title);
                       }
                     },
                     child: const Text("教科を作成"),
