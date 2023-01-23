@@ -61,7 +61,19 @@ class _HomeState extends ConsumerState<Home> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(pageTitles[pageIndex])),
+      appBar: AppBar(
+        title: Text(pageTitles[pageIndex]),
+        actions: <Widget>[
+          IconButton(
+              onPressed: () =>
+                  showAboutDialog(context: context, children: <Widget>[
+                    const Text(
+                      "codename: mimosa",
+                    )
+                  ]),
+              icon: const Icon(Icons.info))
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (selectedIndex) {
           if (selectedIndex == 1) {
