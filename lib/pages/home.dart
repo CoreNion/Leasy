@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 import 'create.dart';
 import 'setting.dart';
 import 'top.dart';
-
-final titleTextProvider = StateProvider((_) => 'Leasy');
-final pageIndexProvider = StateProvider((_) => 0);
 
 class Home extends StatefulHookConsumerWidget {
   const Home({super.key});
@@ -16,16 +14,41 @@ class Home extends StatefulHookConsumerWidget {
 }
 
 class _HomeState extends ConsumerState<Home> {
+  int index = 0;
+  final List<Widget> tabPages = const <Widget>[
+    TopPage(),
+    CreateSubjectPage(),
+    SettingPage(),
+  ];
+  final List<String> pageTitles = const <String>[
+    "Leasy",
+    "教科を新規作成する",
+    "設定",
+  ];
+
   @override
   Widget build(BuildContext context) {
-    StateController<String> title = ref.watch(titleTextProvider.notifier);
-    StateController<int> globalIndex = ref.watch(pageIndexProvider.notifier);
-
     return Scaffold(
-      appBar: AppBar(title: Text(title.state)),
+      appBar: AppBar(title: Text(pageTitles[index])),
       bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (index) {
-          setState(() => globalIndex.state = index);
+        onDestinationSelected: (selectedIndex) {
+          if (selectedIndex == 1) {
+            // 教科の作成Modelを表示
+            showBarModalBottomSheet(
+                context: context,
+                builder: (context) => Scaffold(
+                      appBar: AppBar(
+                        title: Text(pageTitles[selectedIndex]),
+                        automaticallyImplyLeading: false,
+                        leading: IconButton(
+                            onPressed: (() => Navigator.of(context).pop()),
+                            icon: const Icon(Icons.expand_more)),
+                      ),
+                      body: tabPages[1],
+                    ));
+          } else {
+            setState(() => index = selectedIndex);
+          }
         },
         destinations: const <Widget>[
           NavigationDestination(
@@ -36,7 +59,7 @@ class _HomeState extends ConsumerState<Home> {
           NavigationDestination(
             icon: Icon(Icons.add),
             selectedIcon: Icon(Icons.add),
-            label: '問題を作成',
+            label: '教科を作成',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings),
@@ -44,16 +67,9 @@ class _HomeState extends ConsumerState<Home> {
             label: '設定',
           ),
         ],
-        selectedIndex: globalIndex.state,
+        selectedIndex: index,
       ),
-      body: IndexedStack(
-        index: globalIndex.state,
-        children: const <Widget>[
-          TopPage(),
-          CreateSubjectPage(),
-          SettingPage(),
-        ],
-      ),
+      body: tabPages[index],
     );
   }
 }
