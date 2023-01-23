@@ -153,12 +153,36 @@ class _HomeState extends ConsumerState<Home> {
                 icon: const Icon(Icons.remove),
                 color: Colors.black,
                 onPressed: () async {
-                  await DataBaseHelper.removeSubject(title);
+                  final confirm = await showDialog(
+                      context: context,
+                      builder: ((context) {
+                        return AlertDialog(
+                          title: Text('"$title"を削除しますか？'),
+                          content: const Text(
+                              '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
+                          actions: [
+                            SimpleDialogOption(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('いいえ'),
+                            ),
+                            SimpleDialogOption(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('はい'),
+                            ),
+                          ],
+                        );
+                      }));
 
-                  // 教科一覧Widgetから削除
-                  setState(() {
-                    subejctTitleList.removeAt(index);
-                  });
+                  if (confirm) {
+                    await DataBaseHelper.removeSubject(title);
+
+                    // 教科一覧Widgetから削除
+                    setState(() {
+                      subejctTitleList.removeAt(index);
+                    });
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text('削除しました')));
+                  }
                 },
                 splashRadius: 0.1,
               ),
