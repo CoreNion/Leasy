@@ -48,12 +48,11 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
     super.initState();
     mi = widget.miQuestion;
 
-    // フィールドなどを初期化
+    // フィールドなどを初期化 (新規作成の場合はTextEditには何も入れないnull)
     fieldTextEdits.add(TextEditingController(text: mi?.question));
-    for (var i = 0; i < (mi != null ? mi!.choices.length : 3); i++) {
+    for (var i = 0; i < (mi != null ? mi!.choices.length : 4); i++) {
       fieldTextEdits.add(TextEditingController(text: mi?.choices[i]));
     }
-
     fieldAnswerNum = mi != null ? mi!.answer : 1;
   }
 
