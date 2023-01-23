@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/db_helper.dart';
@@ -31,17 +29,40 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   void initState() {
     super.initState();
 
+    // 最初に表示する問題を設定
     mis = widget.miQuestions;
     currentMi = mis.first;
   }
 
-  /// 指定された問題に置き換える関数
+  /// 指定された問題に表示を書き換える関数
   void setQuestionUI(int questionIndex) {
-    // 上限に当てはまる場合のみ実行
+    // 上限未満場合のみ実行
     if (questionIndex <= mis.length) {
       setState(() {
         currentMi = mis[questionIndex - 1];
         currentQuestionIndex = questionIndex;
+      });
+    } else if (questionIndex > mis.length) {
+      // 最後の問題より上の数だったら終了するかを尋ねる
+      showDialog<bool?>(
+          context: context,
+          builder: ((context) => AlertDialog(
+                title: const Text("お知らせ"),
+                content: const Text('最後の問題が終了しました。学習モードを終了しますか？'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('いいえ'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('はい'),
+                  ),
+                ],
+              ))).then((isExit) {
+        if (isExit ?? false) {
+          Navigator.pop(context);
+        }
       });
     }
   }
@@ -90,14 +111,20 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                                 ),
                                 onPressed: () {
                                   if (currentMi.answer == entry.key + 1) {
+                                    const duration = Duration(seconds: 1);
                                     StatusAlert.show(
                                       context,
-                                      duration: const Duration(seconds: 2),
+                                      duration: duration,
                                       title: '正解！',
                                       configuration: const IconConfiguration(
                                           icon: Icons.check_circle),
                                       maxWidth: 260,
                                     );
+
+                                    // 次の問題に進む
+                                    Future.delayed(duration).then((value) {
+                                      setQuestionUI(currentQuestionIndex + 1);
+                                    });
                                   } else {
                                     StatusAlert.show(
                                       context,
