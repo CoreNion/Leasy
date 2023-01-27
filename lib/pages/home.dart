@@ -150,7 +150,7 @@ class _HomeState extends ConsumerState<Home> {
                   MaterialPageRoute(
                       builder: (builder) => SubjectOverview(title: title)))),
               onLongPress: () {},
-              color: Colors.blueAccent,
+              color: Theme.of(context).colorScheme.onPrimary.withGreen(150),
               child: Text(
                 title,
               ),
@@ -166,6 +166,7 @@ class _HomeState extends ConsumerState<Home> {
                 color: Colors.black,
                 onPressed: () async {
                   final confirm = await showDialog(
+                      barrierDismissible: false,
                       context: context,
                       builder: ((context) {
                         return AlertDialog(
@@ -173,11 +174,11 @@ class _HomeState extends ConsumerState<Home> {
                           content: const Text(
                               '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
                           actions: [
-                            SimpleDialogOption(
+                            TextButton(
                               onPressed: () => Navigator.of(context).pop(false),
                               child: const Text('いいえ'),
                             ),
-                            SimpleDialogOption(
+                            TextButton(
                               onPressed: () => Navigator.of(context).pop(true),
                               child: const Text('はい'),
                             ),

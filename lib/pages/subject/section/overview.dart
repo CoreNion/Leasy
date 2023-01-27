@@ -138,12 +138,12 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                 title: Text('${index + 1}番目の問題を削除しますか？'),
                                 content: const Text('この操作は取り消せません。'),
                                 actions: [
-                                  SimpleDialogOption(
+                                  TextButton(
                                     onPressed: () =>
                                         Navigator.of(context).pop(true),
                                     child: const Text('はい'),
                                   ),
-                                  SimpleDialogOption(
+                                  TextButton(
                                     onPressed: () =>
                                         Navigator.of(context).pop(false),
                                     child: const Text('いいえ'),

@@ -34,6 +34,7 @@ class MyApp extends HookConsumerWidget {
                           seedColor: Colors.blue,
                           brightness: Brightness.dark,
                         ),
+                  scaffoldBackgroundColor: Colors.black,
                   useMaterial3: true),
               home: const Home(),
             )));
