@@ -43,7 +43,11 @@ dependencies:
   sqflite_common_ffi: ^2.1.1+1
   sqlite3_flutter_libs: ^0.5.10
   path: ^1.8.2
-  modal_bottom_sheet: ^2.1.2
+  modal_bottom_sheet: #^2.1.2
+    git:
+      url: https://github.com/jamesblasco/modal_bottom_sheet.git
+      ref: main
+      path: modal_bottom_sheet
   flutter_picker: ^2.0.5
   status_alert: ^1.0.1
 
