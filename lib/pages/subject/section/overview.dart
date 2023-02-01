@@ -165,7 +165,10 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                           ),
                         ),
                         child: ListTile(
-                            title: Text(_questionListStr[index]),
+                            title: Text(
+                              _questionListStr[index],
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             onTap: ((() async {
                               final question =
                                   await DataBaseHelper.getMiQuestion(
