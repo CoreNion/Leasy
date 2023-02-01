@@ -81,19 +81,21 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
             children: <Widget>[
               Expanded(
                 flex: 2,
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      "問題 #$currentQuestionIndex",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 25, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      currentMi.question,
-                      style: const TextStyle(fontSize: 17),
-                    )
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        "問題 #$currentQuestionIndex",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        currentMi.question,
+                        style: const TextStyle(fontSize: 17),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Expanded(
