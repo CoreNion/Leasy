@@ -24,6 +24,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   int currentQuestionIndex = 1;
   late MiQuestion currentMi;
   late List<MiQuestion> mis;
+  bool answered = false;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
     // 上限未満場合のみ実行
     if (questionIndex <= mis.length) {
       setState(() {
+        answered = false;
         currentMi = mis[questionIndex - 1];
         currentQuestionIndex = questionIndex;
       });
@@ -105,38 +107,62 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                               margin: const EdgeInsets.only(top: 5, bottom: 5),
                               width: double.infinity,
                               child: ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor: (answered
+                                        ? ((currentMi.answer == entry.key + 1)
+                                            ? MaterialStateProperty.all(
+                                                Colors.green)
+                                            : MaterialStateProperty.all(
+                                                Colors.red))
+                                        : null),
+                                    foregroundColor: answered
+                                        ? MaterialStateProperty.all(
+                                            Colors.white)
+                                        : null),
+                                onPressed: answered
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          answered = true;
+                                        });
+
+                                        if (currentMi.answer == entry.key + 1) {
+                                          const duration = Duration(seconds: 1);
+                                          StatusAlert.show(
+                                            context,
+                                            duration: duration,
+                                            title: '正解！',
+                                            configuration:
+                                                const IconConfiguration(
+                                                    icon: Icons.check_circle),
+                                            maxWidth: 260,
+                                          );
+
+                                          // 次の問題に進む
+                                          Future.delayed(duration)
+                                              .then((value) {
+                                            setQuestionUI(
+                                                currentQuestionIndex + 1);
+                                          });
+                                        } else {
+                                          StatusAlert.show(
+                                            context,
+                                            duration: const Duration(
+                                                milliseconds: 1500),
+                                            title: '不正解',
+                                            subtitle:
+                                                '正解は${currentMi.answer}番です',
+                                            configuration:
+                                                const IconConfiguration(
+                                                    icon: Icons.close),
+                                            maxWidth: 260,
+                                          );
+                                        }
+                                      },
                                 child: Text(
                                   "${entry.key + 1}: ${entry.value}",
                                   style: const TextStyle(fontSize: 16),
                                 ),
-                                onPressed: () {
-                                  if (currentMi.answer == entry.key + 1) {
-                                    const duration = Duration(seconds: 1);
-                                    StatusAlert.show(
-                                      context,
-                                      duration: duration,
-                                      title: '正解！',
-                                      configuration: const IconConfiguration(
-                                          icon: Icons.check_circle),
-                                      maxWidth: 260,
-                                    );
-
-                                    // 次の問題に進む
-                                    Future.delayed(duration).then((value) {
-                                      setQuestionUI(currentQuestionIndex + 1);
-                                    });
-                                  } else {
-                                    StatusAlert.show(
-                                      context,
-                                      duration: const Duration(seconds: 4),
-                                      title: '不正解',
-                                      subtitle: '正解は${currentMi.answer}番です',
-                                      configuration: const IconConfiguration(
-                                          icon: Icons.close),
-                                      maxWidth: 260,
-                                    );
-                                  }
-                                },
                               ),
                             )))
                         .toList(),
