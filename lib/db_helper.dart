@@ -48,7 +48,7 @@ class DataBaseHelper {
 
     // 問題集のTableを作成
     await _db!.execute(
-        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int)");
+        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int)");
 
     // セクション一覧にIDなどを記録
     return _db!.insert("Sections",
@@ -120,6 +120,7 @@ class DataBaseHelper {
     return MiQuestion.tableMapToModel(miQuestionsMaps.first);
   }
 
+  /// MiQuestionの更新
   static Future<int> updateMiQuestion(
       int sectionID, int id, MiQuestion question) async {
     return _db!
@@ -173,11 +174,14 @@ class MiQuestion {
 
   final int answer;
 
+  final bool isInput;
+
   MiQuestion(
       {required this.id,
       required this.question,
       required this.choices,
-      required this.answer});
+      required this.answer,
+      required this.isInput});
 
   // DataBaseの形式のMapに変換する関数
   Map<String, Object?> toTableMap() {
@@ -190,6 +194,7 @@ class MiQuestion {
         'choice3': choices[2],
         'choice4': choices[3],
         'answer': answer,
+        'input': isInput ? 1 : 0,
       };
     }
   }
@@ -205,6 +210,7 @@ class MiQuestion {
           map["choice3"].toString(),
           map["choice4"].toString()
         ],
-        answer: map["answer"] as int);
+        answer: map["answer"] as int,
+        isInput: (map["input"] as int) == 1 ? true : false);
   }
 }

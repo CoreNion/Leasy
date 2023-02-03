@@ -20,6 +20,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   final _formKey = GlobalKey<FormState>();
   late MiQuestion? mi;
 
+  late List<bool> selectedInputType;
   late String fieldQuestion;
   final List<String> fieldChoices = List.filled(4, "");
   late List<TextEditingController> fieldTextEdits = [];
@@ -53,7 +54,13 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
     for (var i = 0; i < (mi != null ? mi!.choices.length : 4); i++) {
       fieldTextEdits.add(TextEditingController(text: mi?.choices[i]));
     }
-    fieldAnswerNum = mi != null ? mi!.answer : 1;
+    if (mi != null) {
+      fieldAnswerNum = mi!.answer;
+      selectedInputType = (mi!.isInput ? [false, true] : [true, false]);
+    } else {
+      fieldAnswerNum = 1;
+      selectedInputType = [true, false];
+    }
   }
 
   @override
@@ -75,7 +82,8 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                           : DateTime.now().millisecondsSinceEpoch,
                       question: fieldQuestion,
                       choices: fieldChoices,
-                      answer: fieldAnswerNum);
+                      answer: fieldAnswerNum,
+                      isInput: selectedInputType[1]);
 
                   if (mi != null) {
                     await DataBaseHelper.updateMiQuestion(
@@ -102,6 +110,31 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
+                ToggleButtons(
+                  onPressed: (int index) {
+                    setState(() {
+                      for (int i = 0; i < selectedInputType.length; i++) {
+                        selectedInputType[i] = i == index;
+                      }
+                    });
+                  },
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  constraints: const BoxConstraints(
+                    minHeight: 40.0,
+                    minWidth: 100.0,
+                  ),
+                  isSelected: selectedInputType,
+                  children: const <Widget>[
+                    Text(
+                      "4択問題",
+                      style: TextStyle(fontSize: 17),
+                    ),
+                    Text(
+                      "入力問題",
+                      style: TextStyle(fontSize: 17),
+                    )
+                  ],
+                ),
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: "問題文",
