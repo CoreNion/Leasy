@@ -166,12 +166,11 @@ packages:
   modal_bottom_sheet:
     dependency: "direct main"
     description:
-      path: modal_bottom_sheet
-      ref: main
-      resolved-ref: "42da8b016ca254c1a4fa01be2edbef2cadd71bd2"
-      url: "https://github.com/jamesblasco/modal_bottom_sheet.git"
-    source: git
-    version: "2.1.2"
+      name: modal_bottom_sheet
+      sha256: "3bba63c62d35c931bce7f8ae23a47f9a05836d8cb3c11122ada64e0b2f3d718f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0-pre"
   path:
     dependency: "direct main"
     description:
@@ -331,4 +330,4 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=2.18.2 <4.0.0"
-  flutter: ">=3.3.0"
+  flutter: ">=3.7.0"
