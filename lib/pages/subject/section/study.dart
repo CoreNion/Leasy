@@ -211,63 +211,61 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.sectionTitle),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                flex: 2,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        "問題 #$currentQuestionIndex",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        currentMi.question,
-                        style: const TextStyle(fontSize: 17),
-                      ),
-                    ],
-                  ),
+      appBar: AppBar(
+        title: Text(widget.sectionTitle),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              flex: 2,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      "問題 #$currentQuestionIndex",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      currentMi.question,
+                      style: const TextStyle(fontSize: 17),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                  flex: 3,
-                  child: setInputQuestion ? inputChoice() : multipleChoice()),
-            ],
-          ),
+            ),
+            Expanded(
+                flex: 3,
+                child: setInputQuestion ? inputChoice() : multipleChoice()),
+          ],
         ),
-        bottomNavigationBar: SizedBox(
-          height: 40,
-          child: BottomNavigationBar(
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            selectedFontSize: 0.0,
-            unselectedFontSize: 0.0,
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.arrow_forward_ios),
-                label: '進む',
-              )
-            ],
-            onTap: (selectedIndex) {
-              if (selectedIndex == 0 && currentQuestionIndex != 1) {
-                // 戻るボタン、最初の問題の場合は何もしない
-                setQuestionUI(currentQuestionIndex - 1);
-              } else if (selectedIndex == 1) {
-                // 進むボタン
-                setQuestionUI(currentQuestionIndex + 1);
-              }
-            },
-          ),
-        ));
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedFontSize: 0.0,
+        unselectedFontSize: 0.0,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.arrow_forward_ios),
+            label: '進む',
+          )
+        ],
+        onTap: (selectedIndex) {
+          if (selectedIndex == 0 && currentQuestionIndex != 1) {
+            // 戻るボタン、最初の問題の場合は何もしない
+            setQuestionUI(currentQuestionIndex - 1);
+          } else if (selectedIndex == 1) {
+            // 進むボタン
+            setQuestionUI(currentQuestionIndex + 1);
+          }
+        },
+      ),
+    );
   }
 }
