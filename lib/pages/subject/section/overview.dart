@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/pages/subject/section/study.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+
 import '../../../db_helper.dart';
 import './manage.dart';
 
@@ -99,6 +100,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                     sectionID: widget.sectionID,
                                     sectionTitle: widget.sectionTitle,
                                     miQuestions: miQuestions,
+                                    testMode: false,
                                   ),
                                 ))
                             : null,
@@ -107,7 +109,18 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                   Padding(
                       padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
-                          onPressed: null, child: const Text("テストを開始する"))),
+                          onPressed: _questionListID.isNotEmpty
+                              ? () =>
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => SectionStudyPage(
+                                      sectionID: widget.sectionID,
+                                      sectionTitle: widget.sectionTitle,
+                                      miQuestions: miQuestions,
+                                      testMode: true,
+                                    ),
+                                  ))
+                              : null,
+                          child: const Text("テストを開始する"))),
                 ],
               ),
               const Divider(),

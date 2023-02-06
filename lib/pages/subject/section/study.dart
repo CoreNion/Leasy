@@ -7,13 +7,14 @@ class SectionStudyPage extends StatefulHookConsumerWidget {
   final int sectionID;
   final String sectionTitle;
   final List<MiQuestion> miQuestions;
+  final bool testMode;
 
-  const SectionStudyPage({
-    super.key,
-    required this.sectionID,
-    required this.sectionTitle,
-    required this.miQuestions,
-  });
+  const SectionStudyPage(
+      {super.key,
+      required this.sectionID,
+      required this.sectionTitle,
+      required this.miQuestions,
+      required this.testMode});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -26,6 +27,8 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   late List<MiQuestion> mis;
   bool answered = false;
   late bool setInputQuestion;
+  // [0]: 正解した問題の数 [1]:不正解の問題の数
+  final List<int> record = [0, 0];
 
   final _formKey = GlobalKey<FormState>();
   late String inputAnswer;
@@ -35,8 +38,13 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   void initState() {
     super.initState();
 
-    // 最初に表示する問題を設定
     mis = widget.miQuestions;
+    // テストモードの場合は問題をシャッフル
+    if (widget.testMode) {
+      mis.shuffle();
+    }
+
+    // 最初に表示する問題を設定
     currentMi = mis.first;
     setInputQuestion = currentMi.isInput;
   }
@@ -59,7 +67,8 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
           context: context,
           builder: ((context) => AlertDialog(
                 title: const Text("お知らせ"),
-                content: const Text('最後の問題が終了しました。学習モードを終了しますか？'),
+                content: Text(
+                    '最後の問題が終了しました。\n結果は、${record[0]}問正解,${record[1]}問不正解でした。\n学習モードを終了しますか？'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -105,15 +114,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                     if (currentMi.answer == entry.key + 1) {
                       onCorrect(context);
                     } else {
-                      StatusAlert.show(
-                        context,
-                        duration: const Duration(milliseconds: 1500),
-                        title: '不正解',
-                        subtitle: '正解は${currentMi.answer}番です',
-                        configuration:
-                            const IconConfiguration(icon: Icons.close),
-                        maxWidth: 260,
-                      );
+                      onIncorrect(context, "${currentMi.answer}番");
                     }
                   },
             child: Text(
@@ -174,14 +175,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                   if (inputAnswer == correctAnswer) {
                     onCorrect(context);
                   } else {
-                    StatusAlert.show(
-                      context,
-                      duration: const Duration(milliseconds: 1500),
-                      title: '不正解',
-                      subtitle: '正解は「$correctAnswer」です',
-                      configuration: const IconConfiguration(icon: Icons.close),
-                      maxWidth: 260,
-                    );
+                    onIncorrect(context, correctAnswer);
                   }
                 }
               },
@@ -191,7 +185,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
     );
   }
 
-  // 正解時の処理
+  /// 正解時の処理
   void onCorrect(BuildContext context) {
     const duration = Duration(seconds: 1);
     StatusAlert.show(
@@ -202,10 +196,36 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
       maxWidth: 260,
     );
 
+    // 正解を記録
+    record[0] = record[0] + 1;
+
     // 次の問題に進む
     Future.delayed(duration).then((value) {
       setQuestionUI(currentQuestionIndex + 1);
     });
+  }
+
+  /// 不正解時の処理
+  void onIncorrect(BuildContext context, String correctAnswer) {
+    const duration = Duration(milliseconds: 1500);
+    StatusAlert.show(
+      context,
+      duration: duration,
+      title: '不正解',
+      subtitle: '正解は「$correctAnswer」です',
+      configuration: const IconConfiguration(icon: Icons.close),
+      maxWidth: 260,
+    );
+
+    // 不正解を記録
+    record[1] = record[1] + 1;
+
+    if (widget.testMode) {
+      // 次の問題に進む
+      Future.delayed(duration).then((value) {
+        setQuestionUI(currentQuestionIndex + 1);
+      });
+    }
   }
 
   @override
@@ -243,29 +263,31 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        selectedFontSize: 0.0,
-        unselectedFontSize: 0.0,
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.arrow_forward_ios),
-            label: '進む',
-          )
-        ],
-        onTap: (selectedIndex) {
-          if (selectedIndex == 0 && currentQuestionIndex != 1) {
-            // 戻るボタン、最初の問題の場合は何もしない
-            setQuestionUI(currentQuestionIndex - 1);
-          } else if (selectedIndex == 1) {
-            // 進むボタン
-            setQuestionUI(currentQuestionIndex + 1);
-          }
-        },
-      ),
+      bottomNavigationBar: widget.testMode
+          ? null
+          : BottomNavigationBar(
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+              selectedFontSize: 0.0,
+              unselectedFontSize: 0.0,
+              items: const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.arrow_forward_ios),
+                  label: '進む',
+                )
+              ],
+              onTap: (selectedIndex) {
+                if (selectedIndex == 0 && currentQuestionIndex != 1) {
+                  // 戻るボタン、最初の問題の場合は何もしない
+                  setQuestionUI(currentQuestionIndex - 1);
+                } else if (selectedIndex == 1) {
+                  // 進むボタン
+                  setQuestionUI(currentQuestionIndex + 1);
+                }
+              },
+            ),
     );
   }
 }
