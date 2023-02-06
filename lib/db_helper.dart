@@ -12,7 +12,7 @@ class DataBaseHelper {
             onCreate: (db, version) async {
               await db.execute("CREATE TABLE Subjects(title text)");
               await db.execute(
-                  "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement)");
+                  "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestCorrect int, latestIncorrect int, latestStudyMode text)");
             },
             version: 3));
   }
@@ -51,8 +51,16 @@ class DataBaseHelper {
         "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int)");
 
     // セクション一覧にIDなどを記録
-    return _db!.insert("Sections",
-        Section(subject: subjectName, title: title, tableID: tableID).toMap());
+    return _db!.insert(
+        "Sections",
+        Section(
+                subject: subjectName,
+                title: title,
+                tableID: tableID,
+                latestCorrect: 0,
+                latestIncorrect: 0,
+                latestStudyMode: "no")
+            .toMap());
   }
 
   /// Sections DataBaseから教科に所属しているセクションIDを取得する
@@ -111,6 +119,13 @@ class DataBaseHelper {
     return miList;
   }
 
+  /// Sectionの概要データの更新
+  static Future<int> updateSectionRecord(int sectionID, int latestCorrect,
+      int latestIncorrect, String latestStudyMode) {
+    return _db!.rawUpdate(
+        "UPDATE Sections SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect, latestStudyMode = '$latestStudyMode' WHERE tableID = $sectionID;");
+  }
+
   /// IDからMiQuestionを返す
   static Future<MiQuestion> getMiQuestion(int sectionID, int id) async {
     _db ??= await _createDB();
@@ -152,14 +167,36 @@ class Section {
   /// セクション名
   final String title;
 
+  /// 前回の学習の正解の問題数
+  final int latestCorrect;
+
+  /// 前回の学習の不正解の問題数
+  final int latestIncorrect;
+
+  /// 前回の結果のモード
+  final String latestStudyMode;
+
   /// テーブルのID
   final int tableID;
 
-  Section({required this.title, required this.tableID, required this.subject});
+  Section(
+      {required this.subject,
+      required this.title,
+      required this.latestCorrect,
+      required this.latestIncorrect,
+      required this.latestStudyMode,
+      required this.tableID});
 
   Map<String, Object?> toMap() {
     {
-      return {'subject': subject, 'title': title, 'tableID': tableID};
+      return {
+        'subject': subject,
+        'title': title,
+        'tableID': tableID,
+        "latestCorrect": latestCorrect,
+        "latestIncorrect": latestIncorrect,
+        "latestStudyMode": latestStudyMode
+      };
     }
   }
 }

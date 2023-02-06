@@ -81,6 +81,10 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                 ],
               ))).then((isExit) {
         if (isExit ?? false) {
+          // DBに記録を保存
+          DataBaseHelper.updateSectionRecord(widget.sectionID, record[0],
+              record[1], widget.testMode ? "test" : "normal");
+
           Navigator.pop(context);
         }
       });
