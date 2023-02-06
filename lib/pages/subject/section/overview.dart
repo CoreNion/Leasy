@@ -47,17 +47,22 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   void updateList(List<dynamic>? manageResult) {
     // 何らかの変更があった場合のみ更新
     if (manageResult is List) {
+      // [ID, 更新されたMiQuestion]
       final checkIndex = _questionListID.indexOf(manageResult[0]);
-      // IDが存在する場合はタイトルのみ変更
+      final mi = (manageResult[1] as MiQuestion);
+
+      // IDが存在する場合はMiQuestionなどを更新
       if (checkIndex != -1) {
+        miQuestions[checkIndex] = mi;
         setState(() {
-          _questionListStr[checkIndex] = manageResult[1];
+          _questionListStr[checkIndex] = mi.question;
         });
       } else {
         // IDが存在しない場合はIDなどを追加
         _questionListID.add(manageResult.first);
+        miQuestions.add(mi);
         setState(() {
-          _questionListStr.add(manageResult[1]);
+          _questionListStr.add(mi.question);
         });
       }
     }

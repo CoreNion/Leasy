@@ -89,14 +89,14 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
                     await DataBaseHelper.updateMiQuestion(
                         widget.sectionID, mi!.id, miQuestion);
 
-                    Navigator.pop(context, [mi!.id, fieldQuestion]);
+                    Navigator.pop(context, [mi!.id, miQuestion]);
                   } else {
                     final id = DateTime.now().millisecondsSinceEpoch;
                     // DBに作成
                     await DataBaseHelper.createQuestion(
                         widget.sectionID, miQuestion);
 
-                    Navigator.pop(context, [id, fieldQuestion]);
+                    Navigator.pop(context, [id, miQuestion]);
                   }
                 }
               },
