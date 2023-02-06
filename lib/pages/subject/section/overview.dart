@@ -7,14 +7,9 @@ import '../../../db_helper.dart';
 import './manage.dart';
 
 class SectionPage extends StatefulHookConsumerWidget {
-  final int sectionID;
-  final String subjectName;
-  final String sectionTitle;
-  const SectionPage(
-      {super.key,
-      required this.sectionID,
-      required this.subjectName,
-      required this.sectionTitle});
+  final Section sectionInfo;
+
+  const SectionPage({super.key, required this.sectionInfo});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _SectionPageState();
@@ -24,13 +19,14 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
   late List<MiQuestion> miQuestions;
+  late Section section;
 
   @override
   void initState() {
     super.initState();
 
     // 保存されている問題をリストに追加
-    DataBaseHelper.getMiQuestions(widget.sectionID).then((questions) {
+    DataBaseHelper.getMiQuestions(widget.sectionInfo.tableID).then((questions) {
       for (var question in questions) {
         _questionListID.add(question.id);
         setState(() => _questionListStr.add(question.question));
@@ -72,15 +68,15 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.sectionTitle),
+          title: Text(widget.sectionInfo.title),
           actions: <Widget>[
             IconButton(
                 onPressed: ((() {
                   showBarModalBottomSheet(
                       context: context,
                       shape: shape,
-                      builder: (builder) =>
-                          SectionManagePage(sectionID: widget.sectionID)).then(
+                      builder: (builder) => SectionManagePage(
+                          sectionID: widget.sectionInfo.tableID)).then(
                     (value) => updateList(value),
                   );
                 })),
@@ -92,6 +88,41 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           child: SingleChildScrollView(
               child: Column(
             children: <Widget>[
+              Container(
+                margin: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(15)),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 7.0),
+                      child: Text(
+                        "前回の${widget.sectionInfo.latestStudyMode == "test" ? "テスト" : "学習"}の結果",
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Text(
+                          "正解: ${widget.sectionInfo.latestCorrect}問",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "不正解: ${widget.sectionInfo.latestIncorrect}問",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -102,8 +133,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                             ? () =>
                                 Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
-                                    sectionID: widget.sectionID,
-                                    sectionTitle: widget.sectionTitle,
+                                    sectionID: widget.sectionInfo.tableID,
+                                    sectionTitle: widget.sectionInfo.title,
                                     miQuestions: miQuestions,
                                     testMode: false,
                                   ),
@@ -118,8 +149,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                               ? () =>
                                   Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
-                                      sectionID: widget.sectionID,
-                                      sectionTitle: widget.sectionTitle,
+                                      sectionID: widget.sectionInfo.tableID,
+                                      sectionTitle: widget.sectionInfo.title,
                                       miQuestions: miQuestions,
                                       testMode: true,
                                     ),
@@ -138,7 +169,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
                           await DataBaseHelper.removeQuestion(
-                              widget.sectionID, _questionListID[index]);
+                              widget.sectionInfo.tableID,
+                              _questionListID[index]);
 
                           _questionListID.removeAt(index);
                           setState(() {
@@ -190,13 +222,14 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                             onTap: ((() async {
                               final question =
                                   await DataBaseHelper.getMiQuestion(
-                                      widget.sectionID, _questionListID[index]);
+                                      widget.sectionInfo.tableID,
+                                      _questionListID[index]);
 
                               final res = await showBarModalBottomSheet(
                                   context: context,
                                   shape: shape,
                                   builder: (builder) => SectionManagePage(
-                                        sectionID: widget.sectionID,
+                                        sectionID: widget.sectionInfo.tableID,
                                         miQuestion: question,
                                       ));
                               updateList(res);

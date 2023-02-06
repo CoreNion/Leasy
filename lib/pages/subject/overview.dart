@@ -165,14 +165,17 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                         ),
                         child: ListTile(
                           title: Text(_sectionListStr[index]),
-                          onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: ((context) => SectionPage(
-                                        sectionID: _sectionListID[index],
-                                        subjectName: widget.title,
-                                        sectionTitle: _sectionListStr[index],
-                                      )))),
+                          onTap: () async {
+                            final secInfo = await DataBaseHelper.getSectionData(
+                                _sectionListID[index]);
+
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: ((context) {
+                              return SectionPage(
+                                sectionInfo: secInfo,
+                              );
+                            })));
+                          },
                         )))),
               ]),
             )));

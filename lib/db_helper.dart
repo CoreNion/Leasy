@@ -85,6 +85,14 @@ class DataBaseHelper {
     return titlesMap.first["title"].toString();
   }
 
+  /// TableIDからSectionを取得
+  static Future<Section> getSectionData(int tableID) async {
+    final sectionsMaps =
+        await _db!.query('Sections', where: "tableID='$tableID'");
+
+    return Section.tableMapToModel(sectionsMaps.first);
+  }
+
   /// DataBaseから一致したセクションを削除する
   static Future<int> removeSection(String subjectName, int id) async {
     _db ??= await _createDB();
@@ -198,6 +206,17 @@ class Section {
         "latestStudyMode": latestStudyMode
       };
     }
+  }
+
+  // DataBaseの形式のMapからModelに変換する関数
+  static Section tableMapToModel(Map<String, Object?> map) {
+    return Section(
+        subject: map["subject"].toString(),
+        title: map["title"].toString(),
+        tableID: map["tableID"] as int,
+        latestCorrect: map["latestCorrect"] as int,
+        latestIncorrect: map["latestIncorrect"] as int,
+        latestStudyMode: map["latestStudyMode"].toString());
   }
 }
 
