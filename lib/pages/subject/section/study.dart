@@ -257,9 +257,9 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                 ),
               ),
             ),
-            Expanded(
-                flex: 3,
-                child: setInputQuestion ? inputChoice() : multipleChoice()),
+            setInputQuestion
+                ? inputChoice()
+                : Expanded(flex: 3, child: multipleChoice()),
           ],
         ),
       ),
