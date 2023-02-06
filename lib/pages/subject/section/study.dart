@@ -167,18 +167,20 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  setState(() {
-                    answered = true;
-                  });
-                  if (inputAnswer == correctAnswer) {
-                    onCorrect(context);
-                  } else {
-                    onIncorrect(context, correctAnswer);
-                  }
-                }
-              },
+              onPressed: answered
+                  ? null
+                  : () {
+                      if (_formKey.currentState!.validate()) {
+                        setState(() {
+                          answered = true;
+                        });
+                        if (inputAnswer == correctAnswer) {
+                          onCorrect(context);
+                        } else {
+                          onIncorrect(context, correctAnswer);
+                        }
+                      }
+                    },
               child: const Text("答え合わせ")),
         )
       ],
