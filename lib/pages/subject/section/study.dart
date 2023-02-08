@@ -236,64 +236,98 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.sectionTitle),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              flex: 2,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      "問題 #$currentQuestionIndex",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 25, fontWeight: FontWeight.bold),
+    return WillPopScope(
+        onWillPop: () async {
+          // 最終問題が終わっていない場合は警告
+          if (currentQuestionIndex < mis.length ||
+              (currentQuestionIndex == mis.length && !answered)) {
+            final res = await showDialog<bool>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("確認"),
+                    content: const Text("学習を終了しますか？\n途中で中断した場合、学習の記録は行いません。"),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("いいえ")),
+                      TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("はい")),
+                    ],
+                  );
+                });
+            if (res != null) {
+              return res;
+            } else {
+              return false;
+            }
+          } else {
+            // DBに記録を保存
+            await DataBaseHelper.updateSectionRecord(widget.sectionID,
+                record[0], record[1], widget.testMode ? "test" : "normal");
+
+            return true;
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.sectionTitle),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  flex: 2,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          "問題 #$currentQuestionIndex",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          currentMi.question,
+                          style: const TextStyle(fontSize: 17),
+                        ),
+                      ],
                     ),
-                    Text(
-                      currentMi.question,
-                      style: const TextStyle(fontSize: 17),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            setInputQuestion
-                ? inputChoice()
-                : Expanded(flex: 3, child: multipleChoice()),
-          ],
-        ),
-      ),
-      bottomNavigationBar: widget.testMode
-          ? null
-          : BottomNavigationBar(
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              selectedFontSize: 0.0,
-              unselectedFontSize: 0.0,
-              items: const [
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.arrow_forward_ios),
-                  label: '進む',
-                )
+                setInputQuestion
+                    ? inputChoice()
+                    : Expanded(flex: 3, child: multipleChoice()),
               ],
-              onTap: (selectedIndex) {
-                if (selectedIndex == 0 && currentQuestionIndex != 1) {
-                  // 戻るボタン、最初の問題の場合は何もしない
-                  setQuestionUI(currentQuestionIndex - 1);
-                } else if (selectedIndex == 1) {
-                  // 進むボタン
-                  setQuestionUI(currentQuestionIndex + 1);
-                }
-              },
             ),
-    );
+          ),
+          bottomNavigationBar: widget.testMode
+              ? null
+              : BottomNavigationBar(
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
+                  selectedFontSize: 0.0,
+                  unselectedFontSize: 0.0,
+                  items: const [
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.arrow_back_ios_new), label: '戻る'),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.arrow_forward_ios),
+                      label: '進む',
+                    )
+                  ],
+                  onTap: (selectedIndex) {
+                    if (selectedIndex == 0 && currentQuestionIndex != 1) {
+                      // 戻るボタン、最初の問題の場合は何もしない
+                      setQuestionUI(currentQuestionIndex - 1);
+                    } else if (selectedIndex == 1) {
+                      // 進むボタン
+                      setQuestionUI(currentQuestionIndex + 1);
+                    }
+                  },
+                ),
+        ));
   }
 }
