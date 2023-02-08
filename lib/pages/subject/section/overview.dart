@@ -21,6 +21,14 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   late List<MiQuestion> miQuestions;
   late Section section;
 
+  static const boardRadius = Radius.circular(10);
+  static const boardPadding = EdgeInsets.all(10.0);
+
+  static const scoreTextStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -66,17 +74,25 @@ class _SectionPageState extends ConsumerState<SectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final secInfo = widget.sectionInfo;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDarkMode = colorScheme.brightness == Brightness.dark;
+
+    final boardBorder =
+        Border.all(color: isDarkMode ? Colors.white : Colors.black);
+
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.sectionInfo.title),
+          title: Text(secInfo.title),
           actions: <Widget>[
             IconButton(
                 onPressed: ((() {
                   showBarModalBottomSheet(
                       context: context,
                       shape: shape,
-                      builder: (builder) => SectionManagePage(
-                          sectionID: widget.sectionInfo.tableID)).then(
+                      builder: (builder) =>
+                          SectionManagePage(sectionID: secInfo.tableID)).then(
                     (value) => updateList(value),
                   );
                 })),
@@ -88,40 +104,63 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           child: SingleChildScrollView(
               child: Column(
             children: <Widget>[
-              Container(
-                margin: const EdgeInsets.all(10.0),
-                padding: const EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(15)),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 7.0),
-                      child: Text(
-                        "前回の${widget.sectionInfo.latestStudyMode == "test" ? "テスト" : "学習"}の結果",
-                        style: const TextStyle(fontSize: 18),
-                      ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
+                    padding: boardPadding,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        border: boardBorder,
+                        borderRadius: const BorderRadius.only(
+                            topLeft: boardRadius, topRight: boardRadius)),
+                    child: Text(
+                      "前回の${secInfo.latestStudyMode == "test" ? "テスト" : "学習"}の結果",
+                      style: const TextStyle(fontSize: 20),
+                      textAlign: TextAlign.center,
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        Text(
-                          "正解: ${widget.sectionInfo.latestCorrect}問",
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      Expanded(
+                          child: Container(
+                        margin: const EdgeInsets.only(bottom: 10, left: 10),
+                        padding: boardPadding,
+                        decoration: BoxDecoration(
+                          color: colorScheme.secondaryContainer,
+                          border: boardBorder,
+                          borderRadius:
+                              const BorderRadius.only(bottomLeft: boardRadius),
                         ),
-                        Text(
-                          "不正解: ${widget.sectionInfo.latestIncorrect}問",
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                        child: Text(
+                          "正解: ${secInfo.latestCorrect}問",
+                          style: scoreTextStyle,
+                          textAlign: TextAlign.center,
                         ),
-                      ],
-                    )
-                  ],
-                ),
+                      )),
+                      Expanded(
+                          child: Container(
+                        margin: const EdgeInsets.only(bottom: 10, right: 10),
+                        padding: boardPadding,
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          border: boardBorder,
+                          borderRadius:
+                              const BorderRadius.only(bottomRight: boardRadius),
+                        ),
+                        child: Text(
+                          "不正解: ${secInfo.latestIncorrect}問",
+                          style: scoreTextStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                      )),
+                    ],
+                  )
+                ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -133,8 +172,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                             ? () =>
                                 Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
-                                    sectionID: widget.sectionInfo.tableID,
-                                    sectionTitle: widget.sectionInfo.title,
+                                    sectionID: secInfo.tableID,
+                                    sectionTitle: secInfo.title,
                                     miQuestions: miQuestions,
                                     testMode: false,
                                   ),
@@ -149,8 +188,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                               ? () =>
                                   Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
-                                      sectionID: widget.sectionInfo.tableID,
-                                      sectionTitle: widget.sectionInfo.title,
+                                      sectionID: secInfo.tableID,
+                                      sectionTitle: secInfo.title,
                                       miQuestions: miQuestions,
                                       testMode: true,
                                     ),
@@ -169,8 +208,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
                           await DataBaseHelper.removeQuestion(
-                              widget.sectionInfo.tableID,
-                              _questionListID[index]);
+                              secInfo.tableID, _questionListID[index]);
 
                           _questionListID.removeAt(index);
                           setState(() {
@@ -222,14 +260,13 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                             onTap: ((() async {
                               final question =
                                   await DataBaseHelper.getMiQuestion(
-                                      widget.sectionInfo.tableID,
-                                      _questionListID[index]);
+                                      secInfo.tableID, _questionListID[index]);
 
                               final res = await showBarModalBottomSheet(
                                   context: context,
                                   shape: shape,
                                   builder: (builder) => SectionManagePage(
-                                        sectionID: widget.sectionInfo.tableID,
+                                        sectionID: secInfo.tableID,
                                         miQuestion: question,
                                       ));
                               updateList(res);
