@@ -19,37 +19,39 @@ class _HomeState extends ConsumerState<Home> {
   int pageIndex = 0;
 
   // トップに表示される教科のWidgetのリスト
-  static final List<String> subejctTitleList = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    DataBaseHelper.getSubjectTitles().then((titles) {
-      // 教科のタイトルを取得次第、Widgetを作成してリストに入れ、ホームのトップ画面に表示する
-      for (var i = 0; i < titles.length; i++) {
-        setState(() {
-          subejctTitleList.add(titles[i]);
-        });
-      }
-    });
-  }
+  static List<Widget> subejctWidgetList = [];
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabPages = <Widget>[
-      // 教科一覧ページ
-      ResponsiveGridList(
-        minItemWidth: 270,
-        horizontalGridMargin: 20,
-        horizontalGridSpacing: 30,
-        verticalGridSpacing: 30,
-        verticalGridMargin: 20,
-        children: subejctTitleList
-            .asMap()
-            .entries
-            .map((e) => subjectWidget(e.value, e.key))
-            .toList(),
+      FutureBuilder(
+        future: DataBaseHelper.getSubjectTitles(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            subejctWidgetList = snapshot.data!
+                .asMap()
+                .entries
+                .map((e) => subjectWidget(e.value, e.key))
+                .toList();
+
+            return ResponsiveGridList(
+              minItemWidth: 270,
+              horizontalGridMargin: 20,
+              horizontalGridSpacing: 30,
+              verticalGridSpacing: 30,
+              verticalGridMargin: 20,
+              children: subejctWidgetList,
+            );
+          } else if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else {
+            return const Center(
+              child: Text("？"),
+            );
+          }
+        },
       ),
       const CreateSubjectPage(),
       const SettingPage(),
@@ -93,7 +95,8 @@ class _HomeState extends ConsumerState<Home> {
               if (createdSubTitle != null) {
                 // 教科Widgetに追加
                 setState(() {
-                  subejctTitleList.add(createdSubTitle);
+                  subejctWidgetList.add(
+                      subjectWidget(createdSubTitle, subejctWidgetList.length));
                 });
 
                 // 教科ページへ移動
@@ -191,7 +194,7 @@ class _HomeState extends ConsumerState<Home> {
 
                     // 教科一覧Widgetから削除
                     setState(() {
-                      subejctTitleList.removeAt(index);
+                      subejctWidgetList.removeAt(index);
                     });
                     ScaffoldMessenger.of(context)
                         .showSnackBar(const SnackBar(content: Text('削除しました')));
