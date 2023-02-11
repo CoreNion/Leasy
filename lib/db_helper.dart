@@ -1,13 +1,14 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class DataBaseHelper {
   static Database? _db;
 
   static Future<Database> _createDB() async {
-    return databaseFactoryFfi.openDatabase(
-        p.join(await getDatabasesPath(), "study.db"),
+    final path = (await getApplicationSupportDirectory()).path;
+    return databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
         options: OpenDatabaseOptions(
             onCreate: (db, version) async {
               await db.execute("CREATE TABLE Subjects(title text)");

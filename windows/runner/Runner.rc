@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "CoreNion" "\0"
-            VALUE "FileDescription", "mimosa" "\0"
+            VALUE "FileDescription", "Leasy" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "mimosa" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2022 CoreNion. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mimosa.exe" "\0"
-            VALUE "ProductName", "Mimosa" "\0"
+            VALUE "OriginalFilename", "leasy.exe" "\0"
+            VALUE "ProductName", "Leasy" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
