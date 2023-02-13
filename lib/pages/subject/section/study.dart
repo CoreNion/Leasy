@@ -4,7 +4,7 @@ import 'package:mimosa/db_helper.dart';
 import 'package:status_alert/status_alert.dart';
 
 class SectionStudyPage extends StatefulHookConsumerWidget {
-  final Section? secInfo;
+  final SectionInfo? secInfo;
   final List<MiQuestion> miQuestions;
   final bool testMode;
 
@@ -21,7 +21,7 @@ class SectionStudyPage extends StatefulHookConsumerWidget {
 
 class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   int currentQuestionIndex = 1;
-  Section? secInfo;
+  SectionInfo? secInfo;
   late MiQuestion currentMi;
   late List<MiQuestion> mis;
   bool answered = false;

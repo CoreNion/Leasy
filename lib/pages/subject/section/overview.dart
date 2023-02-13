@@ -7,7 +7,7 @@ import '../../../db_helper.dart';
 import './manage.dart';
 
 class SectionPage extends StatefulHookConsumerWidget {
-  final Section sectionInfo;
+  final SectionInfo sectionInfo;
 
   const SectionPage({super.key, required this.sectionInfo});
 
@@ -19,7 +19,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
   late List<MiQuestion> miQuestions;
-  late Section section;
+  late SectionInfo section;
 
   static const boardRadius = Radius.circular(10);
   static const boardPadding = EdgeInsets.all(10.0);
@@ -30,7 +30,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   );
 
   /// 現在のセクションの情報
-  late Section secInfo;
+  late SectionInfo secInfo;
 
   @override
   void initState() {
@@ -185,7 +185,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
 
                                 if (record != null) {
                                   setState(() {
-                                    secInfo = Section(
+                                    secInfo = SectionInfo(
                                         subject: secInfo.subject,
                                         title: secInfo.title,
                                         latestCorrect: record[0],
@@ -214,7 +214,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
 
                                   if (record != null) {
                                     setState(() {
-                                      secInfo = Section(
+                                      secInfo = SectionInfo(
                                           subject: secInfo.subject,
                                           title: secInfo.title,
                                           latestCorrect: record[0],

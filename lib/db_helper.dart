@@ -54,7 +54,7 @@ class DataBaseHelper {
     // セクション一覧にIDなどを記録
     return _db!.insert(
         "Sections",
-        Section(
+        SectionInfo(
                 subject: subjectName,
                 title: title,
                 tableID: tableID,
@@ -87,11 +87,11 @@ class DataBaseHelper {
   }
 
   /// TableIDからSectionを取得
-  static Future<Section> getSectionData(int tableID) async {
+  static Future<SectionInfo> getSectionData(int tableID) async {
     final sectionsMaps =
         await _db!.query('Sections', where: "tableID='$tableID'");
 
-    return Section.tableMapToModel(sectionsMaps.first);
+    return SectionInfo.tableMapToModel(sectionsMaps.first);
   }
 
   /// DataBaseから一致したセクションを削除する
@@ -169,7 +169,7 @@ class Subject {
 }
 
 /// セクション一覧のモデル
-class Section {
+class SectionInfo {
   /// 所属教科
   final String subject;
 
@@ -188,7 +188,7 @@ class Section {
   /// テーブルのID
   final int tableID;
 
-  Section(
+  SectionInfo(
       {required this.subject,
       required this.title,
       required this.latestCorrect,
@@ -210,8 +210,8 @@ class Section {
   }
 
   // DataBaseの形式のMapからModelに変換する関数
-  static Section tableMapToModel(Map<String, Object?> map) {
-    return Section(
+  static SectionInfo tableMapToModel(Map<String, Object?> map) {
+    return SectionInfo(
         subject: map["subject"].toString(),
         title: map["title"].toString(),
         tableID: map["tableID"] as int,
