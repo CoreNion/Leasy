@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mimosa/db_helper.dart';
+
+import '../../db_helper.dart';
 import 'section/overview.dart';
-import 'section/study.dart';
+import './study.dart';
 
 class SubjectOverview extends StatefulHookConsumerWidget {
   final String title;
