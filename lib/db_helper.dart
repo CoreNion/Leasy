@@ -117,14 +117,16 @@ class DataBaseHelper {
   }
 
   /// セクションのMiQuestion一覧を取得
-  static Future<List<MiQuestion>> getMiQuestions(int sectionID) async {
-    _db ??= await _createDB();
-    final miQuestionsMaps = await _db!.query('Section_$sectionID');
-
+  static Future<List<MiQuestion>> getMiQuestions(List<int> sectionIDs) async {
     final miList = <MiQuestion>[];
-    for (var map in miQuestionsMaps) {
-      miList.add(MiQuestion.tableMapToModel(map));
+
+    for (var secID in sectionIDs) {
+      final miQuestionsMaps = await _db!.query('Section_$secID');
+      for (var map in miQuestionsMaps) {
+        miList.add(MiQuestion.tableMapToModel(map));
+      }
     }
+
     return miList;
   }
 

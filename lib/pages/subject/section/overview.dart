@@ -40,7 +40,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     secInfo = widget.sectionInfo;
 
     // 保存されている問題をリストに追加
-    DataBaseHelper.getMiQuestions(widget.sectionInfo.tableID).then((questions) {
+    DataBaseHelper.getMiQuestions([widget.sectionInfo.tableID])
+        .then((questions) {
       for (var question in questions) {
         _questionListID.add(question.id);
         setState(() => _questionListStr.add(question.question));
