@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mimosa/db_helper.dart';
 import 'section/overview.dart';
+import 'section/study.dart';
 
 class SubjectOverview extends StatefulHookConsumerWidget {
   final String title;
@@ -90,17 +91,23 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
               child: Column(children: <Widget>[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const <Widget>[
+                  children: <Widget>[
                     Padding(
-                        padding: EdgeInsets.all(7.0),
+                        padding: const EdgeInsets.all(7.0),
                         child: ElevatedButton(
-                          onPressed: null,
-                          child: Text("続きから学習を開始する"),
-                        )),
-                    Padding(
-                        padding: EdgeInsets.all(7.0),
-                        child: ElevatedButton(
-                            onPressed: null, child: Text("テストを開始する"))),
+                            onPressed: () async {
+                              final mis = await DataBaseHelper.getMiQuestions(
+                                  _sectionListID);
+
+                              final record = await Navigator.of(context)
+                                  .push<List<int>>(MaterialPageRoute(
+                                builder: (context) => SectionStudyPage(
+                                  miQuestions: mis,
+                                  testMode: true,
+                                ),
+                              ));
+                            },
+                            child: const Text("テストを開始する"))),
                   ],
                 ),
                 Text(
