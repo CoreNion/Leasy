@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
+import '../../../widgets/overview.dart';
 import '../study.dart';
 import '../../../db_helper.dart';
 import './manage.dart';
@@ -20,14 +21,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   final List<String> _questionListStr = <String>[];
   late List<MiQuestion> miQuestions;
   late SectionInfo section;
-
-  static const boardRadius = Radius.circular(10);
-  static const boardPadding = EdgeInsets.all(10.0);
-
-  static const scoreTextStyle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-  );
 
   /// 現在のセクションの情報
   late SectionInfo secInfo;
@@ -82,10 +75,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDarkMode = colorScheme.brightness == Brightness.dark;
-
-    final boardBorder =
-        Border.all(color: isDarkMode ? Colors.white : Colors.black);
 
     return Scaffold(
         appBar: AppBar(
@@ -109,64 +98,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           child: SingleChildScrollView(
               child: Column(
             children: <Widget>[
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                    margin: const EdgeInsets.only(top: 10, left: 10, right: 10),
-                    padding: boardPadding,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        border: boardBorder,
-                        borderRadius: const BorderRadius.only(
-                            topLeft: boardRadius, topRight: boardRadius)),
-                    child: Text(
-                      "前回の${secInfo.latestStudyMode == "test" ? "テスト" : "学習"}の結果",
-                      style: const TextStyle(fontSize: 20),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: <Widget>[
-                      Expanded(
-                          child: Container(
-                        margin: const EdgeInsets.only(bottom: 10, left: 10),
-                        padding: boardPadding,
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer,
-                          border: boardBorder,
-                          borderRadius:
-                              const BorderRadius.only(bottomLeft: boardRadius),
-                        ),
-                        child: Text(
-                          "正解: ${secInfo.latestCorrect}問",
-                          style: scoreTextStyle,
-                          textAlign: TextAlign.center,
-                        ),
-                      )),
-                      Expanded(
-                          child: Container(
-                        margin: const EdgeInsets.only(bottom: 10, right: 10),
-                        padding: boardPadding,
-                        decoration: BoxDecoration(
-                          color: colorScheme.errorContainer,
-                          border: boardBorder,
-                          borderRadius:
-                              const BorderRadius.only(bottomRight: boardRadius),
-                        ),
-                        child: Text(
-                          "不正解: ${secInfo.latestIncorrect}問",
-                          style: scoreTextStyle,
-                          textAlign: TextAlign.center,
-                        ),
-                      )),
-                    ],
-                  )
-                ],
-              ),
+              scoreBoard(colorScheme, secInfo.latestStudyMode == "test",
+                  secInfo.latestCorrect, secInfo.latestIncorrect),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
