@@ -177,8 +177,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                 final record = await Navigator.of(context)
                                     .push<List<int>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
-                                    sectionID: secInfo.tableID,
-                                    sectionTitle: secInfo.title,
+                                    secInfo: secInfo,
                                     miQuestions: miQuestions,
                                     testMode: false,
                                   ),
@@ -207,8 +206,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                   final record = await Navigator.of(context)
                                       .push<List<int>>(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
-                                      sectionID: secInfo.tableID,
-                                      sectionTitle: secInfo.title,
+                                      secInfo: secInfo,
                                       miQuestions: miQuestions,
                                       testMode: true,
                                     ),

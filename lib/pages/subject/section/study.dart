@@ -4,15 +4,13 @@ import 'package:mimosa/db_helper.dart';
 import 'package:status_alert/status_alert.dart';
 
 class SectionStudyPage extends StatefulHookConsumerWidget {
-  final int sectionID;
-  final String sectionTitle;
+  final Section? secInfo;
   final List<MiQuestion> miQuestions;
   final bool testMode;
 
   const SectionStudyPage(
       {super.key,
-      required this.sectionID,
-      required this.sectionTitle,
+      this.secInfo,
       required this.miQuestions,
       required this.testMode});
 
@@ -23,6 +21,7 @@ class SectionStudyPage extends StatefulHookConsumerWidget {
 
 class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   int currentQuestionIndex = 1;
+  Section? secInfo;
   late MiQuestion currentMi;
   late List<MiQuestion> mis;
   bool answered = false;
@@ -38,6 +37,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   void initState() {
     super.initState();
 
+    secInfo = widget.secInfo;
     mis = widget.miQuestions;
     // テストモードの場合は問題をシャッフル
     if (widget.testMode) {
@@ -81,9 +81,11 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                 ],
               ))).then((isExit) {
         if (isExit ?? false) {
-          // DBに記録を保存
-          DataBaseHelper.updateSectionRecord(widget.sectionID, record[0],
-              record[1], widget.testMode ? "test" : "normal");
+          if (secInfo != null) {
+            // DBに記録を保存
+            DataBaseHelper.updateSectionRecord(secInfo!.tableID, record[0],
+                record[1], widget.testMode ? "test" : "normal");
+          }
 
           Navigator.pop(context, record);
         }
@@ -263,16 +265,18 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
               return false;
             }
           } else {
-            // DBに記録を保存
-            await DataBaseHelper.updateSectionRecord(widget.sectionID,
-                record[0], record[1], widget.testMode ? "test" : "normal");
+            if (secInfo != null) {
+              // DBに記録を保存
+              DataBaseHelper.updateSectionRecord(secInfo!.tableID, record[0],
+                  record[1], widget.testMode ? "test" : "normal");
+            }
 
             return true;
           }
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(widget.sectionTitle),
+            title: Text(secInfo != null ? secInfo!.title : "教科テスト"),
           ),
           body: Padding(
             padding: const EdgeInsets.all(8.0),
