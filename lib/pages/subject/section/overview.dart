@@ -29,9 +29,15 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     fontWeight: FontWeight.bold,
   );
 
+  /// 現在のセクションの情報
+  late Section secInfo;
+
   @override
   void initState() {
     super.initState();
+
+    // セクション情報を読み込む
+    secInfo = widget.sectionInfo;
 
     // 保存されている問題をリストに追加
     DataBaseHelper.getMiQuestions(widget.sectionInfo.tableID).then((questions) {
@@ -74,8 +80,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final secInfo = widget.sectionInfo;
-
     final colorScheme = Theme.of(context).colorScheme;
     final isDarkMode = colorScheme.brightness == Brightness.dark;
 
@@ -169,15 +173,29 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                       padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
                         onPressed: _questionListID.isNotEmpty
-                            ? () =>
-                                Navigator.of(context).push(MaterialPageRoute(
+                            ? () async {
+                                final record = await Navigator.of(context)
+                                    .push<List<int>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
                                     sectionID: secInfo.tableID,
                                     sectionTitle: secInfo.title,
                                     miQuestions: miQuestions,
                                     testMode: false,
                                   ),
-                                ))
+                                ));
+
+                                if (record != null) {
+                                  setState(() {
+                                    secInfo = Section(
+                                        subject: secInfo.subject,
+                                        title: secInfo.title,
+                                        latestCorrect: record[0],
+                                        latestIncorrect: record[1],
+                                        latestStudyMode: "normal",
+                                        tableID: secInfo.tableID);
+                                  });
+                                }
+                              }
                             : null,
                         child: const Text("学習を開始する"),
                       )),
@@ -185,15 +203,29 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                       padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
                           onPressed: _questionListID.isNotEmpty
-                              ? () =>
-                                  Navigator.of(context).push(MaterialPageRoute(
+                              ? () async {
+                                  final record = await Navigator.of(context)
+                                      .push<List<int>>(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
                                       sectionID: secInfo.tableID,
                                       sectionTitle: secInfo.title,
                                       miQuestions: miQuestions,
                                       testMode: true,
                                     ),
-                                  ))
+                                  ));
+
+                                  if (record != null) {
+                                    setState(() {
+                                      secInfo = Section(
+                                          subject: secInfo.subject,
+                                          title: secInfo.title,
+                                          latestCorrect: record[0],
+                                          latestIncorrect: record[1],
+                                          latestStudyMode: "test",
+                                          tableID: secInfo.tableID);
+                                    });
+                                  }
+                                }
                               : null,
                           child: const Text("テストを開始する"))),
                 ],
