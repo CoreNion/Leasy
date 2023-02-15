@@ -25,7 +25,7 @@ class _HomeState extends ConsumerState<Home> {
   Widget build(BuildContext context) {
     final List<Widget> tabPages = <Widget>[
       FutureBuilder(
-        future: DataBaseHelper.getSubjectTitles(),
+        future: DataBaseHelper.getSubjectInfos(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             subejctWidgetList = snapshot.data!
@@ -93,10 +93,15 @@ class _HomeState extends ConsumerState<Home> {
                       body: tabPages[1],
                     )).then((createdSubTitle) {
               if (createdSubTitle != null) {
+                final subInfo = SubjectInfo(
+                    title: createdSubTitle,
+                    latestCorrect: 0,
+                    latestIncorrect: 0);
+
                 // 教科Widgetに追加
                 setState(() {
-                  subejctWidgetList.add(
-                      subjectWidget(createdSubTitle, subejctWidgetList.length));
+                  subejctWidgetList
+                      .add(subjectWidget(subInfo, subejctWidgetList.length));
                 });
 
                 // 教科ページへ移動
@@ -104,7 +109,7 @@ class _HomeState extends ConsumerState<Home> {
                         context,
                         MaterialPageRoute(
                             builder: ((context) =>
-                                SubjectOverview(title: createdSubTitle))))
+                                SubjectOverview(subInfo: subInfo))))
                     .then((removed) {
                   if (removed != null && removed == true) {
                     setState(() {});
@@ -140,7 +145,7 @@ class _HomeState extends ConsumerState<Home> {
   }
 
   /// 教科Widgetのモデル
-  Widget subjectWidget(String title, int index) {
+  Widget subjectWidget(SubjectInfo subInfo, int index) {
     return Builder(
       builder: (context) => Stack(
         alignment: Alignment.topLeft,
@@ -155,14 +160,14 @@ class _HomeState extends ConsumerState<Home> {
                     context,
                     MaterialPageRoute(
                         builder: (builder) =>
-                            SubjectOverview(title: title))).then((removed) {
+                            SubjectOverview(subInfo: subInfo))).then((removed) {
                   if (removed != null && removed == true) {
                     setState(() {});
                   }
                 })),
             color: Theme.of(context).colorScheme.onPrimary.withGreen(150),
             child: Text(
-              title,
+              subInfo.title,
             ),
           ),
         ],

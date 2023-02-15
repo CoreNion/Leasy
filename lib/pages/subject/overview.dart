@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../db_helper.dart';
+import '../../widgets/overview.dart';
 import 'section/overview.dart';
 import './study.dart';
 
 class SubjectOverview extends StatefulHookConsumerWidget {
-  final String title;
-  const SubjectOverview({required this.title, super.key});
+  final SubjectInfo subInfo;
+  const SubjectOverview({required this.subInfo, super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -20,12 +21,16 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
   final List<String> _sectionListStr = <String>[];
   final List<int> _sectionListID = <int>[];
 
+  /// 現在のセクションの情報
+  late SubjectInfo subInfo;
+
   @override
   void initState() {
     super.initState();
 
+    subInfo = widget.subInfo;
     // 保存されているセクションをリストに追加
-    DataBaseHelper.getSectionIDs(widget.title).then((ids) async {
+    DataBaseHelper.getSectionIDs(widget.subInfo.title).then((ids) async {
       for (var id in ids) {
         _sectionListID.add(id);
         final title = await DataBaseHelper.sectionIDtoTitle(id);
@@ -40,7 +45,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(widget.subInfo.title),
           actions: <Widget>[
             IconButton(
                 onPressed: (() {
@@ -58,7 +63,8 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                   final nav = Navigator.of(context);
 
                                   final id = await DataBaseHelper.createSection(
-                                      widget.title, _createdSectionTitle);
+                                      widget.subInfo.title,
+                                      _createdSectionTitle);
                                   setState(() {
                                     _sectionListID.add(id);
                                     _sectionListStr.add(_createdSectionTitle);
@@ -93,6 +99,8 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
             padding: const EdgeInsets.all(7.0),
             child: SingleChildScrollView(
               child: Column(children: <Widget>[
+                scoreBoard(colorScheme, true, subInfo.latestCorrect,
+                    subInfo.latestIncorrect),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -120,6 +128,20 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                         testMode: true,
                                       ),
                                     ));
+                                    if (record == null) {
+                                      return;
+                                    }
+
+                                    // 記録を保存
+                                    await DataBaseHelper.updateSubjectRecord(
+                                        subInfo.title, record[0], record[1]);
+
+                                    setState(() {
+                                      subInfo = SubjectInfo(
+                                          title: subInfo.title,
+                                          latestCorrect: record[0],
+                                          latestIncorrect: record[1]);
+                                    });
                                   }
                                 : null,
                             child: const Text("テストを開始する"))),
@@ -139,7 +161,8 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                 context: context,
                                 builder: ((context) {
                                   return AlertDialog(
-                                    title: Text('"${widget.title}"を削除しますか？'),
+                                    title: Text(
+                                        '"${widget.subInfo.title}"を削除しますか？'),
                                     content: const Text(
                                         '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
                                     actions: [
@@ -158,7 +181,8 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                 }));
 
                             if (confirm) {
-                              await DataBaseHelper.removeSubject(widget.title);
+                              await DataBaseHelper.removeSubject(
+                                  widget.subInfo.title);
 
                               Navigator.pop(context, true);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -182,7 +206,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                         key: Key(_sectionListStr[index]),
                         onDismissed: (direction) async {
                           await DataBaseHelper.removeSection(
-                              widget.title, _sectionListID[index]);
+                              widget.subInfo.title, _sectionListID[index]);
 
                           _sectionListID.removeAt(index);
 
