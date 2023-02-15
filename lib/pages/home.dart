@@ -101,10 +101,15 @@ class _HomeState extends ConsumerState<Home> {
 
                 // 教科ページへ移動
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: ((context) =>
-                            SubjectOverview(title: createdSubTitle))));
+                        context,
+                        MaterialPageRoute(
+                            builder: ((context) =>
+                                SubjectOverview(title: createdSubTitle))))
+                    .then((removed) {
+                  if (removed != null && removed == true) {
+                    setState(() {});
+                  }
+                });
               }
             });
           } else {
@@ -141,69 +146,25 @@ class _HomeState extends ConsumerState<Home> {
         alignment: Alignment.topLeft,
         children: [
           // その教科のページに移動するボタン
-          Container(
-            margin: const EdgeInsets.only(top: 15, left: 15),
-            child: MaterialButton(
-              minWidth: double.infinity,
-              height: 150,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              onPressed: (() => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (builder) => SubjectOverview(title: title)))),
-              onLongPress: () {},
-              color: Theme.of(context).colorScheme.onPrimary.withGreen(150),
-              child: Text(
-                title,
-              ),
+          MaterialButton(
+            minWidth: double.infinity,
+            height: 150,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            onPressed: (() => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (builder) =>
+                            SubjectOverview(title: title))).then((removed) {
+                  if (removed != null && removed == true) {
+                    setState(() {});
+                  }
+                })),
+            color: Theme.of(context).colorScheme.onPrimary.withGreen(150),
+            child: Text(
+              title,
             ),
           ),
-          // 教科削除ボタン
-          Positioned(
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.red,
-              child: IconButton(
-                icon: const Icon(Icons.remove),
-                color: Colors.black,
-                onPressed: () async {
-                  final confirm = await showDialog(
-                      barrierDismissible: false,
-                      context: context,
-                      builder: ((context) {
-                        return AlertDialog(
-                          title: Text('"$title"を削除しますか？'),
-                          content: const Text(
-                              '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('いいえ'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('はい'),
-                            ),
-                          ],
-                        );
-                      }));
-
-                  if (confirm) {
-                    await DataBaseHelper.removeSubject(title);
-
-                    // 教科一覧Widgetから削除
-                    setState(() {
-                      subejctWidgetList.removeAt(index);
-                    });
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('削除しました')));
-                  }
-                },
-                splashRadius: 0.1,
-              ),
-            ),
-          )
         ],
       ),
     );

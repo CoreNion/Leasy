@@ -36,53 +36,56 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
           actions: <Widget>[
             IconButton(
-                onPressed: (() => showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                          title: const Text("セクションを作成"),
-                          actions: <Widget>[
-                            TextButton(
-                                onPressed: (() => Navigator.pop(context)),
-                                child: const Text("キャンセル")),
-                            TextButton(
-                                onPressed: (() async {
-                                  if (_formKey.currentState!.validate()) {
-                                    final nav = Navigator.of(context);
+                onPressed: (() {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                        title: const Text("セクションを作成"),
+                        actions: <Widget>[
+                          TextButton(
+                              onPressed: (() => Navigator.pop(context)),
+                              child: const Text("キャンセル")),
+                          TextButton(
+                              onPressed: (() async {
+                                if (_formKey.currentState!.validate()) {
+                                  final nav = Navigator.of(context);
 
-                                    final id =
-                                        await DataBaseHelper.createSection(
-                                            widget.title, _createdSectionTitle);
-                                    setState(() {
-                                      _sectionListID.add(id);
-                                      _sectionListStr.add(_createdSectionTitle);
-                                    });
-                                    nav.pop();
-                                  }
-                                }),
-                                child: const Text("決定")),
-                          ],
-                          content: Form(
-                              key: _formKey,
-                              child: TextFormField(
-                                decoration: const InputDecoration(
-                                    labelText: "セクション名",
-                                    icon: Icon(Icons.book),
-                                    hintText: "セクション名を入力"),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "セクション名を入力してください";
-                                  } else {
-                                    _createdSectionTitle = value;
-                                    return null;
-                                  }
-                                },
-                              ))),
-                    )),
+                                  final id = await DataBaseHelper.createSection(
+                                      widget.title, _createdSectionTitle);
+                                  setState(() {
+                                    _sectionListID.add(id);
+                                    _sectionListStr.add(_createdSectionTitle);
+                                  });
+                                  nav.pop();
+                                }
+                              }),
+                              child: const Text("決定")),
+                        ],
+                        content: Form(
+                            key: _formKey,
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                  labelText: "セクション名",
+                                  icon: Icon(Icons.book),
+                                  hintText: "セクション名を入力"),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "セクション名を入力してください";
+                                } else {
+                                  _createdSectionTitle = value;
+                                  return null;
+                                }
+                              },
+                            ))),
+                  );
+                }),
                 icon: const Icon(Icons.add))
           ],
         ),
@@ -109,6 +112,49 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                               ));
                             },
                             child: const Text("テストを開始する"))),
+                    Padding(
+                        padding: const EdgeInsets.all(7.0),
+                        child: ElevatedButton.icon(
+                          label: const Text("教科を削除する"),
+                          icon: const Icon(Icons.delete),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStatePropertyAll(
+                                  colorScheme.errorContainer),
+                              textStyle: MaterialStatePropertyAll(TextStyle(
+                                  color: colorScheme.onErrorContainer))),
+                          onPressed: () async {
+                            final confirm = await showDialog(
+                                barrierDismissible: false,
+                                context: context,
+                                builder: ((context) {
+                                  return AlertDialog(
+                                    title: Text('"${widget.title}"を削除しますか？'),
+                                    content: const Text(
+                                        '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: const Text('いいえ'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        child: const Text('はい'),
+                                      ),
+                                    ],
+                                  );
+                                }));
+
+                            if (confirm) {
+                              await DataBaseHelper.removeSubject(widget.title);
+
+                              Navigator.pop(context, true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('削除しました')));
+                            }
+                          },
+                        )),
                   ],
                 ),
                 Text(
