@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SettingPage extends StatefulHookConsumerWidget {
@@ -19,7 +20,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       children: <Widget>[
         TextButton.icon(
           onPressed: ((() async {
-            final db = File(p.join(await getDatabasesPath(), "study.db"));
+            final path = (await getApplicationSupportDirectory()).path;
+            final db = File(p.join(path, "study.db"));
             if (db.existsSync()) {
               db.deleteSync();
               ScaffoldMessenger.of(context)
