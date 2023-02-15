@@ -99,18 +99,29 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                     Padding(
                         padding: const EdgeInsets.all(7.0),
                         child: ElevatedButton(
-                            onPressed: () async {
-                              final mis = await DataBaseHelper.getMiQuestions(
-                                  _sectionListID);
+                            onPressed: _sectionListID.isNotEmpty
+                                ? () async {
+                                    final mis =
+                                        await DataBaseHelper.getMiQuestions(
+                                            _sectionListID);
 
-                              final record = await Navigator.of(context)
-                                  .push<List<int>>(MaterialPageRoute(
-                                builder: (context) => SectionStudyPage(
-                                  miQuestions: mis,
-                                  testMode: true,
-                                ),
-                              ));
-                            },
+                                    if (mis.isEmpty) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
+                                      return;
+                                    }
+
+                                    final record = await Navigator.of(context)
+                                        .push<List<int>>(MaterialPageRoute(
+                                      builder: (context) => SectionStudyPage(
+                                        miQuestions: mis,
+                                        testMode: true,
+                                      ),
+                                    ));
+                                  }
+                                : null,
                             child: const Text("テストを開始する"))),
                     Padding(
                         padding: const EdgeInsets.all(7.0),
