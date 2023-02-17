@@ -24,8 +24,10 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
   SectionInfo? secInfo;
   late MiQuestion currentMi;
   late List<MiQuestion> mis;
-  bool answered = false;
+  late List<bool?> checkedAnswers;
+
   late bool setInputQuestion;
+
   // [0]: 正解した問題の数 [1]:不正解の問題の数
   final List<int> record = [0, 0];
 
@@ -39,6 +41,8 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
     secInfo = widget.secInfo;
     mis = widget.miQuestions;
+    checkedAnswers = List.filled(mis.length, null);
+
     // テストモードの場合は問題をシャッフル
     if (widget.testMode) {
       mis.shuffle();
@@ -51,24 +55,25 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   /// 指定された問題に表示を書き換える関数
   void setQuestionUI(int questionIndex) {
+    print(checkedAnswers);
+
     // 上限未満場合のみ実行
     if (questionIndex <= mis.length) {
       setState(() {
-        answered = false;
         currentMi = mis[questionIndex - 1];
         currentQuestionIndex = questionIndex;
         setInputQuestion = currentMi.isInput;
       });
       // 入力問題の入力済みテキストを削除
       textController.clear();
-    } else if (questionIndex > mis.length) {
-      // 最後の問題より上の数だったら終了するかを尋ねる
+    } else if (questionIndex > mis.length && !checkedAnswers.contains(null)) {
+      // 最後の問題より上かつ全ての問題が解き終わっていたら終了するかを尋ねる
       showDialog<bool?>(
           context: context,
           builder: ((context) => AlertDialog(
-                title: const Text("お知らせ"),
+                title: const Text("All Done!"),
                 content: Text(
-                    '最後の問題が終了しました。\n結果は、${record[0]}問正解,${record[1]}問不正解でした。\n学習モードを終了しますか？'),
+                    '最後の問題が終了しました。\n結果は、${record[0]}問正解/${record[1]}問不正解でした。\n学習モードを終了しますか？'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -95,6 +100,8 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   /// 選択問題の解答部分
   Column multipleChoice() {
+    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
+
     return Column(
       children: currentMi.choices.asMap().entries.map((entry) {
         return Expanded(
@@ -114,7 +121,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                 ? null
                 : () {
                     setState(() {
-                      answered = true;
+                      checkedAnswers[currentQuestionIndex - 1] = true;
                     });
 
                     if (currentMi.answer == entry.key + 1) {
@@ -135,7 +142,9 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   /// 入力問題の解答部分
   Column inputChoice() {
+    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
     final correctAnswer = currentMi.choices[currentMi.answer - 1];
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: <Widget>[
@@ -178,7 +187,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                   : () {
                       if (_formKey.currentState!.validate()) {
                         setState(() {
-                          answered = true;
+                          checkedAnswers[currentQuestionIndex - 1] = true;
                         });
                         if (inputAnswer == correctAnswer) {
                           onCorrect(context);
@@ -238,6 +247,8 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
+
     return WillPopScope(
         onWillPop: () async {
           // 最終問題が終わっていない場合は警告
