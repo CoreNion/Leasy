@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../db_helper.dart';
@@ -80,10 +79,17 @@ class _HomeState extends ConsumerState<Home> {
         onDestinationSelected: (selectedIndex) {
           if (selectedIndex == 1) {
             // 教科の作成Modelを表示
-            showBarModalBottomSheet<String>(
+            showModalBottomSheet<String>(
                 context: context,
-                builder: (context) => Scaffold(
+                builder: (context) {
+                  return SizedBox(
+                    height: 250,
+                    child: Scaffold(
                       appBar: AppBar(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(25)),
+                        ),
                         title: Text(pageTitles[selectedIndex]),
                         automaticallyImplyLeading: false,
                         leading: IconButton(
@@ -91,7 +97,9 @@ class _HomeState extends ConsumerState<Home> {
                             icon: const Icon(Icons.expand_more)),
                       ),
                       body: tabPages[1],
-                    )).then((createdSubTitle) {
+                    ),
+                  );
+                }).then((createdSubTitle) {
               if (createdSubTitle != null) {
                 final subInfo = SubjectInfo(
                     title: createdSubTitle,

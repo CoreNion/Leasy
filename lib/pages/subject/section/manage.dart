@@ -28,6 +28,10 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
   late List<TextEditingController> fieldTextEdits = [];
   late int fieldAnswerNum;
 
+  final shape = const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+  );
+
   TextFormField _selectField(int number) {
     return TextFormField(
       onChanged: (value) {
@@ -107,6 +111,7 @@ class _SectionManagePageState extends ConsumerState<SectionManagePage> {
         child: Scaffold(
           appBar: AppBar(
             title: Text(mi != null ? "問題の編集" : "問題を新規作成する"),
+            shape: shape,
             automaticallyImplyLeading: false,
             leading: IconButton(
                 onPressed: (() async {

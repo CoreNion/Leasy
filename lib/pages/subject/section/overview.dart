@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 import '../../../widgets/overview.dart';
 import '../study.dart';
@@ -43,10 +42,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
     });
   }
 
-  final shape = const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-  );
-
   /// Manageの結果からリストを更新する関数
   void updateList(List<dynamic>? manageResult) {
     // 何らかの変更があった場合のみ更新
@@ -82,11 +77,14 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           actions: <Widget>[
             IconButton(
                 onPressed: ((() {
-                  showBarModalBottomSheet(
+                  showModalBottomSheet(
                       context: context,
-                      shape: shape,
-                      builder: (builder) =>
-                          SectionManagePage(sectionID: secInfo.tableID)).then(
+                      builder: (builder) {
+                        return SizedBox(
+                          height: 700,
+                          child: SectionManagePage(sectionID: secInfo.tableID),
+                        );
+                      }).then(
                     (value) => updateList(value),
                   );
                 })),
@@ -226,9 +224,8 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                   await DataBaseHelper.getMiQuestion(
                                       secInfo.tableID, _questionListID[index]);
 
-                              final res = await showBarModalBottomSheet(
+                              final res = await showModalBottomSheet(
                                   context: context,
-                                  shape: shape,
                                   builder: (builder) => SectionManagePage(
                                         sectionID: secInfo.tableID,
                                         miQuestion: question,

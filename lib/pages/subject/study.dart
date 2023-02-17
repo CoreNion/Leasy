@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mimosa/db_helper.dart';
 import 'package:status_alert/status_alert.dart';
+
+import '../../db_helper.dart';
 
 class SectionStudyPage extends StatefulHookConsumerWidget {
   final SectionInfo? secInfo;
@@ -55,8 +56,6 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   /// 指定された問題に表示を書き換える関数
   void setQuestionUI(int questionIndex) {
-    print(checkedAnswers);
-
     // 上限未満場合のみ実行
     if (questionIndex <= mis.length) {
       setState(() {
