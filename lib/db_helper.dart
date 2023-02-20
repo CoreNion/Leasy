@@ -309,6 +309,9 @@ class MiQuestion {
           map["choice4"].toString()
         ],
         answer: map["answer"] as int,
-        isInput: (map["input"] as int) == 1 ? true : false);
+        isInput: (map["input"] as int) == 1 ? true : false,
+        latestCorrect: (map["latestCorrect"] as int?) != null
+            ? ((map["latestCorrect"] as int) == 1 ? true : false)
+            : null);
   }
 }
