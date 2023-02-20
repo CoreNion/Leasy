@@ -96,8 +96,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           child: SingleChildScrollView(
               child: Column(
             children: <Widget>[
-              scoreBoard(colorScheme, secInfo.latestStudyMode == "test",
-                  secInfo.latestCorrect, secInfo.latestIncorrect),
+              scoreBoard(colorScheme, secInfo.latestStudyMode == "test", 0, 0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -107,7 +106,7 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                         onPressed: _questionListID.isNotEmpty
                             ? () async {
                                 final record = await Navigator.of(context)
-                                    .push<List<int>>(MaterialPageRoute(
+                                    .push<List<bool>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
                                     secInfo: secInfo,
                                     miQuestions: miQuestions,
@@ -120,8 +119,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                     secInfo = SectionInfo(
                                         subject: secInfo.subject,
                                         title: secInfo.title,
-                                        latestCorrect: record[0],
-                                        latestIncorrect: record[1],
                                         latestStudyMode: "normal",
                                         tableID: secInfo.tableID);
                                   });
@@ -149,8 +146,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                                       secInfo = SectionInfo(
                                           subject: secInfo.subject,
                                           title: secInfo.title,
-                                          latestCorrect: record[0],
-                                          latestIncorrect: record[1],
                                           latestStudyMode: "test",
                                           tableID: secInfo.tableID);
                                     });

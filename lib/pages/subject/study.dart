@@ -29,8 +29,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
 
   late bool setInputQuestion;
 
-  // [0]: 正解した問題の数 [1]:不正解の問題の数
-  final List<int> record = [0, 0];
+  late List<bool> record;
 
   final _formKey = GlobalKey<FormState>();
   late String inputAnswer;
@@ -43,6 +42,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
     secInfo = widget.secInfo;
     mis = widget.miQuestions;
     checkedAnswers = List.filled(mis.length, null);
+    record = List.filled(mis.length, false);
 
     // テストモードの場合は問題をシャッフル
     if (widget.testMode) {
@@ -83,12 +83,17 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
                     child: const Text('はい'),
                   ),
                 ],
-              ))).then((isExit) {
+              ))).then((isExit) async {
         if (isExit ?? false) {
           if (secInfo != null) {
             // DBに記録を保存
-            DataBaseHelper.updateSectionRecord(secInfo!.tableID, record[0],
-                record[1], widget.testMode ? "test" : "normal");
+            await DataBaseHelper.updateSectionRecord(
+                secInfo!.tableID, widget.testMode ? "test" : "normal");
+
+            for (var i = 0; i < mis.length; i++) {
+              await DataBaseHelper.updateQuestionRecord(
+                  secInfo!.tableID, record[i], mis[i].id);
+            }
           }
 
           Navigator.pop(context, record);
@@ -213,7 +218,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
     );
 
     // 正解を記録
-    record[0] = record[0] + 1;
+    record[currentQuestionIndex - 1] = true;
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
@@ -234,7 +239,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
     );
 
     // 不正解を記録
-    record[1] = record[1] + 1;
+    record[currentQuestionIndex - 1] = false;
 
     if (widget.testMode) {
       // 次の問題に進む
@@ -277,8 +282,13 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
           } else {
             if (secInfo != null) {
               // DBに記録を保存
-              DataBaseHelper.updateSectionRecord(secInfo!.tableID, record[0],
-                  record[1], widget.testMode ? "test" : "normal");
+              await DataBaseHelper.updateSectionRecord(
+                  secInfo!.tableID, widget.testMode ? "test" : "normal");
+
+              for (var i = 0; i < mis.length; i++) {
+                await DataBaseHelper.updateQuestionRecord(
+                    secInfo!.tableID, record[i], mis[i].id);
+              }
             }
 
             return true;

@@ -14,7 +14,7 @@ class DataBaseHelper {
               await db.execute(
                   "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
               await db.execute(
-                  "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestCorrect int, latestIncorrect int, latestStudyMode text)");
+                  "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
             },
             version: 3));
   }
@@ -59,7 +59,7 @@ class DataBaseHelper {
 
     // 問題集のTableを作成
     await _db!.execute(
-        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int)");
+        "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int)");
 
     // セクション一覧にIDなどを記録
     return _db!.insert(
@@ -68,8 +68,6 @@ class DataBaseHelper {
                 subject: subjectName,
                 title: title,
                 tableID: tableID,
-                latestCorrect: 0,
-                latestIncorrect: 0,
                 latestStudyMode: "no")
             .toMap());
   }
@@ -141,10 +139,10 @@ class DataBaseHelper {
   }
 
   /// Sectionの概要データの更新
-  static Future<int> updateSectionRecord(int sectionID, int latestCorrect,
-      int latestIncorrect, String latestStudyMode) {
+  static Future<int> updateSectionRecord(
+      int sectionID, String latestStudyMode) {
     return _db!.rawUpdate(
-        "UPDATE Sections SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect, latestStudyMode = '$latestStudyMode' WHERE tableID = $sectionID;");
+        "UPDATE Sections SET latestStudyMode = '$latestStudyMode' WHERE tableID = $sectionID;");
   }
 
   /// IDからMiQuestionを返す
@@ -161,6 +159,26 @@ class DataBaseHelper {
       int sectionID, int id, MiQuestion question) async {
     return _db!
         .update("Section_$sectionID", question.toTableMap(), where: "id='$id'");
+  }
+
+  /// Questionの学習記録の更新
+  static Future<int> updateQuestionRecord(
+      int sectionID, bool correct, int questionID) {
+    return _db!.rawUpdate(
+        "UPDATE Section_$sectionID SET latestCorrect = '${correct ? 1 : 0}' WHERE id = $questionID;");
+  }
+
+  /// Questionの学習記録を取得
+  static Future<List<bool?>> getQuestionRecords(
+      int sectionID, bool correct, int questionID) async {
+    final recordsMap =
+        await _db!.query('Section_$sectionID', columns: ["latestCorrect"]);
+
+    List<bool?> records = [];
+    for (var map in recordsMap) {
+      records.add(map.cast()["latestCorrect"]);
+    }
+    return records;
   }
 }
 
@@ -207,12 +225,6 @@ class SectionInfo {
   /// セクション名
   final String title;
 
-  /// 前回の学習の正解の問題数
-  final int latestCorrect;
-
-  /// 前回の学習の不正解の問題数
-  final int latestIncorrect;
-
   /// 前回の結果のモード
   final String latestStudyMode;
 
@@ -222,8 +234,6 @@ class SectionInfo {
   SectionInfo(
       {required this.subject,
       required this.title,
-      required this.latestCorrect,
-      required this.latestIncorrect,
       required this.latestStudyMode,
       required this.tableID});
 
@@ -233,8 +243,6 @@ class SectionInfo {
         'subject': subject,
         'title': title,
         'tableID': tableID,
-        "latestCorrect": latestCorrect,
-        "latestIncorrect": latestIncorrect,
         "latestStudyMode": latestStudyMode
       };
     }
@@ -246,8 +254,6 @@ class SectionInfo {
         subject: map["subject"].toString(),
         title: map["title"].toString(),
         tableID: map["tableID"] as int,
-        latestCorrect: map["latestCorrect"] as int,
-        latestIncorrect: map["latestIncorrect"] as int,
         latestStudyMode: map["latestStudyMode"].toString());
   }
 }
@@ -264,12 +270,15 @@ class MiQuestion {
 
   final bool isInput;
 
+  final bool? latestCorrect;
+
   MiQuestion(
       {required this.id,
       required this.question,
       required this.choices,
       required this.answer,
-      required this.isInput});
+      required this.isInput,
+      this.latestCorrect});
 
   // DataBaseの形式のMapに変換する関数
   Map<String, Object?> toTableMap() {
@@ -283,6 +292,7 @@ class MiQuestion {
         'choice4': choices[3],
         'answer': answer,
         'input': isInput ? 1 : 0,
+        'latestCorrect': latestCorrect != null ? (latestCorrect! ? 1 : 0) : null
       };
     }
   }
