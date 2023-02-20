@@ -18,6 +18,7 @@ class SectionPage extends StatefulHookConsumerWidget {
 class _SectionPageState extends ConsumerState<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
+  final List<bool?> _latestCorrects = [];
   late List<MiQuestion> miQuestions;
   late SectionInfo section;
 
@@ -36,7 +37,10 @@ class _SectionPageState extends ConsumerState<SectionPage> {
         .then((questions) {
       for (var question in questions) {
         _questionListID.add(question.id);
-        setState(() => _questionListStr.add(question.question));
+        setState(() {
+          _latestCorrects.add(question.latestCorrect);
+          _questionListStr.add(question.question);
+        });
       }
       miQuestions = questions;
     });
@@ -96,7 +100,13 @@ class _SectionPageState extends ConsumerState<SectionPage> {
           child: SingleChildScrollView(
               child: Column(
             children: <Widget>[
-              scoreBoard(colorScheme, secInfo.latestStudyMode == "test", 0, 0),
+              scoreBoard(
+                  colorScheme,
+                  secInfo.latestStudyMode == "test",
+                  _latestCorrects.where((correct) => correct ?? false).length,
+                  _latestCorrects
+                      .where((correct) => !(correct ?? false))
+                      .length),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -156,7 +166,6 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                 ],
               ),
               const Divider(),
-              // 要検討: セクション一覧のListViewとWidgetを共通化
               ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -214,6 +223,12 @@ class _SectionPageState extends ConsumerState<SectionPage> {
                               _questionListStr[index],
                               overflow: TextOverflow.ellipsis,
                             ),
+                            leading: Icon(Icons.circle,
+                                color: _latestCorrects[index] != null
+                                    ? (_latestCorrects[index]!
+                                        ? Colors.green
+                                        : Colors.red)
+                                    : Colors.grey),
                             onTap: ((() async {
                               final question =
                                   await DataBaseHelper.getMiQuestion(
