@@ -72,7 +72,7 @@ class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
           builder: ((context) => AlertDialog(
                 title: const Text("All Done!"),
                 content: Text(
-                    '最後の問題が終了しました。\n結果は、${record[0]}問正解/${record[1]}問不正解でした。\n学習モードを終了しますか？'),
+                    '最後の問題が終了しました。\n結果は、${record.where((correct) => correct).length}問正解・${record.where((correct) => !correct).length}問不正解でした。\n学習モードを終了しますか？'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
