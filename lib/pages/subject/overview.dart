@@ -122,7 +122,7 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                     }
 
                                     final record = await Navigator.of(context)
-                                        .push<List<int>>(MaterialPageRoute(
+                                        .push<List<bool>>(MaterialPageRoute(
                                       builder: (context) => SectionStudyPage(
                                         miQuestions: mis,
                                         testMode: true,
@@ -132,15 +132,22 @@ class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
                                       return;
                                     }
 
+                                    final correct = record
+                                        .where((correct) => correct)
+                                        .length;
+                                    final inCorrect = record
+                                        .where((correct) => !correct)
+                                        .length;
+
                                     // 記録を保存
                                     await DataBaseHelper.updateSubjectRecord(
-                                        subInfo.title, record[0], record[1]);
+                                        subInfo.title, correct, inCorrect);
 
                                     setState(() {
                                       subInfo = SubjectInfo(
                                           title: subInfo.title,
-                                          latestCorrect: record[0],
-                                          latestIncorrect: record[1]);
+                                          latestCorrect: correct,
+                                          latestIncorrect: inCorrect);
                                     });
                                   }
                                 : null,
