@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../db_helper.dart';
 import '../../widgets/overview.dart';
 import 'section/overview.dart';
 import './study.dart';
 
-class SubjectOverview extends StatefulHookConsumerWidget {
+class SubjectOverview extends StatefulWidget {
   final SubjectInfo subInfo;
   const SubjectOverview({required this.subInfo, super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _SubjectOverviewState();
+  State<SubjectOverview> createState() => _SubjectOverviewState();
 }
 
-class _SubjectOverviewState extends ConsumerState<SubjectOverview> {
+class _SubjectOverviewState extends State<SubjectOverview> {
   final _formKey = GlobalKey<FormState>();
   String _createdSectionTitle = "";
   final List<String> _sectionListStr = <String>[];

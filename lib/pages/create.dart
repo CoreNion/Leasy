@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../db_helper.dart';
 
-class CreateSubjectPage extends StatefulHookConsumerWidget {
+class CreateSubjectPage extends StatefulWidget {
   const CreateSubjectPage({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _CreateSubjectStatePage();
+  State<CreateSubjectPage> createState() => _CreateSubjectStatePage();
 }
 
-class _CreateSubjectStatePage extends ConsumerState<CreateSubjectPage> {
+class _CreateSubjectStatePage extends State<CreateSubjectPage> {
   final _formKey = GlobalKey<FormState>();
   String _title = "";
 

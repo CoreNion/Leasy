@@ -1,19 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 
-class SettingPage extends StatefulHookConsumerWidget {
+class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _SettingPageState();
+  State<StatefulWidget> createState() => _SettingPageState();
 }
 
-class _SettingPageState extends ConsumerState<SettingPage> {
+class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Column(

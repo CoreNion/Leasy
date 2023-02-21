@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'pages/home.dart';
@@ -8,16 +7,16 @@ import 'pages/home.dart';
 void main() async {
   sqfliteFfiInit();
 
-  runApp(const ProviderScope(
-    child: MyApp(),
-  ));
+  runApp(
+    const MyApp(),
+  );
 }
 
-class MyApp extends HookConsumerWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return DynamicColorBuilder(
         builder: ((lightDynamic, darkDynamic) => MaterialApp(
               title: 'Leasy',

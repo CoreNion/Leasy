@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:status_alert/status_alert.dart';
 
 import '../../db_helper.dart';
 
-class SectionStudyPage extends StatefulHookConsumerWidget {
+class SectionStudyPage extends StatefulWidget {
   final SectionInfo? secInfo;
   final List<MiQuestion> miQuestions;
   final bool testMode;
@@ -16,11 +15,10 @@ class SectionStudyPage extends StatefulHookConsumerWidget {
       required this.testMode});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _SectionStudyPageState();
+  State<StatefulWidget> createState() => _SectionStudyPageState();
 }
 
-class _SectionStudyPageState extends ConsumerState<SectionStudyPage> {
+class _SectionStudyPageState extends State<SectionStudyPage> {
   int currentQuestionIndex = 1;
   SectionInfo? secInfo;
   late MiQuestion currentMi;

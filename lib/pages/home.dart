@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../db_helper.dart';
@@ -7,14 +6,14 @@ import 'create.dart';
 import 'setting.dart';
 import 'subject/overview.dart';
 
-class Home extends StatefulHookConsumerWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _HomeState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends ConsumerState<Home> {
+class _HomeState extends State<Home> {
   int pageIndex = 0;
 
   // トップに表示される教科のWidgetのリスト

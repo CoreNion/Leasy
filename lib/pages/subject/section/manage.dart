@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../db_helper.dart';
 
-class SectionManagePage extends StatefulHookConsumerWidget {
+class SectionManagePage extends StatefulWidget {
   final int sectionID;
   final MiQuestion? miQuestion;
 
@@ -12,11 +11,10 @@ class SectionManagePage extends StatefulHookConsumerWidget {
       {super.key, required this.sectionID, this.miQuestion});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _SectionManagePageState();
+  State<SectionManagePage> createState() => _SectionManagePageState();
 }
 
-class _SectionManagePageState extends ConsumerState<SectionManagePage> {
+class _SectionManagePageState extends State<SectionManagePage> {
   final _formKey = GlobalKey<FormState>();
   late MiQuestion? mi;
 

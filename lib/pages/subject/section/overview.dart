@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../widgets/overview.dart';
 import '../study.dart';
 import '../../../db_helper.dart';
 import './manage.dart';
 
-class SectionPage extends StatefulHookConsumerWidget {
+class SectionPage extends StatefulWidget {
   final SectionInfo sectionInfo;
 
   const SectionPage({super.key, required this.sectionInfo});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _SectionPageState();
+  State<SectionPage> createState() => _SectionPageState();
 }
 
-class _SectionPageState extends ConsumerState<SectionPage> {
+class _SectionPageState extends State<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
   final List<bool?> _latestCorrects = [];
