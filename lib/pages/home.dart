@@ -83,19 +83,21 @@ class _HomeState extends State<Home> {
                 builder: (context) {
                   return SizedBox(
                     height: 250,
-                    child: Scaffold(
-                      appBar: AppBar(
-                        shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(25)),
+                    child: Column(
+                      children: [
+                        AppBar(
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(25)),
+                          ),
+                          title: Text(pageTitles[selectedIndex]),
+                          automaticallyImplyLeading: false,
+                          leading: IconButton(
+                              onPressed: (() => Navigator.of(context).pop()),
+                              icon: const Icon(Icons.expand_more)),
                         ),
-                        title: Text(pageTitles[selectedIndex]),
-                        automaticallyImplyLeading: false,
-                        leading: IconButton(
-                            onPressed: (() => Navigator.of(context).pop()),
-                            icon: const Icon(Icons.expand_more)),
-                      ),
-                      body: tabPages[1],
+                        tabPages[1]
+                      ],
                     ),
                   );
                 }).then((createdSubTitle) {
