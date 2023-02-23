@@ -140,32 +140,23 @@ class _HomeState extends State<Home> {
 
   /// 教科Widgetのモデル
   Widget subjectWidget(SubjectInfo subInfo, int index) {
-    return Builder(
-      builder: (context) => Stack(
-        alignment: Alignment.topLeft,
-        children: [
-          // その教科のページに移動するボタン
-          MaterialButton(
-            minWidth: double.infinity,
-            height: 150,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            onPressed: (() => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (builder) =>
-                            SubjectOverview(subInfo: subInfo))).then((removed) {
-                  if (removed != null && removed == true) {
-                    setState(() {});
-                  }
-                })),
-            color: Theme.of(context).colorScheme.onPrimary.withGreen(150),
-            child: Text(
-              subInfo.title,
-            ),
-          ),
-        ],
-      ),
-    );
+    return FilledButton(
+        style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, 150),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10))),
+        onPressed: (() => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (builder) =>
+                        SubjectOverview(subInfo: subInfo))).then((removed) {
+              if (removed != null && removed == true) {
+                setState(() {});
+              }
+            })),
+        child: Text(
+          subInfo.title,
+          style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+        ));
   }
 }

@@ -104,7 +104,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                   children: <Widget>[
                     Padding(
                         padding: const EdgeInsets.all(7.0),
-                        child: ElevatedButton(
+                        child: FilledButton(
                             onPressed: _sectionListID.isNotEmpty
                                 ? () async {
                                     final mis =

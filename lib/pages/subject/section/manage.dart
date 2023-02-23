@@ -216,8 +216,8 @@ class _SectionManagePageState extends State<SectionManagePage> {
                             _selectField(3),
                             _selectField(4),
                             Container(
-                              margin: const EdgeInsets.only(top: 10),
-                              child: TextButton.icon(
+                              margin: const EdgeInsets.only(top: 15, bottom: 5),
+                              child: FilledButton.icon(
                                 onPressed: () {
                                   Picker(
                                           adapter: NumberPickerAdapter(data: [
@@ -245,7 +245,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                 icon: const Icon(Icons.check),
                                 label: Text(
                                   "正解の選択肢: $fieldAnswerNum番",
-                                  style: const TextStyle(fontSize: 20),
+                                  style: const TextStyle(fontSize: 15),
                                 ),
                               ),
                             )

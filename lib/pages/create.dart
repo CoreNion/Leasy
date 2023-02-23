@@ -40,9 +40,9 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                       children: <Widget>[
                         TextFormField(
                           decoration: const InputDecoration(
-                              labelText: "教科名",
-                              icon: Icon(Icons.title),
-                              hintText: "教科名を入力"),
+                            labelText: "教科名",
+                            icon: Icon(Icons.title),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "タイトルを入力してください";
@@ -53,8 +53,10 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                           },
                         ),
                         Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ElevatedButton(
+                            padding: const EdgeInsets.only(top: 20, bottom: 5),
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                  fixedSize: const Size(150, 40)),
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   // DBに作成

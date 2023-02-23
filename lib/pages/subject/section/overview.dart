@@ -113,7 +113,7 @@ class _SectionPageState extends State<SectionPage> {
                 children: <Widget>[
                   Padding(
                       padding: const EdgeInsets.all(7.0),
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: _questionListID.isNotEmpty
                             ? () async {
                                 final record = await Navigator.of(context)
