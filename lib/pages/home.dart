@@ -61,6 +61,7 @@ class _HomeState extends State<Home> {
     ];
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(pageTitles[pageIndex]),
         actions: <Widget>[
@@ -80,26 +81,10 @@ class _HomeState extends State<Home> {
             // 教科の作成Modelを表示
             showModalBottomSheet<String>(
                 context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
                 builder: (context) {
-                  return SizedBox(
-                    height: 250,
-                    child: Column(
-                      children: [
-                        AppBar(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(25)),
-                          ),
-                          title: Text(pageTitles[selectedIndex]),
-                          automaticallyImplyLeading: false,
-                          leading: IconButton(
-                              onPressed: (() => Navigator.of(context).pop()),
-                              icon: const Icon(Icons.expand_more)),
-                        ),
-                        tabPages[1]
-                      ],
-                    ),
-                  );
+                  return tabPages[1];
                 }).then((createdSubTitle) {
               if (createdSubTitle != null) {
                 final subInfo = SubjectInfo(

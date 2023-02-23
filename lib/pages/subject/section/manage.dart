@@ -106,144 +106,154 @@ class _SectionManagePageState extends State<SectionManagePage> {
         onWillPop: () {
           return _confirmExit(context);
         },
-        child: Column(
-          children: [
-            AppBar(
-              title: Text(mi != null ? "問題の編集" : "問題を新規作成する"),
-              shape: shape,
-              automaticallyImplyLeading: false,
-              leading: IconButton(
-                  onPressed: (() async {
-                    if (await _confirmExit(context)) {
-                      Navigator.of(context).pop();
-                    }
-                  }),
-                  icon: const Icon(Icons.expand_more)),
-              actions: [
-                IconButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final miQuestion = MiQuestion(
-                            id: mi != null
-                                ? mi!.id
-                                : DateTime.now().millisecondsSinceEpoch,
-                            question: fieldQuestion,
-                            choices: fieldChoices,
-                            answer: fieldAnswerNum,
-                            isInput: selectedInputType[1]);
-
-                        if (mi != null) {
-                          await DataBaseHelper.updateMiQuestion(
-                              widget.sectionID, mi!.id, miQuestion);
-
-                          Navigator.pop(context, [mi!.id, miQuestion]);
-                        } else {
-                          final id = DateTime.now().millisecondsSinceEpoch;
-                          // DBに作成
-                          await DataBaseHelper.createQuestion(
-                              widget.sectionID, miQuestion);
-
-                          Navigator.pop(context, [id, miQuestion]);
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.save))
-              ],
-            ),
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(7.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      ToggleButtons(
-                        onPressed: (int index) {
-                          formChanged = true;
-
-                          setState(() {
-                            for (int i = 0; i < selectedInputType.length; i++) {
-                              selectedInputType[i] = i == index;
-                            }
-                          });
-                        },
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(8)),
-                        constraints: const BoxConstraints(
-                          minHeight: 40.0,
-                          minWidth: 100.0,
-                        ),
-                        isSelected: selectedInputType,
-                        children: const <Widget>[
-                          Text(
-                            "4択問題",
-                            style: TextStyle(fontSize: 17),
-                          ),
-                          Text(
-                            "入力問題",
-                            style: TextStyle(fontSize: 17),
-                          )
-                        ],
-                      ),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: "問題文",
-                          icon: Icon(Icons.title),
-                          hintText: "問題を入力",
-                        ),
-                        controller: fieldTextEdits[0],
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "問題文を入力してください";
-                          } else {
-                            fieldQuestion = value;
-                            return null;
-                          }
-                        },
-                      ),
-                      _selectField(1),
-                      _selectField(2),
-                      _selectField(3),
-                      _selectField(4),
-                      Container(
-                        margin: const EdgeInsets.only(top: 10),
-                        child: TextButton.icon(
-                          onPressed: () {
-                            Picker(
-                                    adapter: NumberPickerAdapter(data: [
-                                      const NumberPickerColumn(
-                                          begin: 1, end: 4),
-                                    ]),
-                                    changeToFirst: true,
-                                    onConfirm: (Picker picker, List value) {
-                                      setState(() {
-                                        fieldAnswerNum =
-                                            picker.getSelectedValues().first;
-                                      });
-                                    },
-                                    backgroundColor:
-                                        Theme.of(context).dialogBackgroundColor,
-                                    textStyle:
-                                        Theme.of(context).textTheme.headline6,
-                                    cancelText: "キャンセル",
-                                    confirmText: "決定")
-                                .showModal(context);
-                          },
-                          icon: const Icon(Icons.check),
-                          label: Text(
-                            "正解の選択肢: $fieldAnswerNum番",
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
+        child: SingleChildScrollView(
+            child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
-            ),
-          ],
-        ));
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppBar(
+                      title: Text(mi != null ? "問題の編集" : "問題を新規作成する"),
+                      shape: shape,
+                      automaticallyImplyLeading: false,
+                      leading: IconButton(
+                          onPressed: (() async {
+                            if (await _confirmExit(context)) {
+                              Navigator.of(context).pop();
+                            }
+                          }),
+                          icon: const Icon(Icons.expand_more)),
+                      actions: [
+                        IconButton(
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                final miQuestion = MiQuestion(
+                                    id: mi != null
+                                        ? mi!.id
+                                        : DateTime.now().millisecondsSinceEpoch,
+                                    question: fieldQuestion,
+                                    choices: fieldChoices,
+                                    answer: fieldAnswerNum,
+                                    isInput: selectedInputType[1]);
+
+                                if (mi != null) {
+                                  await DataBaseHelper.updateMiQuestion(
+                                      widget.sectionID, mi!.id, miQuestion);
+
+                                  Navigator.pop(context, [mi!.id, miQuestion]);
+                                } else {
+                                  final id =
+                                      DateTime.now().millisecondsSinceEpoch;
+                                  // DBに作成
+                                  await DataBaseHelper.createQuestion(
+                                      widget.sectionID, miQuestion);
+
+                                  Navigator.pop(context, [id, miQuestion]);
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.save))
+                      ],
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Container(
+                        padding: const EdgeInsets.all(7.0),
+                        child: Column(
+                          children: <Widget>[
+                            ToggleButtons(
+                              onPressed: (int index) {
+                                formChanged = true;
+
+                                setState(() {
+                                  for (int i = 0;
+                                      i < selectedInputType.length;
+                                      i++) {
+                                    selectedInputType[i] = i == index;
+                                  }
+                                });
+                              },
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(8)),
+                              constraints: const BoxConstraints(
+                                minHeight: 40.0,
+                                minWidth: 100.0,
+                              ),
+                              isSelected: selectedInputType,
+                              children: const <Widget>[
+                                Text(
+                                  "4択問題",
+                                  style: TextStyle(fontSize: 17),
+                                ),
+                                Text(
+                                  "入力問題",
+                                  style: TextStyle(fontSize: 17),
+                                )
+                              ],
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: "問題文",
+                                icon: Icon(Icons.title),
+                                hintText: "問題を入力",
+                              ),
+                              controller: fieldTextEdits[0],
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "問題文を入力してください";
+                                } else {
+                                  fieldQuestion = value;
+                                  return null;
+                                }
+                              },
+                            ),
+                            _selectField(1),
+                            _selectField(2),
+                            _selectField(3),
+                            _selectField(4),
+                            Container(
+                              margin: const EdgeInsets.only(top: 10),
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  Picker(
+                                          adapter: NumberPickerAdapter(data: [
+                                            const NumberPickerColumn(
+                                                begin: 1, end: 4),
+                                          ]),
+                                          changeToFirst: true,
+                                          onConfirm:
+                                              (Picker picker, List value) {
+                                            setState(() {
+                                              fieldAnswerNum = picker
+                                                  .getSelectedValues()
+                                                  .first;
+                                            });
+                                          },
+                                          backgroundColor: Theme.of(context)
+                                              .dialogBackgroundColor,
+                                          textStyle: Theme.of(context)
+                                              .textTheme
+                                              .headline6,
+                                          cancelText: "キャンセル",
+                                          confirmText: "決定")
+                                      .showModal(context);
+                                },
+                                icon: const Icon(Icons.check),
+                                label: Text(
+                                  "正解の選択肢: $fieldAnswerNum番",
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ))));
   }
 }

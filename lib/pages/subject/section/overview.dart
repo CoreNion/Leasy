@@ -75,6 +75,7 @@ class _SectionPageState extends State<SectionPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(secInfo.title),
           actions: <Widget>[
@@ -82,10 +83,11 @@ class _SectionPageState extends State<SectionPage> {
                 onPressed: ((() {
                   showModalBottomSheet(
                       context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
                       builder: (builder) {
-                        return SizedBox(
-                          height: 700,
-                          child: SectionManagePage(sectionID: secInfo.tableID),
+                        return SectionManagePage(
+                          sectionID: secInfo.tableID,
                         );
                       }).then(
                     (value) => updateList(value),
@@ -235,10 +237,14 @@ class _SectionPageState extends State<SectionPage> {
 
                               final res = await showModalBottomSheet(
                                   context: context,
-                                  builder: (builder) => SectionManagePage(
-                                        sectionID: secInfo.tableID,
-                                        miQuestion: question,
-                                      ));
+                                  isScrollControlled: true,
+                                  useSafeArea: true,
+                                  builder: (builder) {
+                                    return SectionManagePage(
+                                      sectionID: secInfo.tableID,
+                                      miQuestion: question,
+                                    );
+                                  });
                               updateList(res);
                             }))),
                       ))),
