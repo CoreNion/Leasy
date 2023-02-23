@@ -62,6 +62,7 @@ class _SectionPageState extends State<SectionPage> {
       } else {
         // IDが存在しない場合はIDなどを追加
         _questionListID.add(manageResult.first);
+        _latestCorrects.add(null);
         miQuestions.add(mi);
         setState(() {
           _questionListStr.add(mi.question);
@@ -178,8 +179,10 @@ class _SectionPageState extends State<SectionPage> {
                               secInfo.tableID, _questionListID[index]);
 
                           _questionListID.removeAt(index);
+                          miQuestions.removeAt(index);
                           setState(() {
                             _questionListStr.removeAt(index);
+                            _latestCorrects.removeAt(index);
                           });
 
                           ScaffoldMessenger.of(context)
