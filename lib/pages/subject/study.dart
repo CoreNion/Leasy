@@ -328,6 +328,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           bottomNavigationBar: widget.testMode
               ? null
               : BottomNavigationBar(
+                  selectedItemColor:
+                      BottomNavigationBarTheme.of(context).unselectedItemColor,
                   showSelectedLabels: false,
                   showUnselectedLabels: false,
                   selectedFontSize: 0.0,

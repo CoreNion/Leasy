@@ -17,7 +17,7 @@ class SectionPage extends StatefulWidget {
 class _SectionPageState extends State<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
-  final List<bool?> _latestCorrects = [];
+  List<bool?> _latestCorrects = [];
   late List<MiQuestion> miQuestions;
   late SectionInfo section;
 
@@ -121,21 +121,33 @@ class _SectionPageState extends State<SectionPage> {
                       child: FilledButton(
                         onPressed: _questionListID.isNotEmpty
                             ? () async {
+                                // 不正解のみの場合、不正解の問題のみ送る
+                                final sendQs = onlyIncorrect
+                                    ? miQuestions
+                                        .where((mi) =>
+                                            !(mi.latestCorrect ?? false))
+                                        .toList()
+                                    : miQuestions;
+
                                 final record = await Navigator.of(context)
                                     .push<List<bool>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
                                     secInfo: secInfo,
-                                    miQuestions: onlyIncorrect
-                                        ? miQuestions
-                                            .where((mi) =>
-                                                !(mi.latestCorrect ?? false))
-                                            .toList()
-                                        : miQuestions,
+                                    miQuestions: sendQs,
                                     testMode: false,
                                   ),
                                 ));
 
                                 if (record != null) {
+                                  // 正解記録を適切な場所に保存する
+                                  for (var i = 0; i < sendQs.length; i++) {
+                                    setState(() {
+                                      _latestCorrects[miQuestions.indexWhere(
+                                              (mi) => mi.id == sendQs[i].id)] =
+                                          record[i];
+                                    });
+                                  }
+
                                   setState(() {
                                     secInfo = SectionInfo(
                                         subject: secInfo.subject,
@@ -154,7 +166,7 @@ class _SectionPageState extends State<SectionPage> {
                           onPressed: _questionListID.isNotEmpty
                               ? () async {
                                   final record = await Navigator.of(context)
-                                      .push<List<int>>(MaterialPageRoute(
+                                      .push<List<bool>>(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
                                       secInfo: secInfo,
                                       miQuestions: miQuestions,
@@ -169,6 +181,7 @@ class _SectionPageState extends State<SectionPage> {
                                           title: secInfo.title,
                                           latestStudyMode: "test",
                                           tableID: secInfo.tableID);
+                                      _latestCorrects = record;
                                     });
                                   }
                                 }
