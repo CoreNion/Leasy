@@ -23,7 +23,7 @@ Column scoreBoard(
             borderRadius: const BorderRadius.only(
                 topLeft: boardRadius, topRight: boardRadius)),
         child: Text(
-          "前回の${isTestMode ? "テスト" : "学習"}の結果",
+          isTestMode ? "前回のテストの結果" : "このセクションの学習状況",
           style: scoreTextStyle,
           textAlign: TextAlign.center,
         ),

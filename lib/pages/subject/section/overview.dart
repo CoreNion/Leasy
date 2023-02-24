@@ -25,7 +25,7 @@ class _SectionPageState extends State<SectionPage> {
   late SectionInfo secInfo;
 
   // 前回間違えた問題のみ学習する
-  bool onlyIncorrect = false;
+  bool onlyIncorrect = true;
 
   @override
   void initState() {
@@ -177,12 +177,12 @@ class _SectionPageState extends State<SectionPage> {
                 ],
               ),
               SwitchListTile(
-                  title: const Text("前回間違えた問題のみ学習"),
+                  title: const Text("不正解・新規作成の問題のみ学習"),
                   secondary: const Icon(
                     Icons.error,
                     color: Colors.yellow,
                   ),
-                  subtitle: const Text("テストモードでは適用されません。"),
+                  subtitle: const Text("テストモードでは適用されませんが、結果は反映されます。"),
                   value: onlyIncorrect,
                   onChanged: (val) => setState(() {
                         onlyIncorrect = val;
