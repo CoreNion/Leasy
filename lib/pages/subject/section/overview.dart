@@ -24,6 +24,9 @@ class _SectionPageState extends State<SectionPage> {
   /// 現在のセクションの情報
   late SectionInfo secInfo;
 
+  // 前回間違えた問題のみ学習する
+  bool onlyIncorrect = false;
+
   @override
   void initState() {
     super.initState();
@@ -122,7 +125,12 @@ class _SectionPageState extends State<SectionPage> {
                                     .push<List<bool>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
                                     secInfo: secInfo,
-                                    miQuestions: miQuestions,
+                                    miQuestions: onlyIncorrect
+                                        ? miQuestions
+                                            .where((mi) =>
+                                                !(mi.latestCorrect ?? false))
+                                            .toList()
+                                        : miQuestions,
                                     testMode: false,
                                   ),
                                 ));
@@ -168,6 +176,17 @@ class _SectionPageState extends State<SectionPage> {
                           child: const Text("テストを開始する"))),
                 ],
               ),
+              SwitchListTile(
+                  title: const Text("前回間違えた問題のみ学習"),
+                  secondary: const Icon(
+                    Icons.error,
+                    color: Colors.yellow,
+                  ),
+                  subtitle: const Text("テストモードでは適用されません。"),
+                  value: onlyIncorrect,
+                  onChanged: (val) => setState(() {
+                        onlyIncorrect = val;
+                      })),
               const Divider(),
               ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
