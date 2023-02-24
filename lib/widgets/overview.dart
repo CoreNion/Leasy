@@ -3,16 +3,11 @@ import 'package:flutter/material.dart';
 /// 前回の成績を表示するスコアボード
 Column scoreBoard(
     ColorScheme colorScheme, bool isTestMode, int correct, int inCorrect) {
-  final isDarkMode = colorScheme.brightness == Brightness.dark;
-
   const boardRadius = Radius.circular(10);
   const boardPadding = EdgeInsets.all(10.0);
-  const scoreTextStyle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-  );
-  final boardBorder =
-      Border.all(color: isDarkMode ? Colors.white : Colors.black);
+  const scoreTextStyle =
+      TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white);
+  final boardBorder = Border.all(color: Colors.white);
 
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
@@ -23,13 +18,13 @@ Column scoreBoard(
         padding: boardPadding,
         width: double.infinity,
         decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
+            color: Colors.blue.shade900,
             border: boardBorder,
             borderRadius: const BorderRadius.only(
                 topLeft: boardRadius, topRight: boardRadius)),
         child: Text(
           "前回の${isTestMode ? "テスト" : "学習"}の結果",
-          style: const TextStyle(fontSize: 20),
+          style: scoreTextStyle,
           textAlign: TextAlign.center,
         ),
       ),
@@ -41,7 +36,7 @@ Column scoreBoard(
             margin: const EdgeInsets.only(bottom: 10, left: 10),
             padding: boardPadding,
             decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer,
+              color: Colors.green.shade900,
               border: boardBorder,
               borderRadius: const BorderRadius.only(bottomLeft: boardRadius),
             ),
@@ -56,7 +51,7 @@ Column scoreBoard(
             margin: const EdgeInsets.only(bottom: 10, right: 10),
             padding: boardPadding,
             decoration: BoxDecoration(
-              color: colorScheme.errorContainer,
+              color: Colors.red.shade900,
               border: boardBorder,
               borderRadius: const BorderRadius.only(bottomRight: boardRadius),
             ),
