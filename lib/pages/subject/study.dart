@@ -134,7 +134,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                   },
             child: Text(
               "${entry.key + 1}: ${entry.value}",
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 20),
             ),
           ),
         ));
@@ -183,7 +183,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           margin: const EdgeInsets.only(bottom: 5),
           width: double.infinity,
           height: 50,
-          child: ElevatedButton(
+          child: FilledButton(
               onPressed: answered
                   ? null
                   : () {
