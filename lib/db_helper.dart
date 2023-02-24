@@ -1,22 +1,36 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class DataBaseHelper {
   static Database? _db;
 
   static Future<Database> _createDB() async {
-    final path = (await getApplicationSupportDirectory()).path;
-    return databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
-        options: OpenDatabaseOptions(
-            onCreate: (db, version) async {
-              await db.execute(
-                  "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
-              await db.execute(
-                  "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
-            },
-            version: 3));
+    if (kIsWeb) {
+      return databaseFactoryFfiWeb.openDatabase("study.db",
+          options: OpenDatabaseOptions(
+              onCreate: (db, version) async {
+                await db.execute(
+                    "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
+                await db.execute(
+                    "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
+              },
+              version: 3));
+    } else {
+      final path = (await getApplicationSupportDirectory()).path;
+      return databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
+          options: OpenDatabaseOptions(
+              onCreate: (db, version) async {
+                await db.execute(
+                    "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
+                await db.execute(
+                    "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
+              },
+              version: 3));
+    }
   }
 
   /// DataBaseから教科名を取得する
