@@ -102,11 +102,14 @@ class _SectionManagePageState extends State<SectionManagePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return WillPopScope(
         onWillPop: () {
           return _confirmExit(context);
         },
         child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
             child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -157,10 +160,11 @@ class _SectionManagePageState extends State<SectionManagePage> {
                             icon: const Icon(Icons.save))
                       ],
                     ),
-                    Form(
-                      key: _formKey,
-                      child: Container(
-                        padding: const EdgeInsets.all(7.0),
+                    Container(
+                      color: colorScheme.background,
+                      padding: const EdgeInsets.all(7.0),
+                      child: Form(
+                        key: _formKey,
                         child: Column(
                           children: <Widget>[
                             ToggleButtons(

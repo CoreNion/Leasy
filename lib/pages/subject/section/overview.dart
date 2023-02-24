@@ -83,6 +83,7 @@ class _SectionPageState extends State<SectionPage> {
             IconButton(
                 onPressed: ((() {
                   showModalBottomSheet(
+                      backgroundColor: Colors.transparent,
                       context: context,
                       isScrollControlled: true,
                       useSafeArea: true,
@@ -239,6 +240,7 @@ class _SectionPageState extends State<SectionPage> {
                                       secInfo.tableID, _questionListID[index]);
 
                               final res = await showModalBottomSheet(
+                                  backgroundColor: Colors.transparent,
                                   context: context,
                                   isScrollControlled: true,
                                   useSafeArea: true,

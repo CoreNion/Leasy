@@ -15,7 +15,10 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         child: Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -31,46 +34,49 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                     onPressed: (() => Navigator.of(context).pop()),
                     icon: const Icon(Icons.expand_more)),
               ),
-              Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: const EdgeInsets.all(7.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: "教科名",
-                            icon: Icon(Icons.title),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "タイトルを入力してください";
-                            } else {
-                              _title = value;
-                              return null;
-                            }
-                          },
-                        ),
-                        Padding(
-                            padding: const EdgeInsets.only(top: 20, bottom: 5),
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                  fixedSize: const Size(150, 40)),
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  // DBに作成
-                                  DataBaseHelper.createSubject(_title);
-
-                                  // タイトルを報告しながら、元のページに戻る
-                                  Navigator.pop(context, _title);
+              Container(
+                  color: colorScheme.background,
+                  child: Form(
+                      key: _formKey,
+                      child: Padding(
+                        padding: const EdgeInsets.all(7.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: "教科名",
+                                icon: Icon(Icons.title),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "タイトルを入力してください";
+                                } else {
+                                  _title = value;
+                                  return null;
                                 }
                               },
-                              child: const Text("教科を作成"),
-                            ))
-                      ],
-                    ),
-                  ))
+                            ),
+                            Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 20, bottom: 5),
+                                child: FilledButton(
+                                  style: FilledButton.styleFrom(
+                                      fixedSize: const Size(150, 40)),
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      // DBに作成
+                                      DataBaseHelper.createSubject(_title);
+
+                                      // タイトルを報告しながら、元のページに戻る
+                                      Navigator.pop(context, _title);
+                                    }
+                                  },
+                                  child: const Text("教科を作成"),
+                                ))
+                          ],
+                        ),
+                      )))
             ])));
   }
 }

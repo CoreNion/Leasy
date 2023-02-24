@@ -80,6 +80,7 @@ class _HomeState extends State<Home> {
           if (selectedIndex == 1) {
             // 教科の作成Modelを表示
             showModalBottomSheet<String>(
+                backgroundColor: Colors.transparent,
                 context: context,
                 isScrollControlled: true,
                 useSafeArea: true,
