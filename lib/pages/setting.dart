@@ -35,17 +35,21 @@ class _SettingPageState extends State<SettingPage> {
             Picker(
                     adapter: PickerDataAdapter(pickerdata: _darkModeSelections),
                     changeToFirst: true,
-                    onConfirm: (Picker picker, List value) {
+                    onConfirm: (Picker picker, List value) async {
+                      late String prefsStr;
                       MyApp.rootSetState(() {
                         switch (value.first) {
                           case 0:
                             MyApp.themeMode = ThemeMode.system;
+                            prefsStr = "system";
                             break;
                           case 1:
                             MyApp.themeMode = ThemeMode.dark;
+                            prefsStr = "dark";
                             break;
                           case 2:
                             MyApp.themeMode = ThemeMode.light;
+                            prefsStr = "light";
                             break;
                           default:
                             break;
@@ -54,6 +58,8 @@ class _SettingPageState extends State<SettingPage> {
                       setState(() {
                         darkModeIndex = value.first;
                       });
+
+                      await MyApp.prefs.setString("ThemeMode", prefsStr);
                     },
                     backgroundColor: Theme.of(context).dialogBackgroundColor,
                     textStyle: Theme.of(context).textTheme.titleLarge,
@@ -76,20 +82,27 @@ class _SettingPageState extends State<SettingPage> {
                             ? SwitchListTile(
                                 title: const Text("端末で設定された色を利用"),
                                 value: !(MyApp.customColor),
-                                onChanged: (val) {
+                                onChanged: (val) async {
                                   MyApp.rootSetState(() {
                                     MyApp.customColor = !val;
                                   });
+                                  await MyApp.prefs
+                                      .setBool("CustomColor", !val);
                                 })
                             : Container(),
                         MyApp.customColor
                             ? BlockPicker(
                                 pickerColor: MyApp.seedColor,
-                                onColorChanged: (color) {
+                                onColorChanged: (color) async {
                                   MyApp.rootSetState(() {
                                     MyApp.customColor = true;
                                     MyApp.seedColor = color;
                                   });
+
+                                  await MyApp.prefs
+                                      .setBool("CustomColor", true);
+                                  await MyApp.prefs
+                                      .setInt("SeedColor", color.value);
                                 })
                             : Container(),
                       ],
@@ -123,6 +136,16 @@ class _SettingPageState extends State<SettingPage> {
           })),
           icon: const Icon(Icons.delete_forever),
           label: const Text("study.dbを削除"),
+        ),
+        TextButton.icon(
+          onPressed: ((() async {
+            await MyApp.prefs.clear();
+
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('削除したよ〜')));
+          })),
+          icon: const Icon(Icons.delete_forever),
+          label: const Text("設定を削除"),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'pages/home.dart';
@@ -14,6 +15,8 @@ void main() async {
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static late SharedPreferences prefs;
 
   /// アプリのColorSchemeで選択された色
   static Color seedColor = Colors.blue;
@@ -34,6 +37,40 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    SharedPreferences.getInstance().then((prefs) async {
+      final customColorKey = prefs.getBool("CustomColor");
+      if (customColorKey != null) {
+        MyApp.customColor = customColorKey;
+
+        switch (prefs.getString("ThemeMode")) {
+          case "system":
+            MyApp.themeMode = ThemeMode.system;
+            break;
+          case "dark":
+            MyApp.themeMode = ThemeMode.dark;
+            break;
+          case "light":
+            MyApp.themeMode = ThemeMode.light;
+            break;
+          default:
+        }
+
+        MyApp.seedColor = Color(prefs.getInt("SeedColor")!);
+      } else {
+        // 初期化
+        await prefs.setBool("CustomColor", false);
+        await prefs.setString("ThemeMode", "system");
+        await prefs.setInt("SeedColor", MyApp.seedColor.value);
+      }
+
+      MyApp.prefs = prefs;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     MyApp.rootSetState = setState;
