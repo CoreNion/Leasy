@@ -79,9 +79,12 @@ class _MyAppState extends State<MyApp> {
       late ColorScheme lightScheme;
       late ColorScheme darkScheme;
 
-      lightDynamic != null
-          ? MyApp.supportDynamicColor = true
-          : MyApp.supportDynamicColor = false;
+      if (lightDynamic != null) {
+        MyApp.supportDynamicColor = true;
+      } else {
+        MyApp.supportDynamicColor = false;
+        MyApp.customColor = true;
+      }
 
       if (!MyApp.customColor) {
         lightScheme = lightDynamic != null
