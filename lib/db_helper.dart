@@ -5,6 +5,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'class/question.dart';
+import 'class/section.dart';
+import 'class/subject.dart';
+
 class DataBaseHelper {
   static Database? _db;
 
@@ -193,139 +197,5 @@ class DataBaseHelper {
       records.add(map.cast()["latestCorrect"]);
     }
     return records;
-  }
-}
-
-/// 教科一覧のモデル
-class SubjectInfo {
-  /// 教科名
-  final String title;
-
-  /// 前回の学習の正解の問題数
-  final int latestCorrect;
-
-  /// 前回の学習の不正解の問題数
-  final int latestIncorrect;
-
-  SubjectInfo(
-      {required this.title,
-      required this.latestCorrect,
-      required this.latestIncorrect});
-
-  Map<String, Object?> toMap() {
-    {
-      return {
-        'title': title,
-        'latestCorrect': latestCorrect,
-        'latestIncorrect': latestIncorrect
-      };
-    }
-  }
-
-  // DataBaseの形式のMapからModelに変換する関数
-  static SubjectInfo tableMapToModel(Map<String, Object?> map) {
-    return SubjectInfo(
-        title: map["title"].toString(),
-        latestCorrect: map["latestCorrect"] as int,
-        latestIncorrect: map["latestIncorrect"] as int);
-  }
-}
-
-/// セクション一覧のモデル
-class SectionInfo {
-  /// 所属教科
-  final String subject;
-
-  /// セクション名
-  final String title;
-
-  /// 前回の結果のモード
-  final String latestStudyMode;
-
-  /// テーブルのID
-  final int tableID;
-
-  SectionInfo(
-      {required this.subject,
-      required this.title,
-      required this.latestStudyMode,
-      required this.tableID});
-
-  Map<String, Object?> toMap() {
-    {
-      return {
-        'subject': subject,
-        'title': title,
-        'tableID': tableID,
-        "latestStudyMode": latestStudyMode
-      };
-    }
-  }
-
-  // DataBaseの形式のMapからModelに変換する関数
-  static SectionInfo tableMapToModel(Map<String, Object?> map) {
-    return SectionInfo(
-        subject: map["subject"].toString(),
-        title: map["title"].toString(),
-        tableID: map["tableID"] as int,
-        latestStudyMode: map["latestStudyMode"].toString());
-  }
-}
-
-/// セクションの問題集(MiQuestion)のモデル
-class MiQuestion {
-  final int id;
-
-  final String question;
-
-  final List<String> choices;
-
-  final int answer;
-
-  final bool isInput;
-
-  final bool? latestCorrect;
-
-  MiQuestion(
-      {required this.id,
-      required this.question,
-      required this.choices,
-      required this.answer,
-      required this.isInput,
-      this.latestCorrect});
-
-  // DataBaseの形式のMapに変換する関数
-  Map<String, Object?> toTableMap() {
-    {
-      return {
-        'id': id,
-        'question': question,
-        'choice1': choices[0],
-        'choice2': choices[1],
-        'choice3': choices[2],
-        'choice4': choices[3],
-        'answer': answer,
-        'input': isInput ? 1 : 0,
-        'latestCorrect': latestCorrect != null ? (latestCorrect! ? 1 : 0) : null
-      };
-    }
-  }
-
-  // DataBaseの形式のMapからModelに変換する関数
-  static MiQuestion tableMapToModel(Map<String, Object?> map) {
-    return MiQuestion(
-        id: map["id"] as int,
-        question: map["question"].toString(),
-        choices: [
-          map["choice1"].toString(),
-          map["choice2"].toString(),
-          map["choice3"].toString(),
-          map["choice4"].toString()
-        ],
-        answer: map["answer"] as int,
-        isInput: (map["input"] as int) == 1 ? true : false,
-        latestCorrect: (map["latestCorrect"] as int?) != null
-            ? ((map["latestCorrect"] as int) == 1 ? true : false)
-            : null);
   }
 }

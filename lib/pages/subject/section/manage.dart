@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
 import '../../../db_helper.dart';
+import '../../../class/question.dart';
 
 class SectionManagePage extends StatefulWidget {
   final int sectionID;

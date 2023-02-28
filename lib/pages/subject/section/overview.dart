@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../widgets/overview.dart';
+import '../../../class/section.dart';
+import '../../../class/question.dart';
 import '../study.dart';
 import '../../../db_helper.dart';
 import './manage.dart';

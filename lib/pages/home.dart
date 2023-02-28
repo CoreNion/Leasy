@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../db_helper.dart';
+import '../class/subject.dart';
 import 'create.dart';
 import 'setting.dart';
 import 'subject/overview.dart';

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:status_alert/status_alert.dart';
 
 import '../../db_helper.dart';
+import '../../class/section.dart';
+import '../../class/question.dart';
 
 class SectionStudyPage extends StatefulWidget {
   final SectionInfo? secInfo;
