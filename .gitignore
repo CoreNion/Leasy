@@ -43,4 +43,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# VS Code
 .vscode
+
+# Files for Sqflite Web support
+/web/sqflite_sw.js
+/web/sqlite3.wasm
