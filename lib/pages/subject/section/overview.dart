@@ -193,9 +193,11 @@ class _SectionPageState extends State<SectionPage> {
               ),
               SwitchListTile(
                   title: const Text("不正解・新規作成の問題のみ学習"),
-                  secondary: const Icon(
+                  secondary: Icon(
                     Icons.error,
-                    color: Colors.yellow,
+                    color: colorScheme.brightness == Brightness.light
+                        ? Colors.orange
+                        : Colors.yellow,
                   ),
                   subtitle: const Text("テストモードでは適用されませんが、結果は反映されます。"),
                   value: onlyIncorrect,
