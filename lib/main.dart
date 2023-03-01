@@ -102,9 +102,18 @@ class _MyAppState extends State<MyApp> {
             seedColor: MyApp.seedColor, brightness: Brightness.dark);
       }
 
+      // backgroundにDynamic Colorの色味を付ける (デフォルトだと真っ白)
+      lightScheme =
+          lightScheme.copyWith(background: lightScheme.onInverseSurface);
+
       return MaterialApp(
         title: 'Leasy',
-        theme: ThemeData(colorScheme: lightScheme, useMaterial3: true),
+        theme: ThemeData(
+            colorScheme: lightScheme,
+            useMaterial3: true,
+            scaffoldBackgroundColor: Colors.white,
+            appBarTheme: AppBarTheme.of(context)
+                .copyWith(backgroundColor: lightScheme.onInverseSurface)),
         darkTheme: ThemeData(
             colorScheme: darkScheme,
             scaffoldBackgroundColor: Colors.black,
