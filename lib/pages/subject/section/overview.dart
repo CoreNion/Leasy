@@ -130,6 +130,13 @@ class _SectionPageState extends State<SectionPage> {
                                             !(mi.latestCorrect ?? false))
                                         .toList()
                                     : miQuestions;
+                                if (sendQs.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              '全ての問題が正解しているため、学習モードは実行されません。\nテストを行うか、不正解問題のみ学習をオフにしてください。')));
+                                  return;
+                                }
 
                                 final record = await Navigator.of(context)
                                     .push<List<bool>>(MaterialPageRoute(
