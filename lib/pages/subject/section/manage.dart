@@ -199,6 +199,9 @@ class _SectionManagePageState extends State<SectionManagePage> {
                               ],
                             ),
                             TextFormField(
+                              onChanged: (value) {
+                                formChanged = true;
+                              },
                               decoration: const InputDecoration(
                                 labelText: "問題文",
                                 icon: Icon(Icons.title),
