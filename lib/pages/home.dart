@@ -30,10 +30,14 @@ class _HomeState extends State<Home> {
       // 初回セットアップ(初期画面)を表示
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showModalBottomSheet(
+            isDismissible: false,
             context: context,
+            isScrollControlled: true,
+            enableDrag: false,
             backgroundColor: Colors.transparent,
             useSafeArea: true,
-            builder: (builder) => const SetupPage()).then((val) async {
+            builder: (builder) => const FractionallySizedBox(
+                heightFactor: 0.85, child: SetupPage())).then((val) async {
           // await MyApp.prefs.setBool("setup", true);
         });
       });
