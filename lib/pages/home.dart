@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
+import '../main.dart';
 import '../db_helper.dart';
 import '../class/subject.dart';
+import './setup.dart';
 import 'create.dart';
 import 'setting.dart';
 import 'subject/overview.dart';
@@ -19,6 +21,24 @@ class _HomeState extends State<Home> {
 
   // トップに表示される教科のWidgetのリスト
   static List<Widget> subejctWidgetList = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (!(MyApp.prefs.getBool("setup") ?? false)) {
+      // 初回セットアップ(初期画面)を表示
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            useSafeArea: true,
+            builder: (builder) => const SetupPage()).then((val) async {
+          // await MyApp.prefs.setBool("setup", true);
+        });
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
