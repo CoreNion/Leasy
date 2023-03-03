@@ -47,6 +47,7 @@ dependencies:
   sqflite_common_ffi_web: ^0.3.2
   flutter_colorpicker: ^1.0.3
   shared_preferences: ^2.0.18
+  flutter_native_splash: ^2.2.18
 
 dev_dependencies:
   flutter_test:
