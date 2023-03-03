@@ -111,7 +111,8 @@ class _SetupPageState extends State<SetupPage> {
           "テーマカラーやダークモードなどの設定を行います。",
           style: TextStyle(fontSize: 16),
         ),
-        SettingPage()
+        SizedBox(height: 15),
+        ScreenSettings()
       ],
     );
   }
