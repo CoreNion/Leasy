@@ -38,8 +38,8 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                   color: colorScheme.background,
                   child: Form(
                       key: _formKey,
-                      child: Padding(
-                        padding: const EdgeInsets.all(7.0),
+                      child: Container(
+                        margin: const EdgeInsets.all(15),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
@@ -57,23 +57,26 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                                 }
                               },
                             ),
-                            Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 20, bottom: 5),
-                                child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                      fixedSize: const Size(150, 40)),
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      // DBに作成
-                                      DataBaseHelper.createSubject(_title);
+                            SizedBox.fromSize(size: const Size.fromHeight(40)),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 55),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10))),
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  // DBに作成
+                                  DataBaseHelper.createSubject(_title);
 
-                                      // タイトルを報告しながら、元のページに戻る
-                                      Navigator.pop(context, _title);
-                                    }
-                                  },
-                                  child: const Text("教科を作成"),
-                                ))
+                                  // タイトルを報告しながら、元のページに戻る
+                                  Navigator.pop(context, _title);
+                                }
+                              },
+                              child: const Text("教科を作成",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17)),
+                            )
                           ],
                         ),
                       )))
