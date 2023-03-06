@@ -56,7 +56,6 @@ class _HomeState extends State<Home> {
               builder: (builder) => const FractionallySizedBox(
                   heightFactor: 0.7, child: SetupPage())).then((val) async {});
         }
-
         // await MyApp.prefs.setBool("setup", true);
       });
     }
@@ -64,25 +63,73 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     final List<Widget> tabPages = <Widget>[
       FutureBuilder(
         future: DataBaseHelper.getSubjectInfos(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            subejctWidgetList = snapshot.data!
-                .asMap()
-                .entries
-                .map((e) => subjectWidget(e.value, e.key))
-                .toList();
+            final subjects = snapshot.data!;
+            if (subjects.isNotEmpty) {
+              subejctWidgetList = subjects
+                  .asMap()
+                  .entries
+                  .map((e) => subjectWidget(e.value, e.key))
+                  .toList();
 
-            return ResponsiveGridList(
-              minItemWidth: 270,
-              horizontalGridMargin: 20,
-              horizontalGridSpacing: 30,
-              verticalGridSpacing: 30,
-              verticalGridMargin: 20,
-              children: subejctWidgetList,
-            );
+              return ResponsiveGridList(
+                minItemWidth: 270,
+                horizontalGridMargin: 20,
+                horizontalGridSpacing: 30,
+                verticalGridSpacing: 30,
+                verticalGridMargin: 20,
+                children: subejctWidgetList,
+              );
+            } else {
+              return Stack(alignment: Alignment.bottomCenter, children: [
+                Align(
+                    alignment: Alignment.center,
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: Container(
+                            margin: const EdgeInsets.all(15),
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                color: colorScheme.background,
+                                border: Border.all(color: colorScheme.outline),
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(10))),
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text("教科が一つもありません！",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20)),
+                                  const Divider(),
+                                  SizedBox.fromSize(
+                                      size: const Size.fromHeight(10)),
+                                  const Text("学習を開始するには、まずは教科を作成してください。",
+                                      style: TextStyle(fontSize: 17))
+                                ])))),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("教科を作成する",
+                        style: TextStyle(
+                            color: colorScheme.primary,
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold)),
+                    Icon(
+                      Icons.keyboard_double_arrow_down,
+                      size: 70,
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                )
+              ]);
+            }
           } else if (snapshot.connectionState != ConnectionState.done) {
             return const Center(
               child: CircularProgressIndicator(),
