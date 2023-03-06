@@ -28,8 +28,7 @@ class _SetupPageState extends State<SetupPage> {
     return Container(
         decoration: BoxDecoration(
             color: colorScheme.background,
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+            borderRadius: const BorderRadius.all(Radius.circular(20))),
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -29,17 +29,35 @@ class _HomeState extends State<Home> {
     if (!(MyApp.prefs.getBool("setup") ?? false)) {
       // 初回セットアップ(初期画面)を表示
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showModalBottomSheet(
-            isDismissible: false,
-            context: context,
-            isScrollControlled: true,
-            enableDrag: false,
-            backgroundColor: Colors.transparent,
-            useSafeArea: true,
-            builder: (builder) => const FractionallySizedBox(
-                heightFactor: 0.85, child: SetupPage())).then((val) async {
-          // await MyApp.prefs.setBool("setup", true);
-        });
+        // 大画面デバイスではDialogで表示
+        if (MediaQuery.of(context).size.width > 1000) {
+          showDialog(
+              barrierDismissible: false,
+              context: context,
+              builder: (builder) {
+                return const WillPopScope(
+                    onWillPop: null,
+                    child: Dialog(
+                      child: FractionallySizedBox(
+                        heightFactor: 0.6,
+                        widthFactor: 0.6,
+                        child: SetupPage(),
+                      ),
+                    ));
+              });
+        } else {
+          showModalBottomSheet(
+              isDismissible: false,
+              context: context,
+              isScrollControlled: true,
+              enableDrag: false,
+              backgroundColor: Colors.transparent,
+              useSafeArea: true,
+              builder: (builder) => const FractionallySizedBox(
+                  heightFactor: 0.7, child: SetupPage())).then((val) async {});
+        }
+
+        // await MyApp.prefs.setBool("setup", true);
       });
     }
   }
