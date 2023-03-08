@@ -42,6 +42,14 @@ class MyApp extends StatefulWidget {
 
   static Function rootSetState = () {};
 
+  static Key rootKey = UniqueKey();
+
+  static void resetApp() {
+    rootSetState(() {
+      rootKey = UniqueKey();
+    });
+  }
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -51,102 +59,106 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     MyApp.rootSetState = setState;
 
-    return FutureBuilder(
-      future: SharedPreferences.getInstance().then((prefs) async {
-        final customColorKey = prefs.getBool("CustomColor");
-        if (customColorKey != null) {
-          MyApp.customColor = customColorKey;
+    return KeyedSubtree(
+        key: MyApp.rootKey,
+        child: FutureBuilder(
+          future: SharedPreferences.getInstance().then((prefs) async {
+            final customColorKey = prefs.getBool("CustomColor");
+            if (customColorKey != null) {
+              MyApp.customColor = customColorKey;
 
-          switch (prefs.getString("ThemeMode")) {
-            case "system":
-              MyApp.themeMode = ThemeMode.system;
-              break;
-            case "dark":
-              MyApp.themeMode = ThemeMode.dark;
-              break;
-            case "light":
-              MyApp.themeMode = ThemeMode.light;
-              break;
-            default:
-          }
+              switch (prefs.getString("ThemeMode")) {
+                case "system":
+                  MyApp.themeMode = ThemeMode.system;
+                  break;
+                case "dark":
+                  MyApp.themeMode = ThemeMode.dark;
+                  break;
+                case "light":
+                  MyApp.themeMode = ThemeMode.light;
+                  break;
+                default:
+              }
 
-          MyApp.seedColor = Color(prefs.getInt("SeedColor")!);
-        } else {
-          // 初期化
-          await prefs.setBool("CustomColor", false);
-          await prefs.setString("ThemeMode", "system");
-          await prefs.setInt("SeedColor", MyApp.seedColor.value);
-        }
-
-        await loadStudyDataBase();
-
-        MyApp.prefs = prefs;
-        return prefs;
-      }),
-      builder:
-          (BuildContext context, AsyncSnapshot<SharedPreferences> snapshot) {
-        if (snapshot.hasData) {
-          if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
-            FlutterNativeSplash.remove();
-          }
-
-          return DynamicColorBuilder(builder: ((lightDynamic, darkDynamic) {
-            late ColorScheme lightScheme;
-            late ColorScheme darkScheme;
-
-            if (lightDynamic != null) {
-              MyApp.supportDynamicColor = true;
+              MyApp.seedColor = Color(prefs.getInt("SeedColor")!);
             } else {
-              MyApp.supportDynamicColor = false;
-              MyApp.customColor = true;
+              // 初期化
+              await prefs.setBool("CustomColor", false);
+              await prefs.setString("ThemeMode", "system");
+              await prefs.setInt("SeedColor", MyApp.seedColor.value);
             }
 
-            if (!MyApp.customColor) {
-              lightScheme = lightDynamic != null
-                  ? lightDynamic.harmonized()
-                  : ColorScheme.fromSeed(
+            await loadStudyDataBase();
+
+            MyApp.prefs = prefs;
+            return prefs;
+          }),
+          builder: (BuildContext context,
+              AsyncSnapshot<SharedPreferences> snapshot) {
+            if (snapshot.hasData) {
+              if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
+                FlutterNativeSplash.remove();
+              }
+
+              return DynamicColorBuilder(builder: ((lightDynamic, darkDynamic) {
+                late ColorScheme lightScheme;
+                late ColorScheme darkScheme;
+
+                if (lightDynamic != null) {
+                  MyApp.supportDynamicColor = true;
+                } else {
+                  MyApp.supportDynamicColor = false;
+                  MyApp.customColor = true;
+                }
+
+                if (!MyApp.customColor) {
+                  lightScheme = lightDynamic != null
+                      ? lightDynamic.harmonized()
+                      : ColorScheme.fromSeed(
+                          seedColor: MyApp.seedColor,
+                          brightness: Brightness.light);
+                  darkScheme = darkDynamic != null
+                      ? darkDynamic.harmonized()
+                      : ColorScheme.fromSeed(
+                          seedColor: MyApp.seedColor,
+                          brightness: Brightness.dark);
+                } else {
+                  lightScheme = ColorScheme.fromSeed(
                       seedColor: MyApp.seedColor, brightness: Brightness.light);
-              darkScheme = darkDynamic != null
-                  ? darkDynamic.harmonized()
-                  : ColorScheme.fromSeed(
+                  darkScheme = ColorScheme.fromSeed(
                       seedColor: MyApp.seedColor, brightness: Brightness.dark);
+                }
+
+                // backgroundにDynamic Colorの色味を付ける (デフォルトだと真っ白)
+                lightScheme = lightScheme.copyWith(
+                    background: lightScheme.onInverseSurface);
+
+                return MaterialApp(
+                  title: 'Leasy',
+                  theme: ThemeData(
+                      colorScheme: lightScheme,
+                      useMaterial3: true,
+                      scaffoldBackgroundColor: Colors.white,
+                      appBarTheme: AppBarTheme.of(context).copyWith(
+                          backgroundColor: lightScheme.onInverseSurface)),
+                  darkTheme: ThemeData(
+                      colorScheme: darkScheme,
+                      scaffoldBackgroundColor: Colors.black,
+                      useMaterial3: true),
+                  themeMode: MyApp.themeMode,
+                  home: const Home(),
+                );
+              }));
+            } else if (snapshot.connectionState != ConnectionState.done) {
+              return Container(
+                color: Colors.black,
+              );
             } else {
-              lightScheme = ColorScheme.fromSeed(
-                  seedColor: MyApp.seedColor, brightness: Brightness.light);
-              darkScheme = ColorScheme.fromSeed(
-                  seedColor: MyApp.seedColor, brightness: Brightness.dark);
+              return const Text(
+                "?",
+              );
             }
-
-            // backgroundにDynamic Colorの色味を付ける (デフォルトだと真っ白)
-            lightScheme =
-                lightScheme.copyWith(background: lightScheme.onInverseSurface);
-
-            return MaterialApp(
-              title: 'Leasy',
-              theme: ThemeData(
-                  colorScheme: lightScheme,
-                  useMaterial3: true,
-                  scaffoldBackgroundColor: Colors.white,
-                  appBarTheme: AppBarTheme.of(context)
-                      .copyWith(backgroundColor: lightScheme.onInverseSurface)),
-              darkTheme: ThemeData(
-                  colorScheme: darkScheme,
-                  scaffoldBackgroundColor: Colors.black,
-                  useMaterial3: true),
-              themeMode: MyApp.themeMode,
-              home: const Home(),
-            );
-          }));
-        } else if (snapshot.connectionState != ConnectionState.done) {
-          return Container(
-            color: Colors.black,
-          );
-        } else {
-          return const Text(
-            "?",
-          );
-        }
-      },
-    );
+          },
+        ));
   }
 }

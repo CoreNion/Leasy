@@ -216,10 +216,13 @@ class _DataSettingsState extends State<DataSettings> {
                                   Navigator.pop(context);
 
                                   MyApp.prefs.clear().then((value) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                '設定を初期化しました。アプリを再起動してください。')));
+                                    // メモリにある設定も削除
+                                    MyApp.seedColor = Colors.blue;
+                                    MyApp.supportDynamicColor = false;
+                                    MyApp.customColor = false;
+                                    MyApp.themeMode = ThemeMode.system;
+
+                                    removedDialogAndReset();
                                   });
                                 },
                                 child: const Text("はい")),
@@ -253,11 +256,27 @@ class _DataSettingsState extends State<DataSettings> {
                         SnackBar(content: Text('データは削除できませんでした。詳細: $e')));
                     return;
                   }
-                  messenger.showSnackBar(
-                      const SnackBar(content: Text('データは削除されました。再起動してください。')));
+                  removedDialogAndReset();
                 })
           ],
         ));
+  }
+
+  /// 削除しましたというダイアログを出して、3秒後にリセットする関数
+  Future<void> removedDialogAndReset() async {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (builder) {
+          return const WillPopScope(
+              onWillPop: null,
+              child: AlertDialog(
+                title: Text("削除しました。3秒後にアプリを再起動します..."),
+              ));
+        });
+
+    await Future.delayed(const Duration(seconds: 3));
+    MyApp.resetApp();
   }
 }
 
