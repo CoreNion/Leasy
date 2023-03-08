@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_picker/Picker.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
+import '../helper/common.dart';
 import '../main.dart';
 
 class SettingPage extends StatefulWidget {
@@ -249,25 +246,15 @@ class _DataSettingsState extends State<DataSettings> {
                       builder: (builder) => const RemoveDialog());
                   if (!(res ?? false)) return;
 
-                  final path = kIsWeb
-                      ? "study.db"
-                      : p.join((await getApplicationSupportDirectory()).path,
-                          "study.db");
-                  final file = File(path);
-
-                  if (file.existsSync()) {
-                    try {
-                      file.deleteSync();
-                    } catch (e) {
-                      messenger.showSnackBar(
-                          SnackBar(content: Text('削除出来ませんでした。詳細: $e')));
-                    }
+                  try {
+                    await deleteStudyDataBase();
+                  } catch (e) {
                     messenger.showSnackBar(
-                        const SnackBar(content: Text('データは削除されました。')));
-                  } else {
-                    messenger.showSnackBar(
-                        const SnackBar(content: Text('ファイルは存在しません。')));
+                        SnackBar(content: Text('データは削除できませんでした。詳細: $e')));
+                    return;
                   }
+                  messenger.showSnackBar(
+                      const SnackBar(content: Text('データは削除されました。再起動してください。')));
                 })
           ],
         ));

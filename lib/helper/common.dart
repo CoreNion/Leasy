@@ -7,8 +7,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js';
+
+import 'dummy.dart' if (dart.library.js) 'dart:js';
 
 late Database studyDB;
 
@@ -45,6 +45,7 @@ Future<void> deleteStudyDataBase() async {
         (p.join((await getApplicationSupportDirectory()).path, "study.db")));
     await file.delete();
   } else {
-    await context.callMethod("indexedDB.deleteDatabase", ["sqflite_databases"]);
+    await context["indexedDB"]
+        .callMethod("deleteDatabase", ["sqflite_databases"]);
   }
 }
