@@ -5,11 +5,12 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'pages/home.dart';
 
 void main() async {
-  if (Platform.isIOS || Platform.isAndroid) {
+  if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   }
@@ -82,7 +83,7 @@ class _MyAppState extends State<MyApp> {
       builder:
           (BuildContext context, AsyncSnapshot<SharedPreferences> snapshot) {
         if (snapshot.hasData) {
-          if (Platform.isIOS || Platform.isAndroid) {
+          if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
             FlutterNativeSplash.remove();
           }
 

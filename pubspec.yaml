@@ -49,6 +49,11 @@ dependencies:
   shared_preferences: ^2.0.18
   flutter_native_splash: ^2.2.18
 
+flutter_native_splash:
+  color: '#42a5f5'
+  android_12:
+    
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
