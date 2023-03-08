@@ -1,46 +1,12 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 import 'class/question.dart';
 import 'class/section.dart';
 import 'class/subject.dart';
+import 'helper/common.dart';
 
 class DataBaseHelper {
-  static Database? _db;
-
-  static Future<Database> _createDB() async {
-    if (kIsWeb) {
-      return databaseFactoryFfiWeb.openDatabase("study.db",
-          options: OpenDatabaseOptions(
-              onCreate: (db, version) async {
-                await db.execute(
-                    "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
-                await db.execute(
-                    "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
-              },
-              version: 3));
-    } else {
-      final path = (await getApplicationSupportDirectory()).path;
-      return databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
-          options: OpenDatabaseOptions(
-              onCreate: (db, version) async {
-                await db.execute(
-                    "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
-                await db.execute(
-                    "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
-              },
-              version: 3));
-    }
-  }
-
   /// DataBaseから教科名を取得する
   static Future<List<SubjectInfo>> getSubjectInfos() async {
-    _db ??= await _createDB();
-    final subInfoMaps = await _db!.query('Subjects');
+    final subInfoMaps = await studyDB.query('Subjects');
 
     List<SubjectInfo> subInfos = [];
     for (var subInfo in subInfoMaps) {
@@ -51,8 +17,7 @@ class DataBaseHelper {
 
   /// 初期の教科を作成する
   static void createSubject(String title) async {
-    _db ??= await _createDB();
-    _db!.insert(
+    studyDB.insert(
         "Subjects",
         SubjectInfo(title: title, latestCorrect: 0, latestIncorrect: 0)
             .toMap());
@@ -60,27 +25,25 @@ class DataBaseHelper {
 
   /// DataBaseから教科を削除する
   static Future<int> removeSubject(String title) async {
-    _db ??= await _createDB();
-    return _db!.delete("Subjects", where: "title='$title'");
+    return studyDB.delete("Subjects", where: "title='$title'");
   }
 
   static Future<int> updateSubjectRecord(
       String title, int latestCorrect, int latestIncorrect) {
-    return _db!.rawUpdate(
+    return studyDB.rawUpdate(
         "UPDATE Subjects SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect WHERE title = '$title';");
   }
 
   /// セクションを作成
   static Future<int> createSection(String subjectName, String title) async {
-    _db ??= await _createDB();
     int tableID = DateTime.now().millisecondsSinceEpoch;
 
     // 問題集のTableを作成
-    await _db!.execute(
+    await studyDB.execute(
         "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int)");
 
     // セクション一覧にIDなどを記録
-    return _db!.insert(
+    return studyDB.insert(
         "Sections",
         SectionInfo(
                 subject: subjectName,
@@ -92,8 +55,7 @@ class DataBaseHelper {
 
   /// Sections DataBaseから教科に所属しているセクションIDを取得する
   static Future<List<int>> getSectionIDs(String subjectName) async {
-    _db ??= await _createDB();
-    final idsMap = await _db!.query('Sections',
+    final idsMap = await studyDB.query('Sections',
         columns: ["tableID"], where: "subject='$subjectName'");
 
     List<int> ids = [];
@@ -105,9 +67,8 @@ class DataBaseHelper {
 
   /// セクションIDからタイトルを取得
   static Future<String> sectionIDtoTitle(int id) async {
-    _db ??= await _createDB();
-    final titlesMap = await _db!
-        .query('Sections', columns: ["title"], where: "tableID='$id'");
+    final titlesMap = await studyDB.query('Sections',
+        columns: ["title"], where: "tableID='$id'");
 
     return titlesMap.first["title"].toString();
   }
@@ -115,31 +76,28 @@ class DataBaseHelper {
   /// TableIDからSectionを取得
   static Future<SectionInfo> getSectionData(int tableID) async {
     final sectionsMaps =
-        await _db!.query('Sections', where: "tableID='$tableID'");
+        await studyDB.query('Sections', where: "tableID='$tableID'");
 
     return SectionInfo.tableMapToModel(sectionsMaps.first);
   }
 
   /// DataBaseから一致したセクションを削除する
   static Future<int> removeSection(String subjectName, int id) async {
-    _db ??= await _createDB();
     // セクションの問題集を削除
-    _db!.execute("DROP TABLE Section_$id");
+    studyDB.execute("DROP TABLE Section_$id");
     // セクション一覧から削除
-    return _db!
-        .delete("Sections", where: "subject='$subjectName' AND tableID='$id'");
+    return studyDB.delete("Sections",
+        where: "subject='$subjectName' AND tableID='$id'");
   }
 
   // セクションの問題を作成する
   static Future<void> createQuestion(int sectionID, MiQuestion question) async {
-    _db ??= await _createDB();
-    _db!.insert("Section_$sectionID", question.toTableMap());
+    studyDB.insert("Section_$sectionID", question.toTableMap());
   }
 
   /// セクションの問題を削除
   static Future<void> removeQuestion(int sectionID, int questionID) async {
-    _db ??= await _createDB();
-    _db!.delete("Section_$sectionID", where: "id='$questionID'");
+    studyDB.delete("Section_$sectionID", where: "id='$questionID'");
   }
 
   /// セクションのMiQuestion一覧を取得
@@ -147,7 +105,7 @@ class DataBaseHelper {
     final miList = <MiQuestion>[];
 
     for (var secID in sectionIDs) {
-      final miQuestionsMaps = await _db!.query('Section_$secID');
+      final miQuestionsMaps = await studyDB.query('Section_$secID');
       for (var map in miQuestionsMaps) {
         miList.add(MiQuestion.tableMapToModel(map));
       }
@@ -159,15 +117,14 @@ class DataBaseHelper {
   /// Sectionの概要データの更新
   static Future<int> updateSectionRecord(
       int sectionID, String latestStudyMode) {
-    return _db!.rawUpdate(
+    return studyDB.rawUpdate(
         "UPDATE Sections SET latestStudyMode = '$latestStudyMode' WHERE tableID = $sectionID;");
   }
 
   /// IDからMiQuestionを返す
   static Future<MiQuestion> getMiQuestion(int sectionID, int id) async {
-    _db ??= await _createDB();
     final miQuestionsMaps =
-        await _db!.query('Section_$sectionID', where: "id='$id'");
+        await studyDB.query('Section_$sectionID', where: "id='$id'");
 
     return MiQuestion.tableMapToModel(miQuestionsMaps.first);
   }
@@ -175,14 +132,14 @@ class DataBaseHelper {
   /// MiQuestionの更新
   static Future<int> updateMiQuestion(
       int sectionID, int id, MiQuestion question) async {
-    return _db!
-        .update("Section_$sectionID", question.toTableMap(), where: "id='$id'");
+    return studyDB.update("Section_$sectionID", question.toTableMap(),
+        where: "id='$id'");
   }
 
   /// Questionの学習記録の更新
   static Future<int> updateQuestionRecord(
       int sectionID, bool correct, int questionID) {
-    return _db!.rawUpdate(
+    return studyDB.rawUpdate(
         "UPDATE Section_$sectionID SET latestCorrect = '${correct ? 1 : 0}' WHERE id = $questionID;");
   }
 
@@ -190,7 +147,7 @@ class DataBaseHelper {
   static Future<List<bool?>> getQuestionRecords(
       int sectionID, bool correct, int questionID) async {
     final recordsMap =
-        await _db!.query('Section_$sectionID', columns: ["latestCorrect"]);
+        await studyDB.query('Section_$sectionID', columns: ["latestCorrect"]);
 
     List<bool?> records = [];
     for (var map in recordsMap) {

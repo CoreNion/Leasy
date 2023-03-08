@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:mimosa/helper/common.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -76,6 +77,8 @@ class _MyAppState extends State<MyApp> {
           await prefs.setString("ThemeMode", "system");
           await prefs.setInt("SeedColor", MyApp.seedColor.value);
         }
+
+        await loadStudyDataBase();
 
         MyApp.prefs = prefs;
         return prefs;
