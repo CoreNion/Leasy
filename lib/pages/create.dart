@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../db_helper.dart';
+import '../helper/subject.dart';
 
 class CreateSubjectPage extends StatefulWidget {
   const CreateSubjectPage({super.key});
@@ -66,7 +66,7 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   // DBに作成
-                                  DataBaseHelper.createSubject(_title);
+                                  createSubject(_title);
 
                                   // タイトルを報告しながら、元のページに戻る
                                   Navigator.pop(context, _title);

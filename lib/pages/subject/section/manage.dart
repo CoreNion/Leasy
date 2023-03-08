@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
-import '../../../db_helper.dart';
 import '../../../class/question.dart';
+import '../../../helper/question.dart';
 
 class SectionManagePage extends StatefulWidget {
   final int sectionID;
@@ -143,7 +143,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                     isInput: selectedInputType[1]);
 
                                 if (mi != null) {
-                                  await DataBaseHelper.updateMiQuestion(
+                                  await updateMiQuestion(
                                       widget.sectionID, mi!.id, miQuestion);
 
                                   Navigator.pop(context, [mi!.id, miQuestion]);
@@ -151,7 +151,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                   final id =
                                       DateTime.now().millisecondsSinceEpoch;
                                   // DBに作成
-                                  await DataBaseHelper.createQuestion(
+                                  await createQuestion(
                                       widget.sectionID, miQuestion);
 
                                   Navigator.pop(context, [id, miQuestion]);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../helper/question.dart';
 import '../../../widgets/overview.dart';
 import '../../../class/section.dart';
 import '../../../class/question.dart';
 import '../study.dart';
-import '../../../db_helper.dart';
 import './manage.dart';
 
 class SectionPage extends StatefulWidget {
@@ -37,8 +37,7 @@ class _SectionPageState extends State<SectionPage> {
     secInfo = widget.sectionInfo;
 
     // 保存されている問題をリストに追加
-    DataBaseHelper.getMiQuestions([widget.sectionInfo.tableID])
-        .then((questions) {
+    getMiQuestions([widget.sectionInfo.tableID]).then((questions) {
       for (var question in questions) {
         _questionListID.add(question.id);
         setState(() {
@@ -219,7 +218,7 @@ class _SectionPageState extends State<SectionPage> {
                   itemBuilder: ((context, index) => Dismissible(
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
-                          await DataBaseHelper.removeQuestion(
+                          await removeQuestion(
                               secInfo.tableID, _questionListID[index]);
 
                           _questionListID.removeAt(index);
@@ -278,9 +277,8 @@ class _SectionPageState extends State<SectionPage> {
                                         : Colors.red)
                                     : Colors.grey),
                             onTap: ((() async {
-                              final question =
-                                  await DataBaseHelper.getMiQuestion(
-                                      secInfo.tableID, _questionListID[index]);
+                              final question = await getMiQuestion(
+                                  secInfo.tableID, _questionListID[index]);
 
                               final res = await showModalBottomSheet(
                                   backgroundColor: Colors.transparent,

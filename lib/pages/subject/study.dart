@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:status_alert/status_alert.dart';
 
-import '../../db_helper.dart';
 import '../../class/section.dart';
 import '../../class/question.dart';
+import '../../helper/question.dart';
 
 class SectionStudyPage extends StatefulWidget {
   final SectionInfo? secInfo;
@@ -87,11 +87,11 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
         if (isExit ?? false) {
           if (secInfo != null) {
             // DBに記録を保存
-            await DataBaseHelper.updateSectionRecord(
+            await updateSectionRecord(
                 secInfo!.tableID, widget.testMode ? "test" : "normal");
 
             for (var i = 0; i < mis.length; i++) {
-              await DataBaseHelper.updateQuestionRecord(
+              await updateQuestionRecord(
                   secInfo!.tableID, record[i], mis[i].id);
             }
           }
@@ -282,11 +282,11 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           } else {
             if (secInfo != null) {
               // DBに記録を保存
-              await DataBaseHelper.updateSectionRecord(
+              await updateSectionRecord(
                   secInfo!.tableID, widget.testMode ? "test" : "normal");
 
               for (var i = 0; i < mis.length; i++) {
-                await DataBaseHelper.updateQuestionRecord(
+                await updateQuestionRecord(
                     secInfo!.tableID, record[i], mis[i].id);
               }
             }

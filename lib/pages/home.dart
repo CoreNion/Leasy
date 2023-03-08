@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../main.dart';
-import '../db_helper.dart';
+import '../helper/subject.dart';
 import '../class/subject.dart';
 import './setup.dart';
 import 'create.dart';
@@ -67,7 +67,7 @@ class _HomeState extends State<Home> {
 
     final List<Widget> tabPages = <Widget>[
       FutureBuilder(
-        future: DataBaseHelper.getSubjectInfos(),
+        future: getSubjectInfos(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final subjects = snapshot.data!;

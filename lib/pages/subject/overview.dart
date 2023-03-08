@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../db_helper.dart';
 import '../../class/subject.dart';
+import '../../helper/question.dart';
+import '../../helper/section.dart';
+import '../../helper/subject.dart';
 import '../../widgets/overview.dart';
 import 'section/overview.dart';
 import './study.dart';
@@ -29,10 +31,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
     subInfo = widget.subInfo;
     // 保存されているセクションをリストに追加
-    DataBaseHelper.getSectionIDs(widget.subInfo.title).then((ids) async {
+    getSectionIDs(widget.subInfo.title).then((ids) async {
       for (var id in ids) {
         _sectionListID.add(id);
-        final title = await DataBaseHelper.sectionIDtoTitle(id);
+        final title = await sectionIDtoTitle(id);
         setState(() => _sectionListStr.add(title));
       }
     });
@@ -61,7 +63,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                 if (_formKey.currentState!.validate()) {
                                   final nav = Navigator.of(context);
 
-                                  final id = await DataBaseHelper.createSection(
+                                  final id = await createSection(
                                       widget.subInfo.title,
                                       _createdSectionTitle);
                                   setState(() {
@@ -109,8 +111,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             onPressed: _sectionListID.isNotEmpty
                                 ? () async {
                                     final mis =
-                                        await DataBaseHelper.getMiQuestions(
-                                            _sectionListID);
+                                        await getMiQuestions(_sectionListID);
 
                                     if (mis.isEmpty) {
                                       ScaffoldMessenger.of(context)
@@ -139,7 +140,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                         .length;
 
                                     // 記録を保存
-                                    await DataBaseHelper.updateSubjectRecord(
+                                    await updateSubjectRecord(
                                         subInfo.title, correct, inCorrect);
 
                                     setState(() {
@@ -187,8 +188,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                 }));
 
                             if (confirm) {
-                              await DataBaseHelper.removeSubject(
-                                  widget.subInfo.title);
+                              await removeSubject(widget.subInfo.title);
 
                               Navigator.pop(context, true);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -211,7 +211,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     itemBuilder: ((context, index) => Dismissible(
                         key: Key(_sectionListStr[index]),
                         onDismissed: (direction) async {
-                          await DataBaseHelper.removeSection(
+                          await removeSection(
                               widget.subInfo.title, _sectionListID[index]);
 
                           _sectionListID.removeAt(index);
@@ -261,8 +261,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                         child: ListTile(
                           title: Text(_sectionListStr[index]),
                           onTap: () async {
-                            final secInfo = await DataBaseHelper.getSectionData(
-                                _sectionListID[index]);
+                            final secInfo =
+                                await getSectionData(_sectionListID[index]);
 
                             Navigator.push(context,
                                 MaterialPageRoute(builder: ((context) {
