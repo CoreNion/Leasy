@@ -65,6 +65,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final largeSC = checkLargeSC(context);
 
     final List<Widget> tabPages = <Widget>[
       FutureBuilder(
@@ -167,42 +168,51 @@ class _HomeState extends State<Home> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (selectedIndex) {
+        onDestinationSelected: (selectedIndex) async {
           if (selectedIndex == 1) {
-            // 教科の作成Modelを表示
-            showModalBottomSheet<String>(
-                backgroundColor: Colors.transparent,
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                builder: (context) {
-                  return tabPages[1];
-                }).then((createdSubTitle) {
-              if (createdSubTitle != null) {
-                final subInfo = SubjectInfo(
-                    title: createdSubTitle,
-                    latestCorrect: 0,
-                    latestIncorrect: 0);
+            late String? createdSubTitle;
+            if (largeSC) {
+              createdSubTitle = await showDialog(
+                  context: context,
+                  builder: (builder) {
+                    return Dialog(
+                        child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500.0),
+                      child: tabPages[1],
+                    ));
+                  });
+            } else {
+              createdSubTitle = await showModalBottomSheet<String>(
+                  backgroundColor: Colors.transparent,
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (context) {
+                    return tabPages[1];
+                  });
+            }
 
-                // 教科Widgetに追加
-                setState(() {
-                  subejctWidgetList
-                      .add(subjectWidget(subInfo, subejctWidgetList.length));
-                });
+            if (createdSubTitle != null) {
+              final subInfo = SubjectInfo(
+                  title: createdSubTitle, latestCorrect: 0, latestIncorrect: 0);
 
-                // 教科ページへ移動
-                Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: ((context) =>
-                                SubjectOverview(subInfo: subInfo))))
-                    .then((removed) {
-                  if (removed != null && removed == true) {
-                    setState(() {});
-                  }
-                });
-              }
-            });
+              // 教科Widgetに追加
+              setState(() {
+                subejctWidgetList
+                    .add(subjectWidget(subInfo, subejctWidgetList.length));
+              });
+
+              // 教科ページへ移動
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: ((context) =>
+                          SubjectOverview(subInfo: subInfo)))).then((removed) {
+                if (removed != null && removed == true) {
+                  setState(() {});
+                }
+              });
+            }
           } else {
             setState(() => pageIndex = selectedIndex);
           }

@@ -19,10 +19,13 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
 
     return SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
-        child: Padding(
+        child: Container(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
+            decoration: BoxDecoration(
+                color: colorScheme.background,
+                borderRadius: const BorderRadius.all(Radius.circular(25))),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               AppBar(
                 shape: const RoundedRectangleBorder(
@@ -34,13 +37,11 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                     onPressed: (() => Navigator.of(context).pop()),
                     icon: const Icon(Icons.expand_more)),
               ),
-              Container(
-                  color: colorScheme.background,
-                  child: Form(
-                      key: _formKey,
-                      child: Container(
-                        margin: const EdgeInsets.all(15),
-                        child: Column(
+              Form(
+                  key: _formKey,
+                  child: Container(
+                      margin: const EdgeInsets.all(15),
+                      child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
                             TextFormField(
@@ -76,10 +77,8 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17)),
-                            )
-                          ],
-                        ),
-                      )))
+                            ),
+                          ])))
             ])));
   }
 }
