@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../main.dart';
+import '../utility.dart';
 import '../helper/subject.dart';
 import '../class/subject.dart';
-import './setup.dart';
+import 'setup.dart';
 import 'create.dart';
 import 'setting.dart';
 import 'subject/overview.dart';
@@ -30,7 +31,7 @@ class _HomeState extends State<Home> {
       // 初回セットアップ(初期画面)を表示
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // 大画面デバイスではDialogで表示
-        if (MediaQuery.of(context).size.width > 1000) {
+        if (checkLargeSC(context)) {
           showDialog(
               barrierDismissible: false,
               context: context,
