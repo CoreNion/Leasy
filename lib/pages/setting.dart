@@ -20,13 +20,16 @@ class _SettingPageState extends State<SettingPage> {
     return SingleChildScrollView(
         child: Container(
             margin: const EdgeInsets.all(17),
-            child: Column(
-              children: const <Widget>[
-                ScreenSettings(),
-                SizedBox(height: 25),
-                DataSettings()
-              ],
-            )));
+            child: Center(
+                child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    child: Column(
+                      children: const <Widget>[
+                        ScreenSettings(),
+                        SizedBox(height: 25),
+                        DataSettings()
+                      ],
+                    )))));
   }
 }
 
