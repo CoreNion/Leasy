@@ -152,50 +152,6 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   }
                                 : null,
                             child: const Text("テストを開始する"))),
-                    Padding(
-                        padding: const EdgeInsets.all(7.0),
-                        child: ElevatedButton.icon(
-                          label: const Text("教科を削除する"),
-                          icon: const Icon(Icons.delete),
-                          style: ButtonStyle(
-                              backgroundColor: MaterialStatePropertyAll(
-                                  colorScheme.errorContainer),
-                              textStyle: MaterialStatePropertyAll(TextStyle(
-                                  color: colorScheme.onErrorContainer))),
-                          onPressed: () async {
-                            final confirm = await showDialog(
-                                barrierDismissible: false,
-                                context: context,
-                                builder: ((context) {
-                                  return AlertDialog(
-                                    title: Text(
-                                        '"${widget.subInfo.title}"を削除しますか？'),
-                                    content: const Text(
-                                        '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(false),
-                                        child: const Text('いいえ'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(true),
-                                        child: const Text('はい'),
-                                      ),
-                                    ],
-                                  );
-                                }));
-
-                            if (confirm) {
-                              await removeSubject(widget.subInfo.title);
-
-                              Navigator.pop(context, true);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('削除しました')));
-                            }
-                          },
-                        )),
                   ],
                 ),
                 Text(

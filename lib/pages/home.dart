@@ -13,6 +13,14 @@ import 'subject/overview.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
 
+  /// 強化のドロップダウンを表示するか
+  static bool showDropDown = false;
+
+  /// 教科リストから指定されたindexのWidgetを削除する
+  static void removeSubjectWidget(BuildContext context, int index) {
+    context.findAncestorStateOfType<_HomeState>()!.removeSubjectWidget(index);
+  }
+
   @override
   State<Home> createState() => _HomeState();
 }
@@ -22,6 +30,12 @@ class _HomeState extends State<Home> {
 
   // トップに表示される教科のWidgetのリスト
   static List<Widget> subejctWidgetList = [];
+
+  void removeSubjectWidget(int index) {
+    setState(() {
+      subejctWidgetList.removeAt(index);
+    });
+  }
 
   @override
   void initState() {
@@ -68,80 +82,89 @@ class _HomeState extends State<Home> {
     final largeSC = checkLargeSC(context);
 
     final List<Widget> tabPages = <Widget>[
-      FutureBuilder(
-        future: getSubjectInfos(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final subjects = snapshot.data!;
-            if (subjects.isNotEmpty) {
-              subejctWidgetList = subjects
-                  .asMap()
-                  .entries
-                  .map((e) => subjectWidget(e.value, e.key))
-                  .toList();
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            Home.showDropDown = false;
+          });
+        },
+        child: FutureBuilder(
+          future: getSubjectInfos(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final subjects = snapshot.data!;
+              if (subjects.isNotEmpty) {
+                subejctWidgetList = subjects
+                    .asMap()
+                    .entries
+                    .map((e) => SubjectWidget(subInfo: e.value, index: e.key))
+                    .toList();
 
-              return ResponsiveGridList(
-                minItemWidth: 270,
-                horizontalGridMargin: 20,
-                horizontalGridSpacing: 30,
-                verticalGridSpacing: 30,
-                verticalGridMargin: 20,
-                children: subejctWidgetList,
+                return ResponsiveGridList(
+                  minItemWidth: 270,
+                  horizontalGridMargin: 20,
+                  horizontalGridSpacing: 30,
+                  verticalGridSpacing: 10,
+                  verticalGridMargin: 20,
+                  children: subejctWidgetList,
+                );
+              } else {
+                return Stack(alignment: Alignment.bottomCenter, children: [
+                  Align(
+                      alignment: Alignment.center,
+                      child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: Container(
+                              margin: const EdgeInsets.all(15),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                  color: colorScheme.background,
+                                  border:
+                                      Border.all(color: colorScheme.outline),
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10))),
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text("教科が一つもありません！",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20)),
+                                    const Divider(),
+                                    SizedBox.fromSize(
+                                        size: const Size.fromHeight(10)),
+                                    const Text("学習を開始するには、まずは教科を作成してください。",
+                                        style: TextStyle(fontSize: 17))
+                                  ])))),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("教科を作成する",
+                          style: TextStyle(
+                              color: colorScheme.primary,
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold)),
+                      Icon(
+                        Icons.keyboard_double_arrow_down,
+                        size: 70,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  )
+                ]);
+              }
+            } else if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(
+                child: CircularProgressIndicator(),
               );
             } else {
-              return Stack(alignment: Alignment.bottomCenter, children: [
-                Align(
-                    alignment: Alignment.center,
-                    child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: Container(
-                            margin: const EdgeInsets.all(15),
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                                color: colorScheme.background,
-                                border: Border.all(color: colorScheme.outline),
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10))),
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text("教科が一つもありません！",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20)),
-                                  const Divider(),
-                                  SizedBox.fromSize(
-                                      size: const Size.fromHeight(10)),
-                                  const Text("学習を開始するには、まずは教科を作成してください。",
-                                      style: TextStyle(fontSize: 17))
-                                ])))),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("教科を作成する",
-                        style: TextStyle(
-                            color: colorScheme.primary,
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold)),
-                    Icon(
-                      Icons.keyboard_double_arrow_down,
-                      size: 70,
-                      color: colorScheme.primary,
-                    ),
-                  ],
-                )
-              ]);
+              return const Center(
+                child: Text("？"),
+              );
             }
-          } else if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else {
-            return const Center(
-              child: Text("？"),
-            );
-          }
-        },
+          },
+        ),
       ),
       const CreateSubjectPage(),
       const SettingPage(),
@@ -198,8 +221,8 @@ class _HomeState extends State<Home> {
 
               // 教科Widgetに追加
               setState(() {
-                subejctWidgetList
-                    .add(subjectWidget(subInfo, subejctWidgetList.length));
+                subejctWidgetList.add(SubjectWidget(
+                    subInfo: subInfo, index: subejctWidgetList.length));
               });
 
               // 教科ページへ移動
@@ -207,11 +230,7 @@ class _HomeState extends State<Home> {
                   context,
                   MaterialPageRoute(
                       builder: ((context) =>
-                          SubjectOverview(subInfo: subInfo)))).then((removed) {
-                if (removed != null && removed == true) {
-                  setState(() {});
-                }
-              });
+                          SubjectOverview(subInfo: subInfo))));
             }
           } else {
             setState(() => pageIndex = selectedIndex);
@@ -239,26 +258,111 @@ class _HomeState extends State<Home> {
       body: tabPages[pageIndex],
     );
   }
+}
 
-  /// 教科Widgetのモデル
-  Widget subjectWidget(SubjectInfo subInfo, int index) {
-    return FilledButton(
-        style: FilledButton.styleFrom(
-            minimumSize: const Size(double.infinity, 150),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10))),
-        onPressed: (() => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (builder) =>
-                        SubjectOverview(subInfo: subInfo))).then((removed) {
-              if (removed != null && removed == true) {
-                setState(() {});
-              }
-            })),
-        child: Text(
-          subInfo.title,
-          style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-        ));
+class SubjectWidget extends StatefulWidget {
+  final SubjectInfo subInfo;
+  final int index;
+
+  const SubjectWidget({super.key, required this.subInfo, required this.index});
+
+  @override
+  State<SubjectWidget> createState() => _SubjectWidgetState();
+}
+
+class _SubjectWidgetState extends State<SubjectWidget> {
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Stack(alignment: Alignment.bottomRight, children: [
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FilledButton(
+              style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 150),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              onPressed: (() => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (builder) =>
+                          SubjectOverview(subInfo: widget.subInfo)))),
+              onLongPress: () {
+                setState(() {
+                  Home.showDropDown = true;
+                });
+              },
+              child: Text(
+                widget.subInfo.title,
+                style:
+                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              )),
+          const SizedBox(height: 50)
+        ],
+      ),
+      Home.showDropDown
+          ? Container(
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                  color: colorScheme.background,
+                  borderRadius: BorderRadius.circular(17)),
+              width: 200,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                ListTile(
+                  leading: Icon(Icons.title, color: colorScheme.primary),
+                  title: const Text("名前を変更"),
+                  onTap: () {
+                    setState(() {
+                      Home.showDropDown = false;
+                    });
+                  },
+                ),
+                ListTile(
+                  leading:
+                      Icon(Icons.delete_forever, color: colorScheme.primary),
+                  title: const Text("削除"),
+                  onTap: () async {
+                    setState(() {
+                      Home.showDropDown = false;
+                    });
+
+                    final confirm = await showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: ((context) {
+                          return AlertDialog(
+                            title: Text('"${widget.subInfo.title}"を削除しますか？'),
+                            content: const Text(
+                                '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('いいえ'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('はい'),
+                              ),
+                            ],
+                          );
+                        }));
+
+                    if (confirm) {
+                      await removeSubject(widget.subInfo.title);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('削除しました')));
+
+                      Home.removeSubjectWidget(context, widget.index);
+                    }
+                  },
+                )
+              ]))
+          : Container()
+    ]);
   }
 }
