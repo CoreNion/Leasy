@@ -219,13 +219,7 @@ class _DataSettingsState extends State<DataSettings> {
                                   Navigator.pop(context);
 
                                   MyApp.prefs.clear().then((value) {
-                                    // メモリにある設定も削除
-                                    MyApp.seedColor = Colors.blue;
-                                    MyApp.supportDynamicColor = false;
-                                    MyApp.customColor = false;
-                                    MyApp.themeMode = ThemeMode.system;
-
-                                    removedDialogAndReset();
+                                    willReset("削除しました。3秒後にアプリを再起動します...");
                                   });
                                 },
                                 child: const Text("はい")),
@@ -259,22 +253,33 @@ class _DataSettingsState extends State<DataSettings> {
                         SnackBar(content: Text('データは削除できませんでした。詳細: $e')));
                     return;
                   }
-                  removedDialogAndReset();
-                })
+                  willReset("削除しました。3秒後にアプリを再起動します...");
+                }),
+            ListTile(
+              title: const Text("アプリを再起動"),
+              subtitle: const Text("アプリを再起動します。"),
+              trailing: Icon(
+                Icons.refresh,
+                color: colorScheme.primary,
+              ),
+              onTap: () {
+                willReset("3秒後にアプリを再起動します...");
+              },
+            )
           ],
         ));
   }
 
   /// 削除しましたというダイアログを出して、3秒後にリセットする関数
-  Future<void> removedDialogAndReset() async {
+  Future<void> willReset(String title) async {
     showDialog(
         barrierDismissible: false,
         context: context,
         builder: (builder) {
-          return const WillPopScope(
+          return WillPopScope(
               onWillPop: null,
               child: AlertDialog(
-                title: Text("削除しました。3秒後にアプリを再起動します..."),
+                title: Text(title),
               ));
         });
 

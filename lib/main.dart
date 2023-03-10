@@ -45,6 +45,12 @@ class MyApp extends StatefulWidget {
   static Key rootKey = UniqueKey();
 
   static void resetApp() {
+    // メモリにある設定も削除
+    MyApp.seedColor = Colors.blue;
+    MyApp.supportDynamicColor = false;
+    MyApp.customColor = false;
+    MyApp.themeMode = ThemeMode.system;
+
     rootSetState(() {
       rootKey = UniqueKey();
     });
