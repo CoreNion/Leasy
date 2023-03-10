@@ -302,67 +302,70 @@ class _SubjectWidgetState extends State<SubjectWidget> {
           const SizedBox(height: 50)
         ],
       ),
-      Home.showDropDown
-          ? Container(
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                  color: colorScheme.background,
-                  borderRadius: BorderRadius.circular(17)),
-              width: 200,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                ListTile(
-                  leading: Icon(Icons.title, color: colorScheme.primary),
-                  title: const Text("名前を変更"),
-                  onTap: () {
-                    setState(() {
-                      Home.showDropDown = false;
-                    });
-                  },
-                ),
-                ListTile(
-                  leading:
-                      Icon(Icons.delete_forever, color: colorScheme.primary),
-                  title: const Text("削除"),
-                  onTap: () async {
-                    setState(() {
-                      Home.showDropDown = false;
-                    });
+      IgnorePointer(
+          ignoring: !Home.showDropDown,
+          child: AnimatedOpacity(
+              opacity: Home.showDropDown ? 1 : 0,
+              duration: const Duration(milliseconds: 100),
+              child: Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                      color: colorScheme.background,
+                      borderRadius: BorderRadius.circular(17)),
+                  width: 200,
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    ListTile(
+                      leading: Icon(Icons.title, color: colorScheme.primary),
+                      title: const Text("名前を変更"),
+                      onTap: () {
+                        setState(() {
+                          Home.showDropDown = false;
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.delete_forever,
+                          color: colorScheme.primary),
+                      title: const Text("削除"),
+                      onTap: () async {
+                        setState(() {
+                          Home.showDropDown = false;
+                        });
 
-                    final confirm = await showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: ((context) {
-                          return AlertDialog(
-                            title: Text('"${widget.subInfo.title}"を削除しますか？'),
-                            content: const Text(
-                                '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('いいえ'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('はい'),
-                              ),
-                            ],
-                          );
-                        }));
+                        final confirm = await showDialog(
+                            context: context,
+                            builder: ((context) {
+                              return AlertDialog(
+                                title:
+                                    Text('"${widget.subInfo.title}"を削除しますか？'),
+                                content: const Text(
+                                    '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text('いいえ'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text('はい'),
+                                  ),
+                                ],
+                              );
+                            }));
 
-                    if (confirm) {
-                      await removeSubject(widget.subInfo.title);
+                        if (confirm ?? false) {
+                          await removeSubject(widget.subInfo.title);
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('削除しました')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('削除しました')));
 
-                      Home.removeSubjectWidget(context, widget.index);
-                    }
-                  },
-                )
-              ]))
-          : Container()
+                          Home.removeSubjectWidget(context, widget.index);
+                        }
+                      },
+                    )
+                  ]))))
     ]);
   }
 }
