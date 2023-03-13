@@ -17,7 +17,7 @@ Future<void> loadStudyDataBase() async {
   final options = OpenDatabaseOptions(
       onCreate: (db, version) async {
         await db.execute(
-            "CREATE TABLE Subjects(title text, latestCorrect int, latestIncorrect int)");
+            "CREATE TABLE Subjects(title text, id integer primary key autoincrement, latestCorrect int, latestIncorrect int)");
         await db.execute(
             "CREATE TABLE Sections(subject text, title text, tableID integer primary key autoincrement, latestStudyMode text)");
       },

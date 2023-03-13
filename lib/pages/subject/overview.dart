@@ -141,11 +141,12 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
                                     // 記録を保存
                                     await updateSubjectRecord(
-                                        subInfo.title, correct, inCorrect);
+                                        subInfo.id, correct, inCorrect);
 
                                     setState(() {
                                       subInfo = SubjectInfo(
                                           title: subInfo.title,
+                                          id: subInfo.id,
                                           latestCorrect: correct,
                                           latestIncorrect: inCorrect);
                                     });

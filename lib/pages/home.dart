@@ -193,9 +193,9 @@ class _HomeState extends State<Home> {
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (selectedIndex) async {
           if (selectedIndex == 1) {
-            late String? createdSubTitle;
+            late SubjectInfo? subInfo;
             if (largeSC) {
-              createdSubTitle = await showDialog(
+              subInfo = await showDialog(
                   context: context,
                   builder: (builder) {
                     return Dialog(
@@ -205,7 +205,7 @@ class _HomeState extends State<Home> {
                     ));
                   });
             } else {
-              createdSubTitle = await showModalBottomSheet<String>(
+              subInfo = await showModalBottomSheet<SubjectInfo>(
                   backgroundColor: Colors.transparent,
                   context: context,
                   isScrollControlled: true,
@@ -215,14 +215,11 @@ class _HomeState extends State<Home> {
                   });
             }
 
-            if (createdSubTitle != null) {
-              final subInfo = SubjectInfo(
-                  title: createdSubTitle, latestCorrect: 0, latestIncorrect: 0);
-
+            if (subInfo != null) {
               // 教科Widgetに追加
               setState(() {
                 subejctWidgetList.add(SubjectWidget(
-                    subInfo: subInfo, index: subejctWidgetList.length));
+                    subInfo: subInfo!, index: subejctWidgetList.length));
               });
 
               // 教科ページへ移動
@@ -230,7 +227,7 @@ class _HomeState extends State<Home> {
                   context,
                   MaterialPageRoute(
                       builder: ((context) =>
-                          SubjectOverview(subInfo: subInfo))));
+                          SubjectOverview(subInfo: subInfo!))));
             }
           } else {
             setState(() => pageIndex = selectedIndex);
@@ -356,7 +353,7 @@ class _SubjectWidgetState extends State<SubjectWidget> {
                             }));
 
                         if (confirm ?? false) {
-                          await removeSubject(widget.subInfo.title);
+                          await removeSubject(widget.subInfo.id);
 
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('削除しました')));

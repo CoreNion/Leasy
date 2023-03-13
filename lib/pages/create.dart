@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mimosa/class/subject.dart';
 
 import '../helper/subject.dart';
 
@@ -64,13 +65,19 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                                   minimumSize: const Size(double.infinity, 55),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10))),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
                                   // DBに作成
-                                  createSubject(_title);
+                                  final id = await createSubject(_title);
 
                                   // タイトルを報告しながら、元のページに戻る
-                                  Navigator.pop(context, _title);
+                                  Navigator.pop(
+                                      context,
+                                      SubjectInfo(
+                                          title: _title,
+                                          id: id,
+                                          latestCorrect: 0,
+                                          latestIncorrect: 0));
                                 }
                               },
                               child: const Text("教科を作成",
