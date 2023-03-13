@@ -25,12 +25,18 @@ Future<int> createSubject(String title) async {
 
 /// データベースから教科を削除する
 Future<int> removeSubject(int id) async {
-  return studyDB.delete("Subjects", where: "id='$id'");
+  return studyDB.delete("Subjects", where: "id=$id");
+}
+
+/// 教科の名前を変更する
+Future<int> renameSubjectName(int id, String newTitle) {
+  return studyDB
+      .rawUpdate("UPDATE Subjects SET title = '$newTitle' WHERE id = $id;");
 }
 
 /// データベースに保存されている記録を更新する
 Future<int> updateSubjectRecord(
     int id, int latestCorrect, int latestIncorrect) {
   return studyDB.rawUpdate(
-      "UPDATE Subjects SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect WHERE id = '$id';");
+      "UPDATE Subjects SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect WHERE id = $id;");
 }
