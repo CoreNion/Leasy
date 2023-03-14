@@ -285,25 +285,28 @@ class _SubjectWidgetState extends State<SubjectWidget> {
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FilledButton(
-              style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 150),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10))),
-              onPressed: (() => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (builder) =>
-                          SubjectOverview(subInfo: currentInfo)))),
-              onLongPress: () {
-                setState(() {
-                  Home.showDropDown = true;
-                });
-              },
-              child: Text(
-                currentInfo.title,
-                style:
-                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+          GestureDetector(
+              onLongPress: () => setState(() {
+                    Home.showDropDown = true;
+                  }),
+              onSecondaryTapUp: (details) => setState(() {
+                    Home.showDropDown = true;
+                  }),
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 150),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                onPressed: (() => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (builder) =>
+                            SubjectOverview(subInfo: currentInfo)))),
+                child: Text(
+                  currentInfo.title,
+                  style: const TextStyle(
+                      fontSize: 25, fontWeight: FontWeight.bold),
+                ),
               )),
           const SizedBox(height: 50)
         ],
