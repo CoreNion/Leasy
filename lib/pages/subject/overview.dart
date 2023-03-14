@@ -31,7 +31,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
     subInfo = widget.subInfo;
     // 保存されているセクションをリストに追加
-    getSectionIDs(widget.subInfo.title).then((ids) async {
+    getSectionIDs(widget.subInfo.id).then((ids) async {
       for (var id in ids) {
         _sectionListID.add(id);
         final title = await sectionIDtoTitle(id);
@@ -64,8 +64,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   final nav = Navigator.of(context);
 
                                   final id = await createSection(
-                                      widget.subInfo.title,
-                                      _createdSectionTitle);
+                                      widget.subInfo.id, _createdSectionTitle);
                                   setState(() {
                                     _sectionListID.add(id);
                                     _sectionListStr.add(_createdSectionTitle);

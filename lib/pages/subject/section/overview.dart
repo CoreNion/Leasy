@@ -158,7 +158,7 @@ class _SectionPageState extends State<SectionPage> {
 
                                   setState(() {
                                     secInfo = SectionInfo(
-                                        subject: secInfo.subject,
+                                        subjectID: secInfo.tableID,
                                         title: secInfo.title,
                                         latestStudyMode: "normal",
                                         tableID: secInfo.tableID);
@@ -185,7 +185,7 @@ class _SectionPageState extends State<SectionPage> {
                                   if (record != null) {
                                     setState(() {
                                       secInfo = SectionInfo(
-                                          subject: secInfo.subject,
+                                          subjectID: secInfo.subjectID,
                                           title: secInfo.title,
                                           latestStudyMode: "test",
                                           tableID: secInfo.tableID);

@@ -1,7 +1,7 @@
 /// セクション情報のモデル
 class SectionInfo {
-  /// 所属教科
-  final String subject;
+  /// 所属教科のID
+  final int subjectID;
 
   /// セクション名
   final String title;
@@ -13,7 +13,7 @@ class SectionInfo {
   final int tableID;
 
   SectionInfo(
-      {required this.subject,
+      {required this.subjectID,
       required this.title,
       required this.latestStudyMode,
       required this.tableID});
@@ -21,7 +21,7 @@ class SectionInfo {
   Map<String, Object?> toMap() {
     {
       return {
-        'subject': subject,
+        'subjectID': subjectID,
         'title': title,
         'tableID': tableID,
         "latestStudyMode": latestStudyMode
@@ -32,7 +32,7 @@ class SectionInfo {
   // DataBaseの形式のMapからModelに変換する関数
   static SectionInfo tableMapToModel(Map<String, Object?> map) {
     return SectionInfo(
-        subject: map["subject"].toString(),
+        subjectID: map["subjectID"] as int,
         title: map["title"].toString(),
         tableID: map["tableID"] as int,
         latestStudyMode: map["latestStudyMode"].toString());

@@ -2,7 +2,7 @@ import 'common.dart';
 import '../class/section.dart';
 
 /// Sections DataBaseにセクションを作成
-Future<int> createSection(String subjectName, String title) async {
+Future<int> createSection(int subjectID, String title) async {
   int tableID = DateTime.now().millisecondsSinceEpoch;
 
   // 問題集のTableを作成
@@ -13,7 +13,7 @@ Future<int> createSection(String subjectName, String title) async {
   return studyDB.insert(
       "Sections",
       SectionInfo(
-              subject: subjectName,
+              subjectID: subjectID,
               title: title,
               tableID: tableID,
               latestStudyMode: "no")
@@ -21,9 +21,9 @@ Future<int> createSection(String subjectName, String title) async {
 }
 
 /// Sections DataBaseから指定された教科に所属しているセクションIDを取得する
-Future<List<int>> getSectionIDs(String subjectName) async {
+Future<List<int>> getSectionIDs(int subjectID) async {
   final idsMap = await studyDB.query('Sections',
-      columns: ["tableID"], where: "subject='$subjectName'");
+      columns: ["tableID"], where: "subjectID='$subjectID'");
 
   List<int> ids = [];
   for (var map in idsMap) {
