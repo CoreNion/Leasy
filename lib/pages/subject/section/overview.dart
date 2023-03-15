@@ -6,6 +6,7 @@ import '../../../class/section.dart';
 import '../../../class/question.dart';
 import '../study.dart';
 import './manage.dart';
+import '../../../utility.dart';
 
 class SectionPage extends StatefulWidget {
   final SectionInfo sectionInfo;
@@ -280,17 +281,33 @@ class _SectionPageState extends State<SectionPage> {
                               final question = await getMiQuestion(
                                   secInfo.tableID, _questionListID[index]);
 
-                              final res = await showModalBottomSheet(
-                                  backgroundColor: Colors.transparent,
-                                  context: context,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  builder: (builder) {
-                                    return SectionManagePage(
-                                      sectionID: secInfo.tableID,
-                                      miQuestion: question,
-                                    );
-                                  });
+                              late List<dynamic>? res;
+                              if (checkLargeSC(context)) {
+                                res = await showDialog(
+                                    context: context,
+                                    builder: (builder) {
+                                      return Dialog(
+                                          child: FractionallySizedBox(
+                                        widthFactor: 0.6,
+                                        child: SectionManagePage(
+                                          sectionID: secInfo.tableID,
+                                          miQuestion: question,
+                                        ),
+                                      ));
+                                    });
+                              } else {
+                                res = await showModalBottomSheet(
+                                    backgroundColor: Colors.transparent,
+                                    context: context,
+                                    isScrollControlled: true,
+                                    useSafeArea: true,
+                                    builder: (builder) {
+                                      return SectionManagePage(
+                                        sectionID: secInfo.tableID,
+                                        miQuestion: question,
+                                      );
+                                    });
+                              }
                               updateList(res);
                             }))),
                       ))),

@@ -3,6 +3,7 @@ import 'package:flutter_picker/flutter_picker.dart';
 
 import '../../../class/question.dart';
 import '../../../helper/question.dart';
+import '../../../utility.dart';
 
 class SectionManagePage extends StatefulWidget {
   final int sectionID;
@@ -162,8 +163,13 @@ class _SectionManagePageState extends State<SectionManagePage> {
                       ],
                     ),
                     Container(
-                      color: colorScheme.background,
-                      padding: const EdgeInsets.all(7.0),
+                      padding:
+                          EdgeInsets.all(checkLargeSC(context) ? 20.0 : 7.0),
+                      decoration: BoxDecoration(
+                          color: colorScheme.background,
+                          borderRadius: const BorderRadius.only(
+                              bottomRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(20))),
                       child: Form(
                         key: _formKey,
                         child: Column(
