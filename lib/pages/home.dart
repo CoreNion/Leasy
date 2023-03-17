@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../main.dart';
@@ -181,12 +182,20 @@ class _HomeState extends State<Home> {
         title: Text(pageTitles[pageIndex]),
         actions: <Widget>[
           IconButton(
-              onPressed: () =>
-                  showAboutDialog(context: context, children: <Widget>[
-                    const Text(
-                      "codename: mimosa",
-                    )
-                  ]),
+              onPressed: () => showAboutDialog(
+                    context: context,
+                    applicationName: "Leasy",
+                    applicationVersion: "Dev Version",
+                    applicationLegalese: "(c) 2023 CoreNion\n",
+                    applicationIcon: ClipRRect(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(15)),
+                        child: SvgPicture.asset(
+                          'assets/icon.svg',
+                          width: 80,
+                          height: 80,
+                        )),
+                  ),
               icon: const Icon(Icons.info))
         ],
       ),
