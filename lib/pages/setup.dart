@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mimosa/pages/setting.dart';
 
 class SetupPage extends StatefulWidget {
@@ -32,8 +33,10 @@ class _SetupPageState extends State<SetupPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Column(
+            Expanded(
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
@@ -44,9 +47,9 @@ class _SetupPageState extends State<SetupPage> {
                         fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                 ),
-                contents[currentview]
+                Expanded(child: contents[currentview])
               ],
-            ),
+            )),
             Column(
               children: [
                 FilledButton(
@@ -75,19 +78,20 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   Widget _firstView() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: const [
-        Text(
-          "Leasyをダウンロードしていただき、ありがとうございます！",
-          style: TextStyle(fontSize: 16),
+    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      const Text(
+        "Leasyをダウンロードしていただき、ありがとうございます！",
+        style: TextStyle(fontSize: 20),
+      ),
+      SizedBox.fromSize(size: const Size.fromHeight(40)),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: SvgPicture.asset(
+          'assets/icon.svg',
+          height: 200,
         ),
-        Icon(
-          Icons.handshake,
-          size: 200,
-        )
-      ],
-    );
+      ),
+    ]);
   }
 
   Widget howtoContent() {
