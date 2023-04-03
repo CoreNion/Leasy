@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../main.dart';
@@ -183,6 +183,8 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (selectedIndex) async {
+          HapticFeedback.mediumImpact();
+
           if (selectedIndex == 1) {
             late SubjectInfo? subInfo;
             if (largeSC) {
@@ -278,6 +280,7 @@ class _SubjectWidgetState extends State<SubjectWidget> {
         children: [
           GestureDetector(
               onLongPress: () => setState(() {
+                    HapticFeedback.lightImpact();
                     Home.showDropDown = true;
                   }),
               onSecondaryTapUp: (details) => setState(() {
@@ -288,11 +291,14 @@ class _SubjectWidgetState extends State<SubjectWidget> {
                     minimumSize: const Size(double.infinity, 150),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10))),
-                onPressed: (() => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (builder) =>
-                            SubjectOverview(subInfo: currentInfo)))),
+                onPressed: (() {
+                  HapticFeedback.lightImpact();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (builder) =>
+                              SubjectOverview(subInfo: currentInfo)));
+                }),
                 child: Text(
                   currentInfo.title,
                   style: const TextStyle(

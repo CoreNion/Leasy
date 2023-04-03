@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:status_alert/status_alert.dart';
+import 'package:flutter/services.dart';
 
 import '../../class/section.dart';
 import '../../class/question.dart';
@@ -216,6 +217,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
       configuration: const IconConfiguration(icon: Icons.check_circle),
       maxWidth: 260,
     );
+    HapticFeedback.lightImpact();
 
     // 正解を記録
     record[currentQuestionIndex - 1] = true;
@@ -237,6 +239,10 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
       configuration: const IconConfiguration(icon: Icons.close),
       maxWidth: 260,
     );
+    HapticFeedback.heavyImpact().then((value) async {
+      await Future.delayed(const Duration(milliseconds: 250));
+      HapticFeedback.heavyImpact();
+    });
 
     // 不正解を記録
     record[currentQuestionIndex - 1] = false;
