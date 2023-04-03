@@ -56,3 +56,9 @@ Future<int> removeSection(String subjectName, int id) async {
   return studyDB.delete("Sections",
       where: "subject='$subjectName' AND tableID='$id'");
 }
+
+// セクション名を変更
+Future<int> renameSectionName(int tableID, String name) {
+  return studyDB.rawUpdate(
+      "UPDATE Sections SET title = '$name' WHERE tableID = $tableID;");
+}

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 import '../../class/subject.dart';
@@ -180,40 +182,99 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                               .showSnackBar(SnackBar(content: Text('削除しました')));
                         },
                         confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title:
-                                    Text('${_sectionListStr[index]}を削除しますか？'),
-                                content: const Text('この操作は取り消せません。'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text('はい'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text('いいえ'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                          if (direction == DismissDirection.startToEnd) {
+                            return await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title:
+                                      Text('${_sectionListStr[index]}を削除しますか？'),
+                                  content: const Text('この操作は取り消せません。'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('はい'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('いいえ'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else if (direction == DismissDirection.endToStart) {
+                            final formKey = GlobalKey<FormState>();
+                            late String newTitle;
+
+                            final res = await showDialog<bool?>(
+                                context: context,
+                                builder: (builder) {
+                                  return AlertDialog(
+                                    title: const Text("新しい名前を入力"),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: (() =>
+                                              Navigator.pop(context, false)),
+                                          child: const Text("キャンセル")),
+                                      TextButton(
+                                          onPressed: (() {
+                                            if (formKey.currentState!
+                                                .validate()) {
+                                              Navigator.pop(context, true);
+                                            }
+                                          }),
+                                          child: const Text("決定")),
+                                    ],
+                                    content: Form(
+                                      key: formKey,
+                                      child: TextFormField(
+                                        decoration: const InputDecoration(
+                                            labelText: "セクション名",
+                                            icon: Icon(Icons.book),
+                                            hintText: "セクション名を入力"),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "セクション名を入力してください";
+                                          } else if (value ==
+                                              _sectionListStr[index]) {
+                                            return "新しいセクション名を入力してください";
+                                          } else {
+                                            newTitle = value;
+                                            return null;
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                });
+                            if (!(res ?? false)) return null;
+                            await renameSectionName(
+                                _sectionListID[index], newTitle);
+
+                            setState(() {
+                              _sectionListStr[index] = newTitle;
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('名前を変更しました')));
+                            return false;
+                          }
                         },
                         background: Container(
-                          color: Colors.red,
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const <Widget>[
-                              Icon(Icons.delete),
-                              Icon(Icons.delete)
-                            ],
-                          ),
-                        ),
+                            color: Colors.red,
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Icon(Icons.delete))),
+                        secondaryBackground: Container(
+                            color: Colors.blue,
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: const Align(
+                                alignment: Alignment.centerRight,
+                                child: Icon(Icons.title))),
                         child: ListTile(
                           title: Text(_sectionListStr[index]),
                           onTap: () async {
