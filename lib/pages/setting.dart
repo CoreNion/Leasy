@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_picker/Picker.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../helper/common.dart';
 import '../main.dart';
@@ -17,19 +18,51 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
-        child: Container(
-            margin: const EdgeInsets.all(17),
-            child: Center(
-                child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1000),
-                    child: Column(
-                      children: const <Widget>[
-                        ScreenSettings(),
-                        SizedBox(height: 25),
-                        DataSettings()
-                      ],
-                    )))));
+      child: Container(
+        margin: const EdgeInsets.all(17),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
+              children: <Widget>[
+                const ScreenSettings(),
+                const SizedBox(height: 25),
+                const DataSettings(),
+                const SizedBox(height: 25),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      color: colorScheme.background,
+                      border: Border.all(color: colorScheme.outline),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(10))),
+                  child: ListTile(
+                    title: const Text("アプリ情報"),
+                    subtitle: Text("Version: Dev"),
+                    trailing: Icon(Icons.info, color: colorScheme.primary),
+                    onTap: () => showAboutDialog(
+                        context: context,
+                        applicationName: "Leasy",
+                        applicationVersion: "Dev Version",
+                        applicationLegalese: "(c) 2023 CoreNion\n",
+                        applicationIcon: ClipRRect(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(15)),
+                            child: SvgPicture.asset(
+                              'assets/icon.svg',
+                              width: 80,
+                              height: 80,
+                            ))),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
