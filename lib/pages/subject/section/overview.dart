@@ -84,24 +84,6 @@ class _SectionPageState extends State<SectionPage> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(secInfo.title),
-          actions: <Widget>[
-            IconButton(
-                onPressed: ((() {
-                  showModalBottomSheet(
-                      backgroundColor: Colors.transparent,
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (builder) {
-                        return SectionManagePage(
-                          sectionID: secInfo.tableID,
-                        );
-                      }).then(
-                    (value) => updateList(value),
-                  );
-                })),
-                icon: const Icon(Icons.add)),
-          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(7.0),
@@ -313,6 +295,38 @@ class _SectionPageState extends State<SectionPage> {
                       ))),
             ],
           )),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: ((() {
+            if (checkLargeSC(context)) {
+              showDialog(
+                  context: context,
+                  builder: (builder) {
+                    return Dialog(
+                        child: FractionallySizedBox(
+                      widthFactor: 0.6,
+                      child: SectionManagePage(
+                        sectionID: secInfo.tableID,
+                      ),
+                    ));
+                  }).then((value) => updateList(value));
+            } else {
+              showModalBottomSheet(
+                  backgroundColor: Colors.transparent,
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (builder) {
+                    return SectionManagePage(
+                      sectionID: secInfo.tableID,
+                    );
+                  }).then(
+                (value) => updateList(value),
+              );
+            }
+          })),
+          tooltip: "問題を作成",
+          child: const Icon(Icons.add),
         ));
   }
 }

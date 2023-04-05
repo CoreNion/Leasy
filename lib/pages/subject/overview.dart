@@ -47,249 +47,257 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.subInfo.title),
-          actions: <Widget>[
-            IconButton(
-                onPressed: (() {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                        title: const Text("セクションを作成"),
-                        actions: <Widget>[
-                          TextButton(
-                              onPressed: (() => Navigator.pop(context)),
-                              child: const Text("キャンセル")),
-                          TextButton(
-                              onPressed: (() async {
-                                if (_formKey.currentState!.validate()) {
-                                  final nav = Navigator.of(context);
+      appBar: AppBar(
+        title: Text(widget.subInfo.title),
+      ),
+      body: Padding(
+          padding: const EdgeInsets.all(7.0),
+          child: SingleChildScrollView(
+            child: Column(children: <Widget>[
+              scoreBoard(colorScheme, true, subInfo.latestCorrect,
+                  subInfo.latestIncorrect),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                      padding: const EdgeInsets.all(7.0),
+                      child: FilledButton(
+                          onPressed: _sectionListID.isNotEmpty
+                              ? () async {
+                                  final mis =
+                                      await getMiQuestions(_sectionListID);
 
-                                  final id = await createSection(
-                                      widget.subInfo.id, _createdSectionTitle);
-                                  setState(() {
-                                    _sectionListID.add(id);
-                                    _sectionListStr.add(_createdSectionTitle);
-                                  });
-                                  nav.pop();
-                                }
-                              }),
-                              child: const Text("決定")),
-                        ],
-                        content: Form(
-                            key: _formKey,
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                  labelText: "セクション名",
-                                  icon: Icon(Icons.book),
-                                  hintText: "セクション名を入力"),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return "セクション名を入力してください";
-                                } else {
-                                  _createdSectionTitle = value;
-                                  return null;
-                                }
-                              },
-                            ))),
-                  );
-                }),
-                icon: const Icon(Icons.add))
-          ],
-        ),
-        body: Padding(
-            padding: const EdgeInsets.all(7.0),
-            child: SingleChildScrollView(
-              child: Column(children: <Widget>[
-                scoreBoard(colorScheme, true, subInfo.latestCorrect,
-                    subInfo.latestIncorrect),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.all(7.0),
-                        child: FilledButton(
-                            onPressed: _sectionListID.isNotEmpty
-                                ? () async {
-                                    final mis =
-                                        await getMiQuestions(_sectionListID);
-
-                                    if (mis.isEmpty) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                              content: Text(
-                                                  '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
-                                      return;
-                                    }
-
-                                    final record = await Navigator.of(context)
-                                        .push<List<bool>>(MaterialPageRoute(
-                                      builder: (context) => SectionStudyPage(
-                                        miQuestions: mis,
-                                        testMode: true,
-                                      ),
-                                    ));
-                                    if (record == null) {
-                                      return;
-                                    }
-
-                                    final correct = record
-                                        .where((correct) => correct)
-                                        .length;
-                                    final inCorrect = record
-                                        .where((correct) => !correct)
-                                        .length;
-
-                                    // 記録を保存
-                                    await updateSubjectRecord(
-                                        subInfo.id, correct, inCorrect);
-
-                                    setState(() {
-                                      subInfo = SubjectInfo(
-                                          title: subInfo.title,
-                                          id: subInfo.id,
-                                          latestCorrect: correct,
-                                          latestIncorrect: inCorrect);
-                                    });
+                                  if (mis.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
+                                    return;
                                   }
-                                : null,
-                            child: const Text("テストを開始する"))),
-                  ],
-                ),
-                Text(
-                  "セクション数:${_sectionListID.length}",
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-                const Divider(),
-                ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: _sectionListID.length,
-                    itemBuilder: ((context, index) => Dismissible(
-                        key: Key(_sectionListStr[index]),
-                        onDismissed: (direction) async {
-                          await removeSection(
-                              widget.subInfo.title, _sectionListID[index]);
 
-                          _sectionListID.removeAt(index);
+                                  final record = await Navigator.of(context)
+                                      .push<List<bool>>(MaterialPageRoute(
+                                    builder: (context) => SectionStudyPage(
+                                      miQuestions: mis,
+                                      testMode: true,
+                                    ),
+                                  ));
+                                  if (record == null) {
+                                    return;
+                                  }
 
-                          setState(() {
-                            _sectionListStr.removeAt(index);
-                          });
+                                  final correct =
+                                      record.where((correct) => correct).length;
+                                  final inCorrect = record
+                                      .where((correct) => !correct)
+                                      .length;
 
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('削除しました')));
-                        },
-                        confirmDismiss: (direction) async {
-                          if (direction == DismissDirection.startToEnd) {
-                            return await showDialog(
+                                  // 記録を保存
+                                  await updateSubjectRecord(
+                                      subInfo.id, correct, inCorrect);
+
+                                  setState(() {
+                                    subInfo = SubjectInfo(
+                                        title: subInfo.title,
+                                        id: subInfo.id,
+                                        latestCorrect: correct,
+                                        latestIncorrect: inCorrect);
+                                  });
+                                }
+                              : null,
+                          child: const Text("テストを開始する"))),
+                ],
+              ),
+              Text(
+                "セクション数:${_sectionListID.length}",
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              const Divider(),
+              ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: _sectionListID.length,
+                  itemBuilder: ((context, index) => Dismissible(
+                      key: Key(_sectionListStr[index]),
+                      onDismissed: (direction) async {
+                        await removeSection(
+                            widget.subInfo.title, _sectionListID[index]);
+
+                        _sectionListID.removeAt(index);
+
+                        setState(() {
+                          _sectionListStr.removeAt(index);
+                        });
+
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text('削除しました')));
+                      },
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          return await showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title:
+                                    Text('${_sectionListStr[index]}を削除しますか？'),
+                                content: const Text('この操作は取り消せません。'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text('はい'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text('いいえ'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else if (direction == DismissDirection.endToStart) {
+                          final formKey = GlobalKey<FormState>();
+                          late String newTitle;
+
+                          final res = await showDialog<bool?>(
                               context: context,
-                              builder: (context) {
+                              builder: (builder) {
                                 return AlertDialog(
-                                  title:
-                                      Text('${_sectionListStr[index]}を削除しますか？'),
-                                  content: const Text('この操作は取り消せません。'),
+                                  title: const Text("新しい名前を入力"),
                                   actions: [
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('はい'),
-                                    ),
+                                        onPressed: (() =>
+                                            Navigator.pop(context, false)),
+                                        child: const Text("キャンセル")),
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('いいえ'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          } else if (direction == DismissDirection.endToStart) {
-                            final formKey = GlobalKey<FormState>();
-                            late String newTitle;
-
-                            final res = await showDialog<bool?>(
-                                context: context,
-                                builder: (builder) {
-                                  return AlertDialog(
-                                    title: const Text("新しい名前を入力"),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: (() =>
-                                              Navigator.pop(context, false)),
-                                          child: const Text("キャンセル")),
-                                      TextButton(
-                                          onPressed: (() {
-                                            if (formKey.currentState!
-                                                .validate()) {
-                                              Navigator.pop(context, true);
-                                            }
-                                          }),
-                                          child: const Text("決定")),
-                                    ],
-                                    content: Form(
-                                      key: formKey,
-                                      child: TextFormField(
-                                        decoration: const InputDecoration(
-                                            labelText: "セクション名",
-                                            icon: Icon(Icons.book),
-                                            hintText: "セクション名を入力"),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return "セクション名を入力してください";
-                                          } else if (value ==
-                                              _sectionListStr[index]) {
-                                            return "新しいセクション名を入力してください";
-                                          } else {
-                                            newTitle = value;
-                                            return null;
+                                        onPressed: (() {
+                                          if (formKey.currentState!
+                                              .validate()) {
+                                            Navigator.pop(context, true);
                                           }
-                                        },
-                                      ),
+                                        }),
+                                        child: const Text("決定")),
+                                  ],
+                                  content: Form(
+                                    key: formKey,
+                                    child: TextFormField(
+                                      decoration: const InputDecoration(
+                                          labelText: "セクション名",
+                                          icon: Icon(Icons.book),
+                                          hintText: "セクション名を入力"),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return "セクション名を入力してください";
+                                        } else if (value ==
+                                            _sectionListStr[index]) {
+                                          return "新しいセクション名を入力してください";
+                                        } else {
+                                          newTitle = value;
+                                          return null;
+                                        }
+                                      },
                                     ),
-                                  );
-                                });
-                            if (!(res ?? false)) return null;
-                            await renameSectionName(
-                                _sectionListID[index], newTitle);
+                                  ),
+                                );
+                              });
+                          if (!(res ?? false)) return null;
+                          await renameSectionName(
+                              _sectionListID[index], newTitle);
 
-                            setState(() {
-                              _sectionListStr[index] = newTitle;
-                            });
+                          setState(() {
+                            _sectionListStr[index] = newTitle;
+                          });
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('名前を変更しました')));
-                            return false;
-                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('名前を変更しました')));
+                          return false;
+                        }
+                      },
+                      background: Container(
+                          color: Colors.red,
+                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          child: const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Icon(Icons.delete))),
+                      secondaryBackground: Container(
+                          color: Colors.blue,
+                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          child: const Align(
+                              alignment: Alignment.centerRight,
+                              child: Icon(Icons.title))),
+                      child: ListTile(
+                        title: Text(_sectionListStr[index]),
+                        onTap: () async {
+                          final secInfo =
+                              await getSectionData(_sectionListID[index]);
+
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: ((context) {
+                            return SectionPage(
+                              sectionInfo: secInfo,
+                            );
+                          })));
                         },
-                        background: Container(
-                            color: Colors.red,
-                            padding: const EdgeInsets.only(left: 10, right: 10),
-                            child: const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Icon(Icons.delete))),
-                        secondaryBackground: Container(
-                            color: Colors.blue,
-                            padding: const EdgeInsets.only(left: 10, right: 10),
-                            child: const Align(
-                                alignment: Alignment.centerRight,
-                                child: Icon(Icons.title))),
-                        child: ListTile(
-                          title: Text(_sectionListStr[index]),
-                          onTap: () async {
-                            final secInfo =
-                                await getSectionData(_sectionListID[index]);
+                      )))),
+            ]),
+          )),
+      floatingActionButton: FloatingActionButton(
+          onPressed: (() {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                  title: const Text("セクションを作成"),
+                  actions: <Widget>[
+                    TextButton(
+                        onPressed: (() => Navigator.pop(context)),
+                        child: const Text("キャンセル")),
+                    TextButton(
+                        onPressed: (() async {
+                          if (_formKey.currentState!.validate()) {
+                            final nav = Navigator.of(context);
 
+                            final id = await createSection(
+                                widget.subInfo.id, _createdSectionTitle);
+                            setState(() {
+                              _sectionListID.add(id);
+                              _sectionListStr.add(_createdSectionTitle);
+                            });
+                            nav.pop();
+
+                            // 作成した教科に移動
+                            final secInfo = await getSectionData(id);
                             Navigator.push(context,
                                 MaterialPageRoute(builder: ((context) {
                               return SectionPage(
                                 sectionInfo: secInfo,
                               );
                             })));
-                          },
-                        )))),
-              ]),
-            )));
+                          }
+                        }),
+                        child: const Text("決定")),
+                  ],
+                  content: Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: "セクション名",
+                            icon: Icon(Icons.book),
+                            hintText: "セクション名を入力"),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "セクション名を入力してください";
+                          } else {
+                            _createdSectionTitle = value;
+                            return null;
+                          }
+                        },
+                      ))),
+            );
+          }),
+          tooltip: "セクションを作成",
+          child: const Icon(Icons.add)),
+    );
   }
 }
