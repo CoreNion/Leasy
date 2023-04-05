@@ -122,7 +122,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                       key: Key(_sectionListStr[index]),
                       onDismissed: (direction) async {
                         await removeSection(
-                            widget.subInfo.title, _sectionListID[index]);
+                            widget.subInfo.id, _sectionListID[index]);
 
                         _sectionListID.removeAt(index);
 

@@ -49,12 +49,12 @@ Future<SectionInfo> getSectionData(int tableID) async {
 }
 
 /// DataBaseから一致したセクションを削除する
-Future<int> removeSection(String subjectName, int id) async {
+Future<int> removeSection(int subjectID, int id) async {
   // セクションの問題集を削除
   await studyDB.execute("DROP TABLE Section_$id");
   // セクション一覧から削除
   return studyDB.delete("Sections",
-      where: "subject='$subjectName' AND tableID='$id'");
+      where: "subjectID='$subjectID' AND tableID='$id'");
 }
 
 // セクション名を変更
