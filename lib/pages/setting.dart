@@ -1,9 +1,10 @@
 import 'dart:async';
 
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart';
 
 import '../helper/common.dart';
 import '../main.dart';
@@ -107,7 +108,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
             onTap: () {
               Picker(
                       adapter:
-                          PickerDataAdapter(pickerdata: darkModeSelections),
+                          PickerDataAdapter(pickerData: darkModeSelections),
                       changeToFirst: true,
                       onConfirm: (Picker picker, List value) async {
                         late String prefsStr;
@@ -151,7 +152,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: const Text("テーマ色を選択"),
+                    title: const Text("テーマカラーを選択"),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -167,21 +168,34 @@ class _ScreenSettingsState extends State<ScreenSettings> {
                                       .setBool("CustomColor", !val);
                                 })
                             : Container(),
-                        MyApp.customColor
-                            ? BlockPicker(
-                                pickerColor: MyApp.seedColor,
-                                onColorChanged: (color) async {
-                                  MyApp.rootSetState(() {
-                                    MyApp.customColor = true;
-                                    MyApp.seedColor = color;
-                                  });
-
-                                  await MyApp.prefs
-                                      .setBool("CustomColor", true);
-                                  await MyApp.prefs
-                                      .setInt("SeedColor", color.value);
-                                })
-                            : Container(),
+                        ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: SingleChildScrollView(
+                                child: MyApp.customColor
+                                    ? ColorPicker(
+                                        color: MyApp.seedColor,
+                                        pickersEnabled: const <ColorPickerType,
+                                            bool>{
+                                          ColorPickerType.primary: false,
+                                          ColorPickerType.accent: true
+                                        },
+                                        enableShadesSelection: false,
+                                        borderRadius: 25,
+                                        height: 45,
+                                        width: 45,
+                                        spacing: 15,
+                                        runSpacing: 15,
+                                        onColorChanged: (color) async {
+                                          MyApp.rootSetState(() {
+                                            MyApp.customColor = true;
+                                            MyApp.seedColor = color;
+                                          });
+                                          await MyApp.prefs
+                                              .setBool("CustomColor", true);
+                                          await MyApp.prefs
+                                              .setInt("SeedColor", color.value);
+                                        })
+                                    : Container())),
                       ],
                     ),
                     actions: <Widget>[

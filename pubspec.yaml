@@ -45,10 +45,10 @@ dependencies:
   status_alert: ^1.0.1
   path_provider: ^2.0.12
   sqflite_common_ffi_web: ^0.3.2
-  flutter_colorpicker: ^1.0.3
   shared_preferences: ^2.0.18
   flutter_native_splash: ^2.2.18
   flutter_svg: ^2.0.4
+  flex_color_picker: ^3.2.0
 
 flutter_native_splash:
   color: '#d3edfb'
