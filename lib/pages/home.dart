@@ -51,9 +51,9 @@ class _HomeState extends State<Home> {
               barrierDismissible: false,
               context: context,
               builder: (builder) {
-                return const WillPopScope(
-                    onWillPop: null,
-                    child: Dialog(
+                return WillPopScope(
+                    onWillPop: () async => false,
+                    child: const Dialog(
                       child: FractionallySizedBox(
                         heightFactor: 0.6,
                         widthFactor: 0.6,
@@ -69,8 +69,10 @@ class _HomeState extends State<Home> {
               enableDrag: false,
               backgroundColor: Colors.transparent,
               useSafeArea: true,
-              builder: (builder) => const FractionallySizedBox(
-                  heightFactor: 0.7, child: SetupPage())).then((val) async {});
+              builder: (builder) => WillPopScope(
+                  onWillPop: () async => false,
+                  child: const FractionallySizedBox(
+                      heightFactor: 0.7, child: SetupPage())));
         }
         // await MyApp.prefs.setBool("setup", true);
       });
