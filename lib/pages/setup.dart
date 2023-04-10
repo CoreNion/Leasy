@@ -83,14 +83,17 @@ class _SetupPageState extends State<SetupPage> {
         "Leasyをダウンロードしていただき、ありがとうございます！",
         style: TextStyle(fontSize: 20),
       ),
-      SizedBox.fromSize(size: const Size.fromHeight(40)),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: SvgPicture.asset(
-          'assets/icon.svg',
-          height: 200,
+      Expanded(
+        child: Align(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: SvgPicture.asset(
+              'assets/icon.svg',
+              height: 200,
+            ),
+          ),
         ),
-      ),
+      )
     ]);
   }
 
