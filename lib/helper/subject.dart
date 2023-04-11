@@ -1,5 +1,6 @@
 import 'common.dart';
 import '../class/subject.dart';
+import './section.dart';
 
 /// データベースにある教科を取得する
 Future<List<SubjectInfo>> getSubjectInfos() async {
@@ -25,6 +26,12 @@ Future<int> createSubject(String title) async {
 
 /// データベースから教科を削除する
 Future<int> removeSubject(int id) async {
+  // セクションの削除
+  final secIDs = await getSectionIDs(id);
+  for (var secID in secIDs) {
+    await removeSection(id, secID);
+  }
+
   return studyDB.delete("Subjects", where: "id=$id");
 }
 
