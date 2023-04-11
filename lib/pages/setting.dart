@@ -4,7 +4,6 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/services.dart';
 
 import '../helper/common.dart';
 import '../main.dart';
@@ -41,12 +40,12 @@ class _SettingPageState extends State<SettingPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: ListTile(
                     title: const Text("アプリ情報"),
-                    subtitle: Text("Version: Dev"),
+                    subtitle: Text("v${MyApp.packageInfo.buildNumber}"),
                     trailing: Icon(Icons.info, color: colorScheme.primary),
                     onTap: () => showAboutDialog(
                         context: context,
                         applicationName: "Leasy",
-                        applicationVersion: "Dev Version",
+                        applicationVersion: "v${MyApp.packageInfo.buildNumber}",
                         applicationLegalese: "(c) 2023 CoreNion\n",
                         applicationIcon: ClipRRect(
                             borderRadius:

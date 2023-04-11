@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:mimosa/helper/common.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import './helper/common.dart';
 import 'pages/home.dart';
 
 void main() async {
@@ -27,6 +28,9 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   static late SharedPreferences prefs;
+
+  // パッケージ情報
+  static late PackageInfo packageInfo;
 
   /// アプリのColorSchemeで選択された色
   static Color seedColor = Colors.blue;
@@ -94,7 +98,10 @@ class _MyAppState extends State<MyApp> {
               await prefs.setInt("SeedColor", MyApp.seedColor.value);
             }
 
+            // データベースのロード
             await loadStudyDataBase();
+            // バージョン情報のロード
+            MyApp.packageInfo = await PackageInfo.fromPlatform();
 
             MyApp.prefs = prefs;
             return prefs;
@@ -102,10 +109,6 @@ class _MyAppState extends State<MyApp> {
           builder: (BuildContext context,
               AsyncSnapshot<SharedPreferences> snapshot) {
             if (snapshot.hasData) {
-              if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
-                FlutterNativeSplash.remove();
-              }
-
               return DynamicColorBuilder(builder: ((lightDynamic, darkDynamic) {
                 late ColorScheme lightScheme;
                 late ColorScheme darkScheme;
@@ -138,6 +141,11 @@ class _MyAppState extends State<MyApp> {
                 // backgroundにDynamic Colorの色味を付ける (デフォルトだと真っ白)
                 lightScheme = lightScheme.copyWith(
                     background: lightScheme.onInverseSurface);
+
+                // スプラッシュの削除
+                if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
+                  FlutterNativeSplash.remove();
+                }
 
                 return MaterialApp(
                   title: 'Leasy',
