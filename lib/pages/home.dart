@@ -393,8 +393,11 @@ class _SubjectWidgetState extends State<SubjectWidget> {
                               latestCorrect: currentInfo.latestCorrect,
                               latestIncorrect: currentInfo.latestIncorrect);
                         });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('名前を変更しました')));
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('名前を変更しました')));
+                        }
                       },
                     ),
                     ListTile(
@@ -432,10 +435,11 @@ class _SubjectWidgetState extends State<SubjectWidget> {
                         if (confirm ?? false) {
                           await removeSubject(widget.subInfo.id);
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('削除しました')));
-
-                          Home.removeSubjectWidget(context, widget.index);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('削除しました')));
+                            Home.removeSubjectWidget(context, widget.index);
+                          }
                         }
                       },
                     )
