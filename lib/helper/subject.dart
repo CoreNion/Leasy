@@ -14,14 +14,13 @@ Future<List<SubjectInfo>> getSubjectInfos() async {
 }
 
 /// データベースに教科を作成する
-Future<int> createSubject(String title) async {
-  int id = DateTime.now().millisecondsSinceEpoch;
+Future<SubjectInfo> createSubject(String title) async {
+  final id = DateTime.now().millisecondsSinceEpoch;
+  final subInfo =
+      SubjectInfo(title: title, id: id, latestCorrect: 0, latestIncorrect: 0);
 
-  await studyDB.insert(
-      "Subjects",
-      SubjectInfo(title: title, id: id, latestCorrect: 0, latestIncorrect: 0)
-          .toMap());
-  return id;
+  await studyDB.insert("Subjects", subInfo.toMap());
+  return subInfo;
 }
 
 /// データベースから教科を削除する

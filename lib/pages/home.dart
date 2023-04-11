@@ -187,10 +187,11 @@ class _HomeState extends State<Home> {
         onDestinationSelected: (selectedIndex) async {
           HapticFeedback.mediumImpact();
 
+          // 作成ボタンが押されたらダイアログ/モーダルを表示
           if (selectedIndex == 1) {
-            late SubjectInfo? subInfo;
+            late String? title;
             if (largeSC) {
-              subInfo = await showDialog(
+              title = await showDialog(
                   context: context,
                   builder: (builder) {
                     return Dialog(
@@ -200,7 +201,7 @@ class _HomeState extends State<Home> {
                     ));
                   });
             } else {
-              subInfo = await showModalBottomSheet<SubjectInfo>(
+              title = await showModalBottomSheet<String?>(
                   backgroundColor: Colors.transparent,
                   context: context,
                   isScrollControlled: true,
@@ -210,19 +211,24 @@ class _HomeState extends State<Home> {
                   });
             }
 
-            if (subInfo != null) {
+            if (title != null) {
+              // 作成処理
+              final subInfo = await createSubject(title);
+
               // 教科Widgetに追加
               setState(() {
                 subejctWidgetList.add(SubjectWidget(
-                    subInfo: subInfo!, index: subejctWidgetList.length));
+                    subInfo: subInfo, index: subejctWidgetList.length));
               });
 
               // 教科ページへ移動
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: ((context) =>
-                          SubjectOverview(subInfo: subInfo!))));
+              if (context.mounted) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: ((context) =>
+                            SubjectOverview(subInfo: subInfo))));
+              }
             }
           } else {
             setState(() => pageIndex = selectedIndex);

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mimosa/class/subject.dart';
-
-import '../helper/subject.dart';
 
 class CreateSubjectPage extends StatefulWidget {
   const CreateSubjectPage({super.key});
@@ -65,19 +62,10 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                                   minimumSize: const Size(double.infinity, 55),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10))),
-                              onPressed: () async {
+                              onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  // DBに作成
-                                  final id = await createSubject(_title);
-
                                   // タイトルを報告しながら、元のページに戻る
-                                  Navigator.pop(
-                                      context,
-                                      SubjectInfo(
-                                          title: _title,
-                                          id: id,
-                                          latestCorrect: 0,
-                                          latestIncorrect: 0));
+                                  Navigator.pop(context, _title);
                                 }
                               },
                               child: const Text("教科を作成",
