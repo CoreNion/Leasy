@@ -305,34 +305,34 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
             title: Text(secInfo != null ? secInfo!.title : "教科テスト"),
           ),
           body: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  flex: 2,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: <Widget>[
-                        Text(
-                          "問題 #$currentQuestionIndex",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          currentMi.question,
-                          style: const TextStyle(fontSize: 17),
-                        ),
-                      ],
+              padding: const EdgeInsets.all(8.0),
+              child: SafeArea(
+                  child: Column(
+                children: <Widget>[
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          Text(
+                            "問題 #$currentQuestionIndex",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            currentMi.question,
+                            style: const TextStyle(fontSize: 17),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                setInputQuestion
-                    ? inputChoice()
-                    : Expanded(flex: 3, child: multipleChoice()),
-              ],
-            ),
-          ),
+                  setInputQuestion
+                      ? inputChoice()
+                      : Expanded(flex: 3, child: multipleChoice()),
+                ],
+              ))),
           bottomNavigationBar: widget.testMode
               ? null
               : BottomNavigationBar(
