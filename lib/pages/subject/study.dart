@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../class/section.dart';
 import '../../class/question.dart';
-import '../../helper/question.dart';
 
 class SectionStudyPage extends StatefulWidget {
   final SectionInfo? secInfo;
@@ -30,7 +29,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   late bool setInputQuestion;
 
-  late List<bool> record;
+  Map<int, bool> record = {};
 
   final _formKey = GlobalKey<FormState>();
   late String inputAnswer;
@@ -43,7 +42,6 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     secInfo = widget.secInfo;
     mis = widget.miQuestions;
     checkedAnswers = List.filled(mis.length, null);
-    record = List.filled(mis.length, false);
 
     // テストモードの場合は問題をシャッフル
     if (widget.testMode) {
@@ -73,33 +71,22 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           builder: ((context) => AlertDialog(
                 title: const Text("All Done!"),
                 content: Text(
-                    '最後の問題が終了しました。\n結果は、${record.where((correct) => correct).length}問正解・${record.where((correct) => !correct).length}問不正解でした。\n学習モードを終了しますか？'),
+                    '最後の問題が終了しました。\n結果は、${record.values.where((element) => element == true).length}問正解・${record.values.where((element) => element == false).length}問不正解でした。\n学習モードを終了しますか？'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     child: const Text('いいえ'),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pop(context, true),
+                    onPressed: () {
+                      Navigator.of(context)
+                        ..pop()
+                        ..pop(record);
+                    },
                     child: const Text('はい'),
                   ),
                 ],
-              ))).then((isExit) async {
-        if (isExit ?? false) {
-          if (secInfo != null) {
-            // DBに記録を保存
-            await updateSectionRecord(
-                secInfo!.tableID, widget.testMode ? "test" : "normal");
-
-            for (var i = 0; i < mis.length; i++) {
-              await updateQuestionRecord(
-                  secInfo!.tableID, record[i], mis[i].id);
-            }
-          }
-
-          Navigator.pop(context, record);
-        }
-      });
+              )));
     }
   }
 
@@ -220,7 +207,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     HapticFeedback.lightImpact();
 
     // 正解を記録
-    record[currentQuestionIndex - 1] = true;
+    record[mis[currentQuestionIndex - 1].id] = true;
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
@@ -245,7 +232,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     });
 
     // 不正解を記録
-    record[currentQuestionIndex - 1] = false;
+    record[mis[currentQuestionIndex - 1].id] = false;
 
     if (widget.testMode) {
       // 次の問題に進む
@@ -286,18 +273,9 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
               return false;
             }
           } else {
-            if (secInfo != null) {
-              // DBに記録を保存
-              await updateSectionRecord(
-                  secInfo!.tableID, widget.testMode ? "test" : "normal");
+            Navigator.pop(context, record);
 
-              for (var i = 0; i < mis.length; i++) {
-                await updateQuestionRecord(
-                    secInfo!.tableID, record[i], mis[i].id);
-              }
-            }
-
-            return true;
+            return false;
           }
         },
         child: Scaffold(

@@ -20,7 +20,7 @@ class SectionPage extends StatefulWidget {
 class _SectionPageState extends State<SectionPage> {
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
-  List<bool?> _latestCorrects = [];
+  final List<bool?> _latestCorrects = [];
   late List<MiQuestion> miQuestions;
   late SectionInfo section;
 
@@ -76,6 +76,32 @@ class _SectionPageState extends State<SectionPage> {
     }
   }
 
+  // 学習結果から記録を更新する
+  void updateRecord(Map<int, bool>? record, bool isTest) async {
+    if (record == null) return;
+
+    final latestStudyMode = isTest ? "test" : "normal";
+    setState(() {
+      secInfo = SectionInfo(
+          subjectID: secInfo.tableID,
+          title: secInfo.title,
+          latestStudyMode: latestStudyMode,
+          tableID: secInfo.tableID);
+    });
+
+    // DBに記録を保存
+    await updateSectionRecord(secInfo.tableID, latestStudyMode);
+
+    // 正解記録を適切な場所に保存する
+    record.forEach((id, correct) async {
+      await updateQuestionRecord(secInfo.tableID, correct, id);
+      setState(() {
+        _latestCorrects[
+            miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0)] = correct;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -120,33 +146,16 @@ class _SectionPageState extends State<SectionPage> {
                                   return;
                                 }
 
-                                final record = await Navigator.of(context)
-                                    .push<List<bool>>(MaterialPageRoute(
-                                  builder: (context) => SectionStudyPage(
-                                    secInfo: secInfo,
-                                    miQuestions: sendQs,
-                                    testMode: false,
-                                  ),
-                                ));
-
-                                if (record != null) {
-                                  // 正解記録を適切な場所に保存する
-                                  for (var i = 0; i < sendQs.length; i++) {
-                                    setState(() {
-                                      _latestCorrects[miQuestions.indexWhere(
-                                              (mi) => mi.id == sendQs[i].id)] =
-                                          record[i];
-                                    });
-                                  }
-
-                                  setState(() {
-                                    secInfo = SectionInfo(
-                                        subjectID: secInfo.tableID,
-                                        title: secInfo.title,
-                                        latestStudyMode: "normal",
-                                        tableID: secInfo.tableID);
-                                  });
-                                }
+                                updateRecord(
+                                    await Navigator.of(context)
+                                        .push<Map<int, bool>>(MaterialPageRoute(
+                                      builder: (context) => SectionStudyPage(
+                                        secInfo: secInfo,
+                                        miQuestions: sendQs,
+                                        testMode: false,
+                                      ),
+                                    )),
+                                    false);
                               }
                             : null,
                         child: const Text("学習を開始する"),
@@ -156,25 +165,17 @@ class _SectionPageState extends State<SectionPage> {
                       child: ElevatedButton(
                           onPressed: _questionListID.isNotEmpty
                               ? () async {
-                                  final record = await Navigator.of(context)
-                                      .push<List<bool>>(MaterialPageRoute(
-                                    builder: (context) => SectionStudyPage(
-                                      secInfo: secInfo,
-                                      miQuestions: miQuestions,
-                                      testMode: true,
-                                    ),
-                                  ));
-
-                                  if (record != null) {
-                                    setState(() {
-                                      secInfo = SectionInfo(
-                                          subjectID: secInfo.subjectID,
-                                          title: secInfo.title,
-                                          latestStudyMode: "test",
-                                          tableID: secInfo.tableID);
-                                      _latestCorrects = record;
-                                    });
-                                  }
+                                  updateRecord(
+                                      await Navigator.of(context)
+                                          .push<Map<int, bool>>(
+                                              MaterialPageRoute(
+                                        builder: (context) => SectionStudyPage(
+                                          secInfo: secInfo,
+                                          miQuestions: miQuestions,
+                                          testMode: true,
+                                        ),
+                                      )),
+                                      true);
                                 }
                               : null,
                           child: const Text("テストを開始する"))),
