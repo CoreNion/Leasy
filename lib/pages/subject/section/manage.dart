@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
 import '../../../class/question.dart';
-import '../../../helper/question.dart';
 import '../../../utility.dart';
 
 class SectionManagePage extends StatefulWidget {
@@ -125,8 +124,11 @@ class _SectionManagePageState extends State<SectionManagePage> {
                       automaticallyImplyLeading: false,
                       leading: IconButton(
                           onPressed: (() async {
+                            // ignore: use_build_context_synchronously
                             if (await _confirmExit(context)) {
-                              Navigator.of(context).pop();
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
                             }
                           }),
                           icon: const Icon(Icons.expand_more)),
@@ -144,16 +146,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                     isInput: selectedInputType[1],
                                     sectionID: widget.sectionID);
 
-                                if (mi != null) {
-                                  await updateMiQuestion(
-                                      miQuestion.id, miQuestion);
-                                  Navigator.pop(context, miQuestion);
-                                } else {
-                                  // DBに作成
-                                  await createQuestion(miQuestion);
-
-                                  Navigator.pop(context, miQuestion);
-                                }
+                                Navigator.pop(context, miQuestion);
                               }
                             },
                             icon: const Icon(Icons.save))
@@ -248,7 +241,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                               .dialogBackgroundColor,
                                           textStyle: Theme.of(context)
                                               .textTheme
-                                              .headline6,
+                                              .titleLarge,
                                           cancelText: "キャンセル",
                                           confirmText: "決定")
                                       .showModal(context);

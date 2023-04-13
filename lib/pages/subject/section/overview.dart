@@ -50,20 +50,24 @@ class _SectionPageState extends State<SectionPage> {
     });
   }
 
-  /// Manageの結果からリストを更新する関数
-  void updateList(MiQuestion? newQuestion) {
+  /// Manageの結果からQuestionを更新する関数
+  Future<void> updateQuestion(MiQuestion? newQuestion) async {
     // 何らかの変更があった場合のみ更新
     if (newQuestion != null) {
       final checkIndex = _questionListID.indexOf(newQuestion.id);
 
       // IDが存在する場合はMiQuestionなどを更新
       if (checkIndex != -1) {
+        await updateMiQuestion(newQuestion.id, newQuestion);
+
         miQuestions[checkIndex] = newQuestion;
         setState(() {
           _questionListStr[checkIndex] = newQuestion.question;
         });
       } else {
-        // IDが存在しない場合はIDなどを追加
+        // IDが存在しない場合は作成
+        await createQuestion(newQuestion);
+
         _questionListID.add(newQuestion.id);
         _latestCorrects.add(null);
         miQuestions.add(newQuestion);
@@ -288,7 +292,7 @@ class _SectionPageState extends State<SectionPage> {
                                       );
                                     });
                               }
-                              updateList(newMi);
+                              updateQuestion(newMi);
                             }))),
                       ))),
             ],
@@ -307,7 +311,7 @@ class _SectionPageState extends State<SectionPage> {
                         sectionID: secInfo.tableID,
                       ),
                     ));
-                  }).then((value) => updateList(value));
+                  }).then((value) => updateQuestion(value));
             } else {
               showModalBottomSheet(
                   backgroundColor: Colors.transparent,
@@ -319,7 +323,7 @@ class _SectionPageState extends State<SectionPage> {
                       sectionID: secInfo.tableID,
                     );
                   }).then(
-                (value) => updateList(value),
+                (value) => updateQuestion(value),
               );
             }
           })),
