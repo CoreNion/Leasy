@@ -1,6 +1,8 @@
-/// セクションの問題集のモデル
+/// 問題集のモデル
 class MiQuestion {
   final int id;
+
+  final int sectionID;
 
   final String question;
 
@@ -14,6 +16,7 @@ class MiQuestion {
 
   MiQuestion(
       {required this.id,
+      required this.sectionID,
       required this.question,
       required this.choices,
       required this.answer,
@@ -26,6 +29,7 @@ class MiQuestion {
       return {
         'id': id,
         'question': question,
+        'sectionID': sectionID,
         'choice1': choices[0],
         'choice2': choices[1],
         'choice3': choices[2],
@@ -41,6 +45,7 @@ class MiQuestion {
   static MiQuestion tableMapToModel(Map<String, Object?> map) {
     return MiQuestion(
         id: map["id"] as int,
+        sectionID: map["sectionID"] as int,
         question: map["question"].toString(),
         choices: [
           map["choice1"].toString(),

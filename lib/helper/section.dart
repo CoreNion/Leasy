@@ -5,10 +5,6 @@ import '../class/section.dart';
 Future<int> createSection(int subjectID, String title) async {
   int tableID = DateTime.now().millisecondsSinceEpoch;
 
-  // 問題集のTableを作成
-  await studyDB.execute(
-      "CREATE TABLE Section_$tableID(id integer primary key autoincrement, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int)");
-
   // セクション一覧にIDなどを記録
   return studyDB.insert(
       "Sections",
@@ -50,8 +46,6 @@ Future<SectionInfo> getSectionData(int tableID) async {
 
 /// DataBaseから一致したセクションを削除する
 Future<int> removeSection(int subjectID, int id) async {
-  // セクションの問題集を削除
-  await studyDB.execute("DROP TABLE Section_$id");
   // セクション一覧から削除
   return studyDB.delete("Sections",
       where: "subjectID='$subjectID' AND tableID='$id'");

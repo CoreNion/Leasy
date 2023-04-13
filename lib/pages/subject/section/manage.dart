@@ -141,21 +141,18 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                     question: fieldQuestion,
                                     choices: fieldChoices,
                                     answer: fieldAnswerNum,
-                                    isInput: selectedInputType[1]);
+                                    isInput: selectedInputType[1],
+                                    sectionID: widget.sectionID);
 
                                 if (mi != null) {
                                   await updateMiQuestion(
-                                      widget.sectionID, mi!.id, miQuestion);
-
-                                  Navigator.pop(context, [mi!.id, miQuestion]);
+                                      miQuestion.id, miQuestion);
+                                  Navigator.pop(context, miQuestion);
                                 } else {
-                                  final id =
-                                      DateTime.now().millisecondsSinceEpoch;
                                   // DBに作成
-                                  await createQuestion(
-                                      widget.sectionID, miQuestion);
+                                  await createQuestion(miQuestion);
 
-                                  Navigator.pop(context, [id, miQuestion]);
+                                  Navigator.pop(context, miQuestion);
                                 }
                               }
                             },

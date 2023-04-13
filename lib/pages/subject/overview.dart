@@ -74,7 +74,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   }
 
                                   final record = await Navigator.of(context)
-                                      .push<List<bool>>(MaterialPageRoute(
+                                      .push<Map<int, bool>>(MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
                                       miQuestions: mis,
                                       testMode: true,
@@ -84,9 +84,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                     return;
                                   }
 
-                                  final correct =
-                                      record.where((correct) => correct).length;
-                                  final inCorrect = record
+                                  final correct = record.values
+                                      .where((correct) => correct)
+                                      .length;
+                                  final inCorrect = record.values
                                       .where((correct) => !correct)
                                       .length;
 

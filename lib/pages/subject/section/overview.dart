@@ -51,26 +51,24 @@ class _SectionPageState extends State<SectionPage> {
   }
 
   /// Manageの結果からリストを更新する関数
-  void updateList(List<dynamic>? manageResult) {
+  void updateList(MiQuestion? newQuestion) {
     // 何らかの変更があった場合のみ更新
-    if (manageResult is List) {
-      // [ID, 更新されたMiQuestion]
-      final checkIndex = _questionListID.indexOf(manageResult[0]);
-      final mi = (manageResult[1] as MiQuestion);
+    if (newQuestion != null) {
+      final checkIndex = _questionListID.indexOf(newQuestion.id);
 
       // IDが存在する場合はMiQuestionなどを更新
       if (checkIndex != -1) {
-        miQuestions[checkIndex] = mi;
+        miQuestions[checkIndex] = newQuestion;
         setState(() {
-          _questionListStr[checkIndex] = mi.question;
+          _questionListStr[checkIndex] = newQuestion.question;
         });
       } else {
         // IDが存在しない場合はIDなどを追加
-        _questionListID.add(manageResult.first);
+        _questionListID.add(newQuestion.id);
         _latestCorrects.add(null);
-        miQuestions.add(mi);
+        miQuestions.add(newQuestion);
         setState(() {
-          _questionListStr.add(mi.question);
+          _questionListStr.add(newQuestion.question);
         });
       }
     }
@@ -94,7 +92,7 @@ class _SectionPageState extends State<SectionPage> {
 
     // 正解記録を適切な場所に保存する
     record.forEach((id, correct) async {
-      await updateQuestionRecord(secInfo.tableID, correct, id);
+      await updateQuestionRecord(id, correct);
       setState(() {
         _latestCorrects[
             miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0)] = correct;
@@ -202,8 +200,7 @@ class _SectionPageState extends State<SectionPage> {
                   itemBuilder: ((context, index) => Dismissible(
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
-                          await removeQuestion(
-                              secInfo.tableID, _questionListID[index]);
+                          await removeQuestion(_questionListID[index]);
 
                           _questionListID.removeAt(index);
                           miQuestions.removeAt(index);
@@ -261,12 +258,12 @@ class _SectionPageState extends State<SectionPage> {
                                         : Colors.red)
                                     : Colors.grey),
                             onTap: ((() async {
-                              final question = await getMiQuestion(
-                                  secInfo.tableID, _questionListID[index]);
+                              final question =
+                                  await getMiQuestion(_questionListID[index]);
 
-                              late List<dynamic>? res;
+                              late MiQuestion? newMi;
                               if (checkLargeSC(context)) {
-                                res = await showDialog(
+                                newMi = await showDialog(
                                     context: context,
                                     builder: (builder) {
                                       return Dialog(
@@ -279,7 +276,7 @@ class _SectionPageState extends State<SectionPage> {
                                       ));
                                     });
                               } else {
-                                res = await showModalBottomSheet(
+                                newMi = await showModalBottomSheet(
                                     backgroundColor: Colors.transparent,
                                     context: context,
                                     isScrollControlled: true,
@@ -291,7 +288,7 @@ class _SectionPageState extends State<SectionPage> {
                                       );
                                     });
                               }
-                              updateList(res);
+                              updateList(newMi);
                             }))),
                       ))),
             ],
