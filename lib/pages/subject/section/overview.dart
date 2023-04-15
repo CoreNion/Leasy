@@ -37,8 +37,11 @@ class _SectionPageState extends State<SectionPage> {
     // セクション情報を読み込む
     secInfo = widget.sectionInfo;
 
-    // 保存されている問題をリストに追加
-    getMiQuestions([widget.sectionInfo.tableID]).then((questions) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 保存されている問題をリストに追加
+      final questions = await getMiQuestions([widget.sectionInfo.tableID]);
+      if (!mounted) return;
+
       for (var question in questions) {
         _questionListID.add(question.id);
         setState(() {
@@ -59,6 +62,7 @@ class _SectionPageState extends State<SectionPage> {
       // IDが存在する場合はMiQuestionなどを更新
       if (checkIndex != -1) {
         await updateMiQuestion(newQuestion.id, newQuestion);
+        if (!mounted) return;
 
         miQuestions[checkIndex] = newQuestion;
         setState(() {
@@ -67,6 +71,7 @@ class _SectionPageState extends State<SectionPage> {
       } else {
         // IDが存在しない場合は作成
         await createQuestion(newQuestion);
+        if (!mounted) return;
 
         _questionListID.add(newQuestion.id);
         _latestCorrects.add(null);
@@ -79,10 +84,13 @@ class _SectionPageState extends State<SectionPage> {
   }
 
   // 学習結果から記録を更新する
-  void updateRecord(Map<int, bool>? record, bool isTest) async {
+  Future<void> updateRecord(Map<int, bool>? record, bool isTest) async {
     if (record == null) return;
 
     final latestStudyMode = isTest ? "test" : "normal";
+    // DBに記録を保存
+    await updateSectionRecord(secInfo.tableID, latestStudyMode);
+
     setState(() {
       secInfo = SectionInfo(
           subjectID: secInfo.tableID,
@@ -91,12 +99,10 @@ class _SectionPageState extends State<SectionPage> {
           tableID: secInfo.tableID);
     });
 
-    // DBに記録を保存
-    await updateSectionRecord(secInfo.tableID, latestStudyMode);
-
     // 正解記録を適切な場所に保存する
     record.forEach((id, correct) async {
       await updateQuestionRecord(id, correct);
+
       setState(() {
         _latestCorrects[
             miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0)] = correct;
@@ -205,6 +211,7 @@ class _SectionPageState extends State<SectionPage> {
                         key: Key(_questionListStr[index]),
                         onDismissed: (direction) async {
                           await removeQuestion(_questionListID[index]);
+                          if (!mounted) return;
 
                           _questionListID.removeAt(index);
                           miQuestions.removeAt(index);
@@ -213,8 +220,8 @@ class _SectionPageState extends State<SectionPage> {
                             _latestCorrects.removeAt(index);
                           });
 
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('削除しました')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('削除しました')));
                         },
                         confirmDismiss: (direction) async {
                           return await showDialog(
@@ -264,6 +271,7 @@ class _SectionPageState extends State<SectionPage> {
                             onTap: ((() async {
                               final question =
                                   await getMiQuestion(_questionListID[index]);
+                              if (!mounted) return;
 
                               late MiQuestion? newMi;
                               if (checkLargeSC(context)) {

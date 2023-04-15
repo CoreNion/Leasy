@@ -2,18 +2,17 @@ import 'common.dart';
 import '../class/section.dart';
 
 /// Sections DataBaseにセクションを作成
-Future<int> createSection(int subjectID, String title) async {
+Future<SectionInfo> createSection(int subjectID, String title) async {
   int tableID = DateTime.now().millisecondsSinceEpoch;
+  final section = SectionInfo(
+      subjectID: subjectID,
+      title: title,
+      tableID: tableID,
+      latestStudyMode: "no");
 
   // セクション一覧にIDなどを記録
-  return studyDB.insert(
-      "Sections",
-      SectionInfo(
-              subjectID: subjectID,
-              title: title,
-              tableID: tableID,
-              latestStudyMode: "no")
-          .toMap());
+  await studyDB.insert("Sections", section.toMap());
+  return section;
 }
 
 /// Sections DataBaseから指定された教科に所属しているセクションIDを取得する

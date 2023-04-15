@@ -30,12 +30,16 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     super.initState();
 
     subInfo = widget.subInfo;
-    // 保存されているセクションをリストに追加
-    getSectionIDs(widget.subInfo.id).then((ids) async {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 保存されているセクションをリストに追加
+      final ids = await getSectionIDs(widget.subInfo.id);
       for (var id in ids) {
-        _sectionListID.add(id);
         final title = await sectionIDtoTitle(id);
-        setState(() => _sectionListStr.add(title));
+        setState(() {
+          _sectionListStr.add(title);
+          _sectionListID.add(id);
+        });
       }
     });
   }
@@ -64,6 +68,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                               ? () async {
                                   final mis =
                                       await getMiQuestions(_sectionListID);
+                                  if (!mounted) return;
 
                                   if (mis.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +100,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   await updateSubjectRecord(
                                       subInfo.id, correct, inCorrect);
 
+                                  if (!mounted) return;
                                   setState(() {
                                     subInfo = SubjectInfo(
                                         title: subInfo.title,
@@ -122,6 +128,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                       onDismissed: (direction) async {
                         await removeSection(
                             widget.subInfo.id, _sectionListID[index]);
+                        if (!mounted) return;
 
                         _sectionListID.removeAt(index);
 
@@ -129,8 +136,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                           _sectionListStr.removeAt(index);
                         });
 
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text('削除しました')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('削除しました')));
                       },
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
@@ -204,6 +211,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                           if (!(res ?? false)) return null;
                           await renameSectionName(
                               _sectionListID[index], newTitle);
+                          if (!mounted) return false;
 
                           setState(() {
                             _sectionListStr[index] = newTitle;
@@ -213,6 +221,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                               const SnackBar(content: Text('名前を変更しました')));
                           return false;
                         }
+                        return null;
                       },
                       background: Container(
                           color: Colors.red,
@@ -231,6 +240,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                         onTap: () async {
                           final secInfo =
                               await getSectionData(_sectionListID[index]);
+                          if (!mounted) return;
 
                           Navigator.push(context,
                               MaterialPageRoute(builder: ((context) {
@@ -255,22 +265,21 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     TextButton(
                         onPressed: (() async {
                           if (_formKey.currentState!.validate()) {
-                            final nav = Navigator.of(context);
-
-                            final id = await createSection(
+                            final section = await createSection(
                                 widget.subInfo.id, _createdSectionTitle);
+                            if (!mounted) return;
+
                             setState(() {
-                              _sectionListID.add(id);
+                              _sectionListID.add(section.tableID);
                               _sectionListStr.add(_createdSectionTitle);
                             });
-                            nav.pop();
+                            Navigator.pop(context);
 
                             // 作成した教科に移動
-                            final secInfo = await getSectionData(id);
                             Navigator.push(context,
                                 MaterialPageRoute(builder: ((context) {
                               return SectionPage(
-                                sectionInfo: secInfo,
+                                sectionInfo: section,
                               );
                             })));
                           }
