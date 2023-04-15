@@ -22,6 +22,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
   final List<String> _sectionListStr = <String>[];
   final List<int> _sectionListID = <int>[];
 
+  bool loading = true;
+
   /// 現在のセクションの情報
   late SubjectInfo subInfo;
 
@@ -41,6 +43,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
           _sectionListID.add(id);
         });
       }
+      setState(() => loading = false);
     });
   }
 
@@ -51,6 +54,14 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.subInfo.title),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 10),
+            height: 20,
+            width: 20,
+            child: loading ? const CircularProgressIndicator() : null,
+          )
+        ],
       ),
       body: Padding(
           padding: const EdgeInsets.all(7.0),
@@ -66,6 +77,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                       child: FilledButton(
                           onPressed: _sectionListID.isNotEmpty
                               ? () async {
+                                  setState(() => loading = true);
+
                                   final mis =
                                       await getMiQuestions(_sectionListID);
                                   if (!mounted) return;
@@ -75,6 +88,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                         const SnackBar(
                                             content: Text(
                                                 '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
+                                    setState(() => loading = false);
                                     return;
                                   }
 
@@ -86,6 +100,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                     ),
                                   ));
                                   if (record == null) {
+                                    setState(() => loading = false);
                                     return;
                                   }
 
@@ -102,6 +117,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
                                   if (!mounted) return;
                                   setState(() {
+                                    loading = false;
                                     subInfo = SubjectInfo(
                                         title: subInfo.title,
                                         id: subInfo.id,

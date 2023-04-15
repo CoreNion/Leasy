@@ -18,6 +18,7 @@ class SectionPage extends StatefulWidget {
 }
 
 class _SectionPageState extends State<SectionPage> {
+  bool loading = true;
   final List<int> _questionListID = <int>[];
   final List<String> _questionListStr = <String>[];
   final List<bool?> _latestCorrects = [];
@@ -50,11 +51,13 @@ class _SectionPageState extends State<SectionPage> {
         });
       }
       miQuestions = questions;
+      setState(() => loading = false);
     });
   }
 
   /// Manageの結果からQuestionを更新する関数
   Future<void> updateQuestion(MiQuestion? newQuestion) async {
+    setState(() => loading = true);
     // 何らかの変更があった場合のみ更新
     if (newQuestion != null) {
       final checkIndex = _questionListID.indexOf(newQuestion.id);
@@ -81,11 +84,13 @@ class _SectionPageState extends State<SectionPage> {
         });
       }
     }
+    setState(() => loading = false);
   }
 
   // 学習結果から記録を更新する
   Future<void> updateRecord(Map<int, bool>? record, bool isTest) async {
     if (record == null) return;
+    setState(() => loading = true);
 
     final latestStudyMode = isTest ? "test" : "normal";
     // DBに記録を保存
@@ -108,6 +113,7 @@ class _SectionPageState extends State<SectionPage> {
             miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0)] = correct;
       });
     });
+    setState(() => loading = false);
   }
 
   @override
@@ -118,6 +124,14 @@ class _SectionPageState extends State<SectionPage> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(secInfo.title),
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 10),
+              height: 20,
+              width: 20,
+              child: loading ? const CircularProgressIndicator() : null,
+            )
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(7.0),
@@ -154,7 +168,7 @@ class _SectionPageState extends State<SectionPage> {
                                   return;
                                 }
 
-                                updateRecord(
+                                await updateRecord(
                                     await Navigator.of(context)
                                         .push<Map<int, bool>>(MaterialPageRoute(
                                       builder: (context) => SectionStudyPage(
@@ -300,7 +314,7 @@ class _SectionPageState extends State<SectionPage> {
                                       );
                                     });
                               }
-                              updateQuestion(newMi);
+                              await updateQuestion(newMi);
                             }))),
                       ))),
             ],
