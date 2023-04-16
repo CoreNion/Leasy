@@ -42,9 +42,12 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
 
-    if (!(MyApp.prefs.getBool("setup") ?? false)) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 起動時にダイナミックカラーが読み込まれない問題の対策
+      MyApp.rootSetState(context, () {});
+
       // 初回セットアップ(初期画面)を表示
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!(MyApp.prefs.getBool("setup") ?? false)) {
         // 大画面デバイスではDialogで表示
         if (checkLargeSC(context)) {
           await showDialog(
@@ -74,8 +77,8 @@ class _HomeState extends State<Home> {
                   child: const SizedBox(height: 650, child: SetupPage())));
         }
         await MyApp.prefs.setBool("setup", true);
-      });
-    }
+      }
+    });
   }
 
   @override
