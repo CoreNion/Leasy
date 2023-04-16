@@ -96,19 +96,28 @@ flutter:
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  # list giving the asset and other descriptors for the font.
+  fonts:
+    - family: M PLUS 2
+      fonts:
+        - asset: fonts/MPLUS2-Thin.ttf
+          weight: 100
+        - asset: fonts/MPLUS2-ExtraLight.ttf
+          weight: 200
+        - asset: fonts/MPLUS2-Light.ttf
+          weight: 300
+        - asset: fonts/MPLUS2-Regular.ttf
+          weight: 400
+        - asset: fonts/MPLUS2-Medium.ttf
+          weight: 500
+        - asset: fonts/MPLUS2-SemiBold.ttf
+          weight: 600
+        - asset: fonts/MPLUS2-Bold.ttf
+          weight: 700
+        - asset: fonts/MPLUS2-ExtraBold.ttf
+          weight: 800
+        - asset: fonts/MPLUS2-Black.ttf
+          weight: 900
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

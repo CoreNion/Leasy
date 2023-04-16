@@ -152,11 +152,13 @@ class _MyAppState extends State<MyApp> {
                   theme: ThemeData(
                       colorScheme: lightScheme,
                       useMaterial3: true,
+                      fontFamily: 'M PLUS 2',
                       scaffoldBackgroundColor: Colors.white,
                       appBarTheme: AppBarTheme.of(context).copyWith(
                           backgroundColor: lightScheme.onInverseSurface)),
                   darkTheme: ThemeData(
                       colorScheme: darkScheme,
+                      fontFamily: 'M PLUS 2',
                       scaffoldBackgroundColor: Colors.black,
                       useMaterial3: true),
                   themeMode: MyApp.themeMode,
