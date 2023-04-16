@@ -44,18 +44,20 @@ class MyApp extends StatefulWidget {
   /// ThemeModeの設定
   static ThemeMode themeMode = ThemeMode.system;
 
-  static Function rootSetState = () {};
+  static void rootSetState(BuildContext context, Function fun) {
+    context.findAncestorStateOfType<_MyAppState>()!.rootSetState(fun);
+  }
 
   static Key rootKey = UniqueKey();
 
-  static void resetApp() {
+  static void resetApp(BuildContext context) {
     // メモリにある設定も削除
     MyApp.seedColor = Colors.blue;
     MyApp.supportDynamicColor = false;
     MyApp.customColor = false;
     MyApp.themeMode = ThemeMode.system;
 
-    rootSetState(() {
+    rootSetState(context, () {
       rootKey = UniqueKey();
     });
   }
@@ -65,10 +67,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  void rootSetState(Function fun) {
+    setState(() {
+      fun();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    MyApp.rootSetState = setState;
-
     return KeyedSubtree(
         key: MyApp.rootKey,
         child: FutureBuilder(

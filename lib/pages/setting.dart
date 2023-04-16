@@ -165,7 +165,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
                       changeToFirst: true,
                       onConfirm: (Picker picker, List value) async {
                         late String prefsStr;
-                        MyApp.rootSetState(() {
+                        MyApp.rootSetState(context, () {
                           switch (value.first) {
                             case 0:
                               MyApp.themeMode = ThemeMode.system;
@@ -214,7 +214,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
                                 title: const Text("端末で設定された色を利用"),
                                 value: !(MyApp.customColor),
                                 onChanged: (val) async {
-                                  MyApp.rootSetState(() {
+                                  MyApp.rootSetState(context, () {
                                     MyApp.customColor = !val;
                                   });
                                   await MyApp.prefs
@@ -239,7 +239,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
                                         spacing: 15,
                                         runSpacing: 15,
                                         onColorChanged: (color) async {
-                                          MyApp.rootSetState(() {
+                                          MyApp.rootSetState(context, () {
                                             MyApp.customColor = true;
                                             MyApp.seedColor = color;
                                           });
@@ -373,7 +373,9 @@ class _DataSettingsState extends State<DataSettings> {
         });
 
     await Future.delayed(const Duration(seconds: 3));
-    MyApp.resetApp();
+    if (!mounted) return;
+
+    MyApp.resetApp(context);
   }
 }
 
