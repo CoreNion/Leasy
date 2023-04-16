@@ -44,25 +44,25 @@ class _HomeState extends State<Home> {
 
     if (!(MyApp.prefs.getBool("setup") ?? false)) {
       // 初回セットアップ(初期画面)を表示
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         // 大画面デバイスではDialogで表示
         if (checkLargeSC(context)) {
-          showDialog(
+          await showDialog(
               barrierDismissible: false,
               context: context,
               builder: (builder) {
                 return WillPopScope(
                     onWillPop: () async => false,
                     child: const Dialog(
-                      child: FractionallySizedBox(
-                        heightFactor: 0.6,
-                        widthFactor: 0.6,
+                      child: SizedBox(
+                        height: 600,
+                        width: 700,
                         child: SetupPage(),
                       ),
                     ));
               });
         } else {
-          showModalBottomSheet(
+          await showModalBottomSheet(
               isDismissible: false,
               context: context,
               isScrollControlled: true,
@@ -71,10 +71,9 @@ class _HomeState extends State<Home> {
               useSafeArea: true,
               builder: (builder) => WillPopScope(
                   onWillPop: () async => false,
-                  child: const FractionallySizedBox(
-                      heightFactor: 0.7, child: SetupPage())));
+                  child: const SizedBox(height: 650, child: SetupPage())));
         }
-        // await MyApp.prefs.setBool("setup", true);
+        await MyApp.prefs.setBool("setup", true);
       });
     }
   }

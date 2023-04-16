@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mimosa/pages/setting.dart';
+import 'package:status_alert/status_alert.dart';
 
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key});
@@ -11,16 +15,15 @@ class SetupPage extends StatefulWidget {
 
 class _SetupPageState extends State<SetupPage> {
   int currentview = 0;
-  late List<Widget> contents;
+  final List<Widget> contents = const [
+    _FirstView(),
+    _HowToContent(),
+    _NoteDescContent(),
+    _SettingContent()
+  ];
 
-  final titles = ["Welcome to Leasy!", "使い方", "カスタマイズ"];
-  final bottomButtonTexts = ["始める", "次へ", "始めましょう！"];
-
-  @override
-  void initState() {
-    contents = [_firstView(), howtoContent(), _settingContent()];
-    super.initState();
-  }
+  final titles = ["Welcome to Leasy!", "使い方", "学習の管理", "カスタマイズ"];
+  final bottomButtonTexts = ["始める", "次へ", "次へ", "始めましょう！"];
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +79,13 @@ class _SetupPageState extends State<SetupPage> {
           ],
         ));
   }
+}
 
-  Widget _firstView() {
+class _FirstView extends StatelessWidget {
+  const _FirstView();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       const Text(
         "Leasyをダウンロードしていただき、ありがとうございます！",
@@ -96,26 +104,298 @@ class _SetupPageState extends State<SetupPage> {
       )
     ]);
   }
+}
 
-  Widget howtoContent() {
+class _HowToContent extends StatefulWidget {
+  const _HowToContent();
+
+  @override
+  State<_HowToContent> createState() => __HowToContentState();
+}
+
+class __HowToContentState extends State<_HowToContent> {
+  int currentview = 0;
+  final PageController controller = PageController();
+  List<bool> selectedInputType = [true, false];
+  late Timer timer;
+
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      setState(() {
+        currentview = currentview == 0 ? 1 : 0;
+        controller.animateToPage(currentview,
+            duration: const Duration(seconds: 1), curve: Curves.ease);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: const [
-        Text(
-          "使い方の動画などを置く予定",
-          style: TextStyle(fontSize: 16),
+      children: [
+        const Text(
+          "このアプリは、自分で覚えたい単語やフレーズなどを登録して、4択問題や入力問題を通して暗記学習を進めるアプリです。",
+          style: TextStyle(fontSize: 15),
         ),
+        Expanded(
+            child: Container(
+          margin:
+              const EdgeInsets.only(top: 20, bottom: 20, left: 10, right: 10),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+              color: colorScheme.background,
+              border: Border.all(color: colorScheme.outline),
+              borderRadius: const BorderRadius.all(Radius.circular(10))),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(currentview == 0 ? "問題の編集画面" : "学習画面",
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
+              const Divider(),
+              SizedBox.fromSize(size: const Size.fromHeight(10)),
+              Expanded(
+                child: PageView(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    onPageChanged: (index) {
+                      setState(() {
+                        currentview = index;
+                      });
+                    },
+                    children: <Widget>[
+                      Column(children: [
+                        ToggleButtons(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
+                          constraints: const BoxConstraints(
+                            minHeight: 40.0,
+                            minWidth: 100.0,
+                          ),
+                          onPressed: (int index) {
+                            setState(() {
+                              for (int i = 0;
+                                  i < selectedInputType.length;
+                                  i++) {
+                                selectedInputType[i] = (i == index);
+                              }
+                            });
+                          },
+                          isSelected: selectedInputType,
+                          children: const <Widget>[
+                            Text(
+                              "4択問題",
+                              style: TextStyle(fontSize: 17),
+                            ),
+                            Text(
+                              "入力問題",
+                              style: TextStyle(fontSize: 17),
+                            )
+                          ],
+                        ),
+                        TextFormField(
+                            decoration: const InputDecoration(
+                              labelText: "問題文",
+                              icon: Icon(Icons.title),
+                              hintText: "問題を入力",
+                            ),
+                            initialValue: "テスト問題",
+                            readOnly: true),
+                        TextFormField(
+                          decoration: const InputDecoration(
+                              labelText: "1番目の選択肢",
+                              icon: Icon(Icons.dashboard),
+                              hintText: "選択肢に表示される文を入力"),
+                          readOnly: true,
+                          initialValue: "選択肢1",
+                        ),
+                        SizedBox.fromSize(size: const Size.fromHeight(5)),
+                        const Icon(Icons.more_vert),
+                        SizedBox.fromSize(size: const Size.fromHeight(5)),
+                        FilledButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.check),
+                          label: const Text(
+                            "正解の選択肢: 1番",
+                            style: TextStyle(fontSize: 15),
+                          ),
+                        ),
+                      ]),
+                      Column(
+                        children: <Widget>[
+                          Expanded(
+                            flex: 2,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: const <Widget>[
+                                  Text(
+                                    "問題 #1",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    "テスト問題",
+                                    style: TextStyle(fontSize: 17),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          selectedInputType[0] == true
+                              ? Column(
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(
+                                          top: 5, bottom: 5),
+                                      width: double.infinity,
+                                      height: 100,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          StatusAlert.show(
+                                            context,
+                                            duration:
+                                                const Duration(seconds: 1),
+                                            title: '正解！',
+                                            configuration:
+                                                const IconConfiguration(
+                                                    icon: Icons.check_circle),
+                                            maxWidth: 260,
+                                          );
+                                          HapticFeedback.lightImpact();
+                                        },
+                                        child: const Text(
+                                          "1: 選択肢1",
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(Icons.more_vert)
+                                  ],
+                                )
+                              : Container(
+                                  margin: const EdgeInsets.all(10),
+                                  child: TextFormField(
+                                    decoration: const InputDecoration(
+                                        labelText: "解答",
+                                        icon: Icon(Icons.dashboard),
+                                        hintText: "解答を正確に入力"),
+                                    readOnly: true,
+                                  )),
+                        ],
+                      )
+                    ]),
+              ),
+            ],
+          ),
+        )),
       ],
     );
   }
+}
 
-  Widget _settingContent() {
+class _NoteDescContent extends StatelessWidget {
+  const _NoteDescContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          "Leasyでは、教科 -> セクション -> 問題の構造で学習を管理しています。\n基本的に問題の学習やテストは、各セクション内で行います。\nなお、教科内の全ての問題のテストを実施することも可能です。",
+          style: TextStyle(fontSize: 15),
+        ),
+        const SizedBox(height: 15),
+        Stack(
+          alignment: Alignment.topLeft,
+          children: [
+            Container(
+              width: 350,
+              height: 260,
+              decoration: BoxDecoration(
+                border: Border.all(color: colorScheme.outline),
+                color: colorScheme.primary,
+              ),
+              child: Align(
+                alignment: const Alignment(0.83, 0),
+                child: Text(
+                  "教科",
+                  style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+              ),
+            ),
+            Container(
+              width: 250,
+              height: 190,
+              decoration: BoxDecoration(
+                border: Border.all(color: colorScheme.outline),
+                color: colorScheme.secondary,
+              ),
+              child: Align(
+                alignment: const Alignment(0.7, 0),
+                child: Text(
+                  "セクション",
+                  style: TextStyle(
+                      color: colorScheme.onSecondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+              ),
+            ),
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                border: Border.all(color: colorScheme.outline),
+                color: colorScheme.tertiary,
+              ),
+              child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  "問題",
+                  style: TextStyle(
+                      color: colorScheme.onTertiary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+              ),
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
+class _SettingContent extends StatelessWidget {
+  const _SettingContent();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: const [
         Text(
           "テーマカラーやダークモードなどの設定を行います。",
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 17),
         ),
         SizedBox(height: 15),
         ScreenSettings()
