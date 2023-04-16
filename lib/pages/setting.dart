@@ -4,9 +4,12 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../helper/common.dart';
 import '../main.dart';
+import '../utility.dart';
+import 'setup.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -39,6 +42,49 @@ class _SettingPageState extends State<SettingPage> {
                       borderRadius:
                           const BorderRadius.all(Radius.circular(10))),
                   child: ListTile(
+                      title: const Text("チュートリアルを開く"),
+                      subtitle: const Text("初回起動時に表示されたチュートリアルを開きます。"),
+                      trailing: Icon(Icons.support, color: colorScheme.primary),
+                      onTap: () async {
+                        if (checkLargeSC(context)) {
+                          await showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (builder) {
+                                return WillPopScope(
+                                    onWillPop: () async => false,
+                                    child: const Dialog(
+                                      child: SizedBox(
+                                        height: 600,
+                                        width: 700,
+                                        child: SetupPage(),
+                                      ),
+                                    ));
+                              });
+                        } else {
+                          await showModalBottomSheet(
+                              isDismissible: false,
+                              context: context,
+                              isScrollControlled: true,
+                              enableDrag: false,
+                              backgroundColor: Colors.transparent,
+                              useSafeArea: true,
+                              builder: (builder) => WillPopScope(
+                                  onWillPop: () async => false,
+                                  child: const SizedBox(
+                                      height: 650, child: SetupPage())));
+                        }
+                      }),
+                ),
+                const SizedBox(height: 25),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      color: colorScheme.background,
+                      border: Border.all(color: colorScheme.outline),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(10))),
+                  child: ListTile(
                     title: const Text("アプリ情報"),
                     subtitle: Text("v${MyApp.packageInfo.buildNumber}"),
                     trailing: Icon(Icons.info, color: colorScheme.primary),
@@ -47,6 +93,14 @@ class _SettingPageState extends State<SettingPage> {
                         applicationName: "Leasy",
                         applicationVersion: "v${MyApp.packageInfo.buildNumber}",
                         applicationLegalese: "(c) 2023 CoreNion\n",
+                        children: [
+                          TextButton(
+                              onPressed: () {
+                                launchUrl(
+                                    Uri.https("corenion.github.io", "/leasy"));
+                              },
+                              child: const Text("ホームページ")),
+                        ],
                         applicationIcon: ClipRRect(
                             borderRadius:
                                 const BorderRadius.all(Radius.circular(15)),
@@ -301,17 +355,6 @@ class _DataSettingsState extends State<DataSettings> {
                   }
                   willReset("削除しました。3秒後にアプリを再起動します...");
                 }),
-            ListTile(
-              title: const Text("アプリを再起動"),
-              subtitle: const Text("アプリを再起動します。"),
-              trailing: Icon(
-                Icons.refresh,
-                color: colorScheme.primary,
-              ),
-              onTap: () {
-                willReset("3秒後にアプリを再起動します...");
-              },
-            )
           ],
         ));
   }

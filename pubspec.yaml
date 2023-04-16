@@ -50,6 +50,7 @@ dependencies:
   flutter_svg: ^2.0.4
   flex_color_picker: ^3.2.0
   package_info_plus: ^3.1.0
+  url_launcher: ^6.1.10
 
 flutter_native_splash:
   color: '#d3edfb'
