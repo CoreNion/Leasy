@@ -299,6 +299,30 @@ class _DataSettingsState extends State<DataSettings> {
             ),
             const Divider(),
             ListTile(
+              title: const Text("学習データをバックアップ"),
+              subtitle: const Text("学習帳データをバックアップします。"),
+              trailing: Icon(
+                Icons.download,
+                color: colorScheme.primary,
+              ),
+              onTap: () async {
+                final dialogRes = await showDialog<bool>(
+                    context: context,
+                    builder: (builder) => const WarningDialog(
+                          content:
+                              "バックアップしたファイルを私的な目的以外(他人に共有するなど)で利用した場合、法令や内部規則などの違反行為となり罰せられる可能性があります。\nこの機能を利用したことにより利用者が損害を被った場合でも、Leasyの開発者は当該損害に関して一切責任を負いません。\nまた、開発者などがこの機能が不正に利用されていることを発見した場合、然るべき機関に報告することがあります。\nこれらに同意しますか？",
+                          count: 15,
+                        ));
+                if (!mounted || !(dialogRes ?? false)) return;
+
+                final res = await backupDataBase();
+                if (!res || !mounted) return;
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text("データを保存しました。")));
+              },
+            ),
+            ListTile(
                 title: const Text("設定を初期化"),
                 subtitle: const Text("設定を初期化します。学習データは削除されません。"),
                 trailing: Icon(
@@ -340,16 +364,18 @@ class _DataSettingsState extends State<DataSettings> {
                   color: colorScheme.primary,
                 ),
                 onTap: () async {
-                  final messenger = ScaffoldMessenger.of(context);
                   final res = await showDialog<bool>(
                       context: context,
-                      builder: (builder) => const RemoveDialog());
+                      builder: (builder) => const WarningDialog(
+                          content:
+                              "この操作を行うと、今までの学習データが全て削除されます。\n削除した学習データ復元できません。\n本当に削除しますか？"));
                   if (!(res ?? false)) return;
 
                   try {
                     await deleteStudyDataBase();
                   } catch (e) {
-                    messenger.showSnackBar(
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('データは削除できませんでした。詳細: $e')));
                     return;
                   }
@@ -379,15 +405,18 @@ class _DataSettingsState extends State<DataSettings> {
   }
 }
 
-/// データベース削除時に出てくるダイアログ
-class RemoveDialog extends StatefulWidget {
-  const RemoveDialog({super.key});
+/// 警告ダイアログ
+class WarningDialog extends StatefulWidget {
+  const WarningDialog({super.key, required this.content, this.count});
+
+  final String content;
+  final int? count;
 
   @override
-  State<RemoveDialog> createState() => _RemoveDialogState();
+  State<WarningDialog> createState() => _WarningDialogState();
 }
 
-class _RemoveDialogState extends State<RemoveDialog> {
+class _WarningDialogState extends State<WarningDialog> {
   String yesButtonText = "はい (5)";
   bool openYesButton = false;
 
@@ -398,7 +427,12 @@ class _RemoveDialogState extends State<RemoveDialog> {
   void initState() {
     super.initState();
 
-    // 5秒待たせるTimer
+    if (widget.count != null) {
+      count = widget.count!;
+      yesButtonText = "はい ($count)";
+    }
+
+    // 待たせるTimer
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       count = count - 1;
       if (count == 0) {
@@ -419,11 +453,10 @@ class _RemoveDialogState extends State<RemoveDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("警告"),
-      content: const Text(
-          "この操作を行うと、今までの学習データが全て削除されます。\n削除した学習データ復元できません。\n本当に削除しますか？"),
+      content: Text(widget.content),
       actions: [
         TextButton(
-            // 5秒待ってからボタンを押せるようにする
+            // 待ってからボタンを押せるようにする
             onPressed: openYesButton
                 ? () {
                     Navigator.pop(context, true);
