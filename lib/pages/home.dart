@@ -77,6 +77,7 @@ class _HomeState extends State<Home> {
                   child: const SizedBox(height: 650, child: SetupPage())));
         }
         await MyApp.prefs.setBool("setup", true);
+        setState(() {});
       }
     });
   }

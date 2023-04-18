@@ -1,10 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mimosa/pages/setting.dart';
 import 'package:status_alert/status_alert.dart';
+
+import '../main.dart';
+import '../helper/common.dart';
 
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key});
@@ -385,20 +389,103 @@ class _NoteDescContent extends StatelessWidget {
   }
 }
 
-class _SettingContent extends StatelessWidget {
+class _SettingContent extends StatefulWidget {
   const _SettingContent();
 
   @override
+  State<_SettingContent> createState() => __SettingContentState();
+}
+
+class __SettingContentState extends State<_SettingContent> {
+  bool imported = false;
+  bool loading = false;
+
+  @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    kIsWeb ? imported = true : imported = false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: const [
-        Text(
+      children: [
+        const Text(
           "テーマカラーやダークモードなどの設定を行います。",
           style: TextStyle(fontSize: 17),
         ),
-        SizedBox(height: 15),
-        ScreenSettings()
+        const SizedBox(height: 15),
+        const ScreenSettings(),
+        const SizedBox(height: 10),
+        !(MyApp.prefs.getBool("setup") ?? false)
+            ? Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                    color: colorScheme.background,
+                    border: Border.all(color: colorScheme.outline),
+                    borderRadius: const BorderRadius.all(Radius.circular(10))),
+                child: ListTile(
+                    title: const Text("学習データをインポート"),
+                    subtitle: const Text(!kIsWeb
+                        ? "バックアップされたファイルから、学習データをインポートします。"
+                        : "現在、Web版は非対応"),
+                    trailing: loading
+                        ? const CircularProgressIndicator()
+                        : Icon(
+                            !kIsWeb
+                                ? (imported ? Icons.check : Icons.upload)
+                                : Icons.close,
+                            color: colorScheme.primary,
+                          ),
+                    onTap: !imported
+                        ? () async {
+                            final dialogRes = await showDialog<bool>(
+                                context: context,
+                                builder: (builder) => const WarningDialog(
+                                      content:
+                                          "他人から受け取ったファイルを利用した場合、法令や内部規則などの違反行為となり罰せられる可能性があります。\nこの機能を利用したことにより利用者が損害を被った場合でも、Leasyの開発者は当該損害に関して一切責任を負いません。\nまた、開発者などがこの機能が不正に利用されていることを発見した場合、然るべき機関に報告することがあります。\nこれらに同意しますか？",
+                                      count: 10,
+                                    ));
+
+                            if (!mounted || !(dialogRes ?? false)) return;
+                            setState(() {
+                              loading = true;
+                            });
+
+                            final res =
+                                await importDataBase().catchError((e) async {
+                              await showDialog(
+                                  context: context,
+                                  builder: (builder) => AlertDialog(
+                                        title: const Text("エラー"),
+                                        content: Text(
+                                            "エラーが発生したため、データをインポート出来ませんでした。\n正しいファイルを選択しているかを確認してください。\n詳細:${e.toString()}"),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: const Text("OK"))
+                                        ],
+                                      ));
+                              return false;
+                            });
+                            setState(() {
+                              loading = false;
+                            });
+
+                            if (!res || !mounted) return;
+                            StatusAlert.show(
+                              context,
+                              duration: const Duration(seconds: 2),
+                              title: 'インポート完了！',
+                              configuration: const IconConfiguration(
+                                  icon: Icons.check_circle),
+                              maxWidth: 260,
+                            );
+                            HapticFeedback.lightImpact();
+                          }
+                        : null),
+              )
+            : Container(),
       ],
     );
   }

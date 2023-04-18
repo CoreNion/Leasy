@@ -1,3 +1,5 @@
+// ignore_for_file: duplicate_import
+
 import 'dart:io' as io;
 import 'dart:convert';
 
@@ -103,4 +105,42 @@ Future<bool> backupDataBase() async {
   // データベースの再読み込み
   await loadStudyDataBase();
   return result;
+}
+
+// データベースをインポートする関数 (Web版は非対応)
+Future<bool> importDataBase() async {
+  // 既存ファイル削除
+  await deleteStudyDataBase();
+
+  // ファイル選択
+  final res = await FilePicker.platform
+      .pickFiles(type: FileType.any, lockParentWindow: true);
+  if (res == null) return false;
+  final pFile = res.files.first;
+
+  if (kIsWeb) {
+    throw UnsupportedError("Web版は未実装");
+    /* WIP (Not Working)
+    final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+    fs.createFile("/study.db");
+
+    fs.write("/study.db", pFile.bytes!, pFile.bytes!.offsetInBytes); */
+  } else {
+    final path = (await getApplicationSupportDirectory()).path;
+    await io.File(pFile.path!).copy(p.join(path, "study.db"));
+  }
+
+  // データベースの再読み込み
+  await loadStudyDataBase().catchError((e) async {
+    // ファイル削除
+    if (!kIsWeb) {
+      final path = (await getApplicationSupportDirectory()).path;
+      await io.File(p.join(path, "study.db")).delete();
+    }
+
+    // 新規作成
+    await loadStudyDataBase();
+    throw e;
+  });
+  return true;
 }
