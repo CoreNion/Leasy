@@ -315,7 +315,25 @@ class _DataSettingsState extends State<DataSettings> {
                         ));
                 if (!mounted || !(dialogRes ?? false)) return;
 
-                final res = await backupDataBase();
+                final res = await backupDataBase().catchError((e) async {
+                  await showDialog(
+                      context: context,
+                      builder: (builder) => AlertDialog(
+                            title: const Text("エラー"),
+                            content: Text(
+                                "エラーが発生したため、データをバックアップ出来ませんでした。\n詳細:${e.toString()}"),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("OK"))
+                            ],
+                          ));
+                  // DB再読み込み
+                  await loadStudyDataBase();
+                  return false;
+                });
                 if (!res || !mounted) return;
 
                 ScaffoldMessenger.of(context)
