@@ -1,20 +1,19 @@
 # Leasy
-## Codename: `Mimosa`
+シンプルで扱いやすい暗記帳アプリ。
 
-A new Flutter project.
+## [ホームページ](https://corenion.github.io/leasy/)
 
-## Getting Started
+# Features
+## 使いやすい暗記帳！
+このアプリは、自分で覚えたい単語やフレーズなどを登録して、暗記帳のように暗記学習が出来るアプリです。
+問題形式は4択問題か入力問題で、不正解だった問題に絞って復習できる学習モードや、ランダムに出題されるテストモードもあります！
+## 端末内で完結、そしてオープンソース！
+問題などは全て端末内のみに保存されます。そのため、アカウントを作成する必要はなく、作成した問題が不正に利用されることもありません！
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-### Web Support
+# Releases
+iOS / Androidに対応、リリースタブからダウンロードしてください。
+[Web(PWA)へはこちら](https://corenion.github.io/leasy/pwa/)
+# Build
+## Web Support
+最初にWeb向けにビルドする前に、必ず以下のコマンドを実行してくだい！
 `dart run sqflite_common_ffi_web:setup`
