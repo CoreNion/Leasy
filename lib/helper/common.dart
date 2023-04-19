@@ -109,14 +109,14 @@ Future<bool> backupDataBase() async {
 
 // データベースをインポートする関数 (Web版は非対応)
 Future<bool> importDataBase() async {
-  // 既存ファイル削除
-  await deleteStudyDataBase();
-
   // ファイル選択
   final res = await FilePicker.platform
       .pickFiles(type: FileType.any, lockParentWindow: true);
   if (res == null) return false;
   final pFile = res.files.first;
+
+  // 既存ファイル削除
+  await deleteStudyDataBase();
 
   if (kIsWeb) {
     throw UnsupportedError("Web版は未実装");
