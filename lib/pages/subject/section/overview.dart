@@ -107,10 +107,10 @@ class _SectionPageState extends State<SectionPage> {
     // 正解記録を適切な場所に保存する
     record.forEach((id, correct) async {
       await updateQuestionRecord(id, correct);
+      final len = miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0);
 
       setState(() {
-        _latestCorrects[
-            miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0)] = correct;
+        _latestCorrects[len] = correct;
       });
     });
     setState(() => loading = false);
@@ -156,8 +156,17 @@ class _SectionPageState extends State<SectionPage> {
                                 // 不正解のみの場合、不正解の問題のみ送る
                                 final sendQs = onlyIncorrect
                                     ? miQuestions
-                                        .where((mi) =>
-                                            !(mi.latestCorrect ?? false))
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (entry) {
+                                            if (!(_latestCorrects[entry.key] ??
+                                                false)) {
+                                              return entry.value;
+                                            }
+                                          },
+                                        )
+                                        .whereType<MiQuestion>()
                                         .toList()
                                     : miQuestions;
                                 if (sendQs.isEmpty) {
