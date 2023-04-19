@@ -468,6 +468,12 @@ class _WarningDialogState extends State<WarningDialog> {
   }
 
   @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("警告"),
