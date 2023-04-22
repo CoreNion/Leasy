@@ -11,19 +11,32 @@ Future<int> removeQuestion(int questionID) async {
   return studyDB.delete("Questions", where: "id = ?", whereArgs: [questionID]);
 }
 
-/// データベース上の指定されたセクションのMiQuestion一覧を取得
-Future<List<MiQuestion>> getMiQuestions(List<int> sectionIDs) async {
-  final miList = <MiQuestion>[];
+/// 指定された単一セクションのMiQuestion概要(IDと問題/正誤)を取得
+Future<Map<int, MapEntry<String, bool?>>> getMiQuestionSummaries(
+    int sectionID) async {
+  final results = await studyDB.query('Questions',
+      columns: ["id", "question", "latestCorrect"],
+      where: "sectionID = ?",
+      whereArgs: [sectionID]);
 
-  for (var secID in sectionIDs) {
-    final miQuestionsMaps = await studyDB
-        .query('Questions', where: "sectionID = ?", whereArgs: [secID]);
-    for (var map in miQuestionsMaps) {
-      miList.add(MiQuestion.tableMapToModel(map));
-    }
-  }
+  return {
+    for (var e in results)
+      e["id"] as int: MapEntry(
+          e["question"] as String,
+          (e["latestCorrect"] as int?) != null
+              ? ((e["latestCorrect"] as int) == 1 ? true : false)
+              : null)
+  };
+}
 
-  return miList;
+/// データベース上の指定されたセクションのMiQuestionのID一覧を取得
+Future<List<int>> getMiQuestionsID(List<int> sectionIDs) async {
+  final results = await studyDB.query('Questions',
+      columns: ["id"],
+      where: "sectionID IN (${List.filled(sectionIDs.length, '?').join(',')})",
+      whereArgs: sectionIDs);
+
+  return results.map((e) => e["id"] as int).toList();
 }
 
 /// IDからMiQuestionを返す

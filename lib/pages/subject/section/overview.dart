@@ -20,11 +20,7 @@ class SectionPage extends StatefulWidget {
 
 class _SectionPageState extends State<SectionPage> {
   bool loading = true;
-  final List<int> _questionListID = <int>[];
-  final List<String> _questionListStr = <String>[];
-  final List<bool?> _latestCorrects = [];
-  late List<MiQuestion> miQuestions;
-  late SectionInfo section;
+  Map<int, MapEntry<String, bool?>> _questionSummaries = {};
 
   /// 現在のセクションの情報
   late SectionInfo secInfo;
@@ -41,18 +37,14 @@ class _SectionPageState extends State<SectionPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 保存されている問題をリストに追加
-      final questions = await getMiQuestions([widget.sectionInfo.tableID]);
+      final summaries =
+          await getMiQuestionSummaries(widget.sectionInfo.tableID);
       if (!mounted) return;
 
-      for (var question in questions) {
-        _questionListID.add(question.id);
-        setState(() {
-          _latestCorrects.add(question.latestCorrect);
-          _questionListStr.add(question.question);
-        });
-      }
-      miQuestions = questions;
-      setState(() => loading = false);
+      setState(() {
+        _questionSummaries = summaries;
+        loading = false;
+      });
     });
   }
 
@@ -61,27 +53,23 @@ class _SectionPageState extends State<SectionPage> {
     setState(() => loading = true);
     // 何らかの変更があった場合のみ更新
     if (newQuestion != null) {
-      final checkIndex = _questionListID.indexOf(newQuestion.id);
+      final id = newQuestion.id;
 
-      // IDが存在する場合はMiQuestionなどを更新
-      if (checkIndex != -1) {
-        await updateMiQuestion(newQuestion.id, newQuestion);
+      if (_questionSummaries.containsKey(id)) {
+        // 既存の問題の場合はMiQuestionなどを更新
+        await updateMiQuestion(id, newQuestion);
+
         if (!mounted) return;
-
-        miQuestions[checkIndex] = newQuestion;
         setState(() {
-          _questionListStr[checkIndex] = newQuestion.question;
+          _questionSummaries[id] = MapEntry(newQuestion.question, null);
         });
       } else {
         // IDが存在しない場合は作成
         await createQuestion(newQuestion);
         if (!mounted) return;
 
-        _questionListID.add(newQuestion.id);
-        _latestCorrects.add(null);
-        miQuestions.add(newQuestion);
         setState(() {
-          _questionListStr.add(newQuestion.question);
+          _questionSummaries.addAll({id: MapEntry(newQuestion.question, null)});
         });
       }
     }
@@ -89,8 +77,9 @@ class _SectionPageState extends State<SectionPage> {
   }
 
   // 学習結果から記録を更新する
-  Future<void> updateRecord(Map<int, bool>? record, bool isTest) async {
-    if (record == null) return;
+  Future<void> updateRecord(
+      List<MapEntry<int, bool?>>? records, bool isTest) async {
+    if (records == null) return;
     setState(() => loading = true);
 
     final latestStudyMode = isTest ? "test" : "normal";
@@ -106,14 +95,17 @@ class _SectionPageState extends State<SectionPage> {
     });
 
     // 正解記録を適切な場所に保存する
-    record.forEach((id, correct) async {
-      await updateQuestionRecord(id, correct);
-      final len = miQuestions.indexWhere((mi) => mi.id.compareTo(id) == 0);
+    for (var recordEntry in records) {
+      final id = recordEntry.key;
+      final correct = recordEntry.value;
 
+      await updateQuestionRecord(id, correct!);
+
+      if (!mounted) return;
       setState(() {
-        _latestCorrects[len] = correct;
+        _questionSummaries[id] = MapEntry(_questionSummaries[id]!.key, correct);
       });
-    });
+    }
     setState(() => loading = false);
   }
 
@@ -142,9 +134,11 @@ class _SectionPageState extends State<SectionPage> {
               scoreBoard(
                   colorScheme,
                   secInfo.latestStudyMode == "test",
-                  _latestCorrects.where((correct) => correct ?? false).length,
-                  _latestCorrects
-                      .where((correct) => !(correct ?? false))
+                  _questionSummaries.values
+                      .where((correct) => correct.value ?? false)
+                      .length,
+                  _questionSummaries.values
+                      .where((correct) => !(correct.value ?? false))
                       .length),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -152,24 +146,16 @@ class _SectionPageState extends State<SectionPage> {
                   Padding(
                       padding: const EdgeInsets.all(7.0),
                       child: FilledButton(
-                        onPressed: _questionListID.isNotEmpty
+                        onPressed: _questionSummaries.isNotEmpty
                             ? () async {
                                 // 不正解のみの場合、不正解の問題のみ送る
                                 final sendQs = onlyIncorrect
-                                    ? miQuestions
-                                        .asMap()
-                                        .entries
-                                        .map(
-                                          (entry) {
-                                            if (!(_latestCorrects[entry.key] ??
-                                                false)) {
-                                              return entry.value;
-                                            }
-                                          },
-                                        )
-                                        .whereType<MiQuestion>()
+                                    ? _questionSummaries.entries
+                                        .where((entry) =>
+                                            !(entry.value.value ?? false))
+                                        .map((entry) => entry.key)
                                         .toList()
-                                    : miQuestions;
+                                    : _questionSummaries.keys.toList();
                                 if (sendQs.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -180,10 +166,11 @@ class _SectionPageState extends State<SectionPage> {
 
                                 await updateRecord(
                                     await Navigator.of(context)
-                                        .push<Map<int, bool>>(MaterialPageRoute(
+                                        .push<List<MapEntry<int, bool?>>?>(
+                                            MaterialPageRoute(
                                       builder: (context) => SectionStudyPage(
-                                        secInfo: secInfo,
-                                        miQuestions: sendQs,
+                                        title: secInfo.title,
+                                        questionIDs: sendQs,
                                         testMode: false,
                                       ),
                                     )),
@@ -195,15 +182,16 @@ class _SectionPageState extends State<SectionPage> {
                   Padding(
                       padding: const EdgeInsets.all(7.0),
                       child: ElevatedButton(
-                          onPressed: _questionListID.isNotEmpty
+                          onPressed: _questionSummaries.isNotEmpty
                               ? () async {
                                   updateRecord(
                                       await Navigator.of(context)
-                                          .push<Map<int, bool>>(
+                                          .push<List<MapEntry<int, bool?>>?>(
                                               MaterialPageRoute(
                                         builder: (context) => SectionStudyPage(
-                                          secInfo: secInfo,
-                                          miQuestions: miQuestions,
+                                          title: secInfo.title,
+                                          questionIDs:
+                                              _questionSummaries.keys.toList(),
                                           testMode: true,
                                         ),
                                       )),
@@ -228,105 +216,106 @@ class _SectionPageState extends State<SectionPage> {
                       })),
               const Divider(),
               ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: _questionListStr.length,
-                  itemBuilder: ((context, index) => Dismissible(
-                        key: Key(_questionListStr[index]),
-                        onDismissed: (direction) async {
-                          await removeQuestion(_questionListID[index]);
-                          if (!mounted) return;
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: _questionSummaries.length,
+                itemBuilder: ((context, index) {
+                  final id = _questionSummaries.keys.elementAt(index);
+                  final value = _questionSummaries.values.elementAt(index);
 
-                          _questionListID.removeAt(index);
-                          miQuestions.removeAt(index);
-                          setState(() {
-                            _questionListStr.removeAt(index);
-                            _latestCorrects.removeAt(index);
-                          });
+                  return Dismissible(
+                    key: Key(id.toString()),
+                    onDismissed: (direction) async {
+                      await removeQuestion(id);
+                      if (!mounted) return;
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('削除しました')));
-                        },
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text('${index + 1}番目の問題を削除しますか？'),
-                                content: const Text('この操作は取り消せません。'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text('はい'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text('いいえ'),
-                                  ),
-                                ],
-                              );
-                            },
+                      setState(() {
+                        _questionSummaries.remove(id);
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('削除しました')));
+                    },
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('${index + 1}番目の問題を削除しますか？'),
+                            content: const Text('この操作は取り消せません。'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('はい'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('いいえ'),
+                              ),
+                            ],
                           );
                         },
-                        background: Container(
-                          color: Colors.red,
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const <Widget>[
-                              Icon(Icons.delete),
-                              Icon(Icons.delete)
-                            ],
-                          ),
-                        ),
-                        child: ListTile(
-                            title: Text(
-                              _questionListStr[index],
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            leading: Icon(Icons.circle,
-                                color: _latestCorrects[index] != null
-                                    ? (_latestCorrects[index]!
-                                        ? Colors.green
-                                        : Colors.red)
-                                    : Colors.grey),
-                            onTap: ((() async {
-                              final question =
-                                  await getMiQuestion(_questionListID[index]);
-                              if (!mounted) return;
+                      );
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.only(left: 10, right: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const <Widget>[
+                          Icon(Icons.delete),
+                          Icon(Icons.delete)
+                        ],
+                      ),
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        value.key,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      leading: Icon(Icons.circle,
+                          color: value.value != null
+                              ? (value.value! ? Colors.green : Colors.red)
+                              : Colors.grey),
+                      onTap: ((() async {
+                        final question = await getMiQuestion(id);
+                        if (!mounted) return;
 
-                              late MiQuestion? newMi;
-                              if (checkLargeSC(context)) {
-                                newMi = await showDialog(
-                                    context: context,
-                                    builder: (builder) {
-                                      return Dialog(
-                                          child: FractionallySizedBox(
-                                        widthFactor: 0.6,
-                                        child: SectionManagePage(
-                                          sectionID: secInfo.tableID,
-                                          miQuestion: question,
-                                        ),
-                                      ));
-                                    });
-                              } else {
-                                newMi = await showModalBottomSheet(
-                                    backgroundColor: Colors.transparent,
-                                    context: context,
-                                    isScrollControlled: true,
-                                    useSafeArea: true,
-                                    builder: (builder) {
-                                      return SectionManagePage(
-                                        sectionID: secInfo.tableID,
-                                        miQuestion: question,
-                                      );
-                                    });
-                              }
-                              await updateQuestion(newMi);
-                            }))),
-                      ))),
+                        late MiQuestion? newMi;
+                        if (checkLargeSC(context)) {
+                          newMi = await showDialog(
+                              context: context,
+                              builder: (builder) {
+                                return Dialog(
+                                    child: FractionallySizedBox(
+                                  widthFactor: 0.6,
+                                  child: SectionManagePage(
+                                    sectionID: secInfo.tableID,
+                                    miQuestion: question,
+                                  ),
+                                ));
+                              });
+                        } else {
+                          newMi = await showModalBottomSheet(
+                              backgroundColor: Colors.transparent,
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              builder: (builder) {
+                                return SectionManagePage(
+                                  sectionID: secInfo.tableID,
+                                  miQuestion: question,
+                                );
+                              });
+                        }
+                        await updateQuestion(newMi);
+                      })),
+                    ),
+                  );
+                }),
+              ),
             ],
           )),
         ),

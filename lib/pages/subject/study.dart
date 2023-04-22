@@ -2,34 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:status_alert/status_alert.dart';
 import 'package:flutter/services.dart';
 
-import '../../class/section.dart';
 import '../../class/question.dart';
+import '../../helper/question.dart';
 
 class SectionStudyPage extends StatefulWidget {
-  final SectionInfo? secInfo;
-  final List<MiQuestion> miQuestions;
+  // 学習する問題のID
+  final List<int> questionIDs;
+  // テストモードかどうか
   final bool testMode;
+  // アプリバーに表示されるタイトル
+  final String? title;
 
   const SectionStudyPage(
       {super.key,
-      this.secInfo,
-      required this.miQuestions,
-      required this.testMode});
+      required this.questionIDs,
+      required this.testMode,
+      this.title});
 
   @override
   State<StatefulWidget> createState() => _SectionStudyPageState();
 }
 
 class _SectionStudyPageState extends State<SectionStudyPage> {
+  bool loading = true;
+
+  // 現在の問題番号(Index)
   int currentQuestionIndex = 1;
-  SectionInfo? secInfo;
+  // 解答済みか
+  bool answered = false;
+
+  // 現在学習している問題
   late MiQuestion currentMi;
-  late List<MiQuestion> mis;
-  late List<bool?> checkedAnswers;
-
+  // 学習する問題IDと解答状況
+  late List<MapEntry<int, bool?>> records;
+  // 入力問題にするか
   late bool setInputQuestion;
-
-  Map<int, bool> record = {};
 
   final _formKey = GlobalKey<FormState>();
   late String inputAnswer;
@@ -39,39 +46,49 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
   void initState() {
     super.initState();
 
-    secInfo = widget.secInfo;
-    mis = widget.miQuestions;
-    checkedAnswers = List.filled(mis.length, null);
-
     // テストモードの場合は問題をシャッフル
-    if (widget.testMode) {
-      mis.shuffle();
-    }
+    records =
+        widget.questionIDs.map((e) => MapEntry<int, bool?>(e, null)).toList();
+    if (widget.testMode) records.shuffle();
 
     // 最初に表示する問題を設定
-    currentMi = mis.first;
-    setInputQuestion = currentMi.isInput;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      currentMi = await getMiQuestion(records.first.key);
+      setInputQuestion = currentMi.isInput;
+
+      setState(() => loading = false);
+    });
   }
 
   /// 指定された問題に表示を書き換える関数
-  void setQuestionUI(int questionIndex) {
+  Future<void> setQuestion(int questionIndex) async {
     // 上限未満場合のみ実行
-    if (questionIndex <= mis.length) {
+    if (questionIndex <= records.length) {
+      setState(() => loading = true);
+      // 問題を取得し、Indexなどを設定
+      currentMi = await getMiQuestion(records[questionIndex - 1].key);
       setState(() {
-        currentMi = mis[questionIndex - 1];
-        currentQuestionIndex = questionIndex;
         setInputQuestion = currentMi.isInput;
+        answered = records[questionIndex - 1].value != null;
+
+        // 入力問題の入力済みテキストを削除
+        textController.clear();
+
+        currentQuestionIndex = questionIndex;
+        loading = false;
       });
-      // 入力問題の入力済みテキストを削除
-      textController.clear();
-    } else if (questionIndex > mis.length && !checkedAnswers.contains(null)) {
+    } else if (questionIndex > records.length &&
+        !records.map((e) => e.value).contains(null)) {
+      final correct = records.where((e) => e.value == true).length;
+      final incorrect = records.where((e) => e.value == false).length;
+
       // 最後の問題より上かつ全ての問題が解き終わっていたら終了するかを尋ねる
       showDialog<bool?>(
           context: context,
           builder: ((context) => AlertDialog(
                 title: const Text("All Done!"),
                 content: Text(
-                    '最後の問題が終了しました。\n結果は、${record.values.where((element) => element == true).length}問正解・${record.values.where((element) => element == false).length}問不正解でした。\n学習モードを終了しますか？'),
+                    '最後の問題が終了しました。\n結果は、$correct問正解・$incorrect問不正解でした。\n学習モードを終了しますか？'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -81,7 +98,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                     onPressed: () {
                       Navigator.of(context)
                         ..pop()
-                        ..pop(record);
+                        ..pop(records);
                     },
                     child: const Text('はい'),
                   ),
@@ -92,8 +109,6 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   /// 選択問題の解答部分
   Column multipleChoice() {
-    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
-
     return Column(
       children: currentMi.choices.asMap().entries.map((entry) {
         return Expanded(
@@ -112,9 +127,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
             onPressed: answered
                 ? null
                 : () {
-                    setState(() {
-                      checkedAnswers[currentQuestionIndex - 1] = true;
-                    });
+                    // 解答後のUIにする
+                    setState(() => answered = true);
 
                     if (currentMi.answer == entry.key + 1) {
                       onCorrect(context);
@@ -134,7 +148,6 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   /// 入力問題の解答部分
   Column inputChoice() {
-    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
     final correctAnswer = currentMi.choices[currentMi.answer - 1];
 
     return Column(
@@ -178,9 +191,9 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                   ? null
                   : () {
                       if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          checkedAnswers[currentQuestionIndex - 1] = true;
-                        });
+                        // 解答後のUIにする
+                        setState(() => answered = true);
+
                         if (inputAnswer == correctAnswer) {
                           onCorrect(context);
                         } else {
@@ -206,12 +219,15 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     );
     HapticFeedback.lightImpact();
 
-    // 正解を記録
-    record[mis[currentQuestionIndex - 1].id] = true;
+    setState(() {
+      // 正解を記録
+      records[currentQuestionIndex - 1] =
+          MapEntry(records[currentQuestionIndex - 1].key, true);
+    });
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
-      setQuestionUI(currentQuestionIndex + 1);
+      setQuestion(currentQuestionIndex + 1);
     });
   }
 
@@ -232,25 +248,28 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     });
 
     // 不正解を記録
-    record[mis[currentQuestionIndex - 1].id] = false;
+    setState(() {
+      records[currentQuestionIndex - 1] =
+          MapEntry(records[currentQuestionIndex - 1].key, false);
+    });
 
     if (widget.testMode) {
       // 次の問題に進む
       Future.delayed(duration).then((value) {
-        setQuestionUI(currentQuestionIndex + 1);
+        setQuestion(currentQuestionIndex + 1);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final answered = checkedAnswers[currentQuestionIndex - 1] ?? false;
+    final answered = records[currentQuestionIndex - 1].value ?? false;
 
     return WillPopScope(
         onWillPop: () async {
           // 最終問題が終わっていない場合は警告
-          if (currentQuestionIndex < mis.length ||
-              (currentQuestionIndex == mis.length && !answered)) {
+          if (currentQuestionIndex < records.length ||
+              (currentQuestionIndex == records.length && !answered)) {
             final res = await showDialog<bool>(
                 context: context,
                 builder: (context) {
@@ -273,14 +292,14 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
               return false;
             }
           } else {
-            Navigator.pop(context, record);
+            Navigator.pop(context, records);
 
             return false;
           }
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(secInfo != null ? secInfo!.title : "教科テスト"),
+            title: Text(widget.title != null ? widget.title! : "教科テスト"),
           ),
           body: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -299,16 +318,18 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                                 fontSize: 25, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            currentMi.question,
+                            loading ? "" : currentMi.question,
                             style: const TextStyle(fontSize: 17),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  setInputQuestion
-                      ? inputChoice()
-                      : Expanded(flex: 3, child: multipleChoice()),
+                  loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : (setInputQuestion
+                          ? inputChoice()
+                          : Expanded(flex: 3, child: multipleChoice())),
                 ],
               ))),
           bottomNavigationBar: widget.testMode
@@ -328,15 +349,17 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                       label: '進む',
                     )
                   ],
-                  onTap: (selectedIndex) {
-                    if (selectedIndex == 0 && currentQuestionIndex != 1) {
-                      // 戻るボタン、最初の問題の場合は何もしない
-                      setQuestionUI(currentQuestionIndex - 1);
-                    } else if (selectedIndex == 1) {
-                      // 進むボタン
-                      setQuestionUI(currentQuestionIndex + 1);
-                    }
-                  },
+                  onTap: loading
+                      ? null
+                      : (selectedIndex) {
+                          if (selectedIndex == 0 && currentQuestionIndex != 1) {
+                            // 戻るボタン、最初の問題の場合は何もしない
+                            setQuestion(currentQuestionIndex - 1);
+                          } else if (selectedIndex == 1) {
+                            // 進むボタン
+                            setQuestion(currentQuestionIndex + 1);
+                          }
+                        },
                 ),
         ));
   }

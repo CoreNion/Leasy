@@ -68,11 +68,11 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                               ? () async {
                                   setState(() => loading = true);
 
-                                  final mis = await getMiQuestions(
+                                  final qIDs = await getMiQuestionsID(
                                       _sectionSummaries.keys.toList());
                                   if (!mounted) return;
 
-                                  if (mis.isEmpty) {
+                                  if (qIDs.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                             content: Text(
@@ -82,9 +82,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   }
 
                                   final record = await Navigator.of(context)
-                                      .push<Map<int, bool>>(MaterialPageRoute(
+                                      .push<List<MapEntry<int, bool?>>?>(
+                                          MaterialPageRoute(
                                     builder: (context) => SectionStudyPage(
-                                      miQuestions: mis,
+                                      questionIDs: qIDs,
                                       testMode: true,
                                     ),
                                   ));
@@ -93,11 +94,11 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                     return;
                                   }
 
-                                  final correct = record.values
-                                      .where((correct) => correct)
+                                  final correct = record
+                                      .where((entry) => entry.value!)
                                       .length;
-                                  final inCorrect = record.values
-                                      .where((correct) => !correct)
+                                  final inCorrect = record
+                                      .where((entry) => !(entry.value!))
                                       .length;
 
                                   // 記録を保存
