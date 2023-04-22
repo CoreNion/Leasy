@@ -18,7 +18,7 @@ Future<SectionInfo> createSection(int subjectID, String title) async {
 /// Sections DataBaseから指定された教科に所属しているセクションIDを取得する
 Future<List<int>> getSectionIDs(int subjectID) async {
   final idsMap = await studyDB.query('Sections',
-      columns: ["tableID"], where: "subjectID='$subjectID'");
+      columns: ["tableID"], where: "subjectID = ?", whereArgs: [subjectID]);
 
   List<int> ids = [];
   for (var map in idsMap) {
@@ -30,15 +30,15 @@ Future<List<int>> getSectionIDs(int subjectID) async {
 /// セクションIDからタイトルを取得
 Future<String> sectionIDtoTitle(int id) async {
   final titlesMap = await studyDB.query('Sections',
-      columns: ["title"], where: "tableID='$id'");
+      columns: ["title"], where: "tableID = ?", whereArgs: [id]);
 
   return titlesMap.first["title"].toString();
 }
 
 /// TableIDからSection情報を取得
 Future<SectionInfo> getSectionData(int tableID) async {
-  final sectionsMaps =
-      await studyDB.query('Sections', where: "tableID='$tableID'");
+  final sectionsMaps = await studyDB
+      .query('Sections', where: "tableID = ?", whereArgs: [tableID]);
 
   return SectionInfo.tableMapToModel(sectionsMaps.first);
 }
@@ -47,11 +47,19 @@ Future<SectionInfo> getSectionData(int tableID) async {
 Future<int> removeSection(int subjectID, int id) async {
   // セクション一覧から削除
   return studyDB.delete("Sections",
-      where: "subjectID='$subjectID' AND tableID='$id'");
+      where: "subjectID = ? AND tableID = ?", whereArgs: [subjectID, id]);
 }
 
 // セクション名を変更
 Future<int> renameSectionName(int tableID, String name) {
-  return studyDB.rawUpdate(
-      "UPDATE Sections SET title = '$name' WHERE tableID = $tableID;");
+  final updateValues = {"title": name};
+  return studyDB.update("Sections", updateValues,
+      where: "tableID = ?", whereArgs: [tableID]);
+}
+
+/// 指定されたセクションの概要データの更新
+Future<int> updateSectionRecord(int sectionID, String latestStudyMode) {
+  final updateValues = {"latestStudyMode": latestStudyMode};
+  return studyDB.update("Sections", updateValues,
+      where: "tableID = ?", whereArgs: [sectionID]);
 }

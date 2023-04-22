@@ -31,18 +31,23 @@ Future<int> removeSubject(int id) async {
     await removeSection(id, secID);
   }
 
-  return studyDB.delete("Subjects", where: "id=$id");
+  return studyDB.delete("Subjects", where: "id = ?", whereArgs: [id]);
 }
 
 /// 教科の名前を変更する
 Future<int> renameSubjectName(int id, String newTitle) {
+  final updateValues = {"title": newTitle};
   return studyDB
-      .rawUpdate("UPDATE Subjects SET title = '$newTitle' WHERE id = $id;");
+      .update("Subjects", updateValues, where: "id = ?", whereArgs: [id]);
 }
 
 /// データベースに保存されている記録を更新する
 Future<int> updateSubjectRecord(
     int id, int latestCorrect, int latestIncorrect) {
-  return studyDB.rawUpdate(
-      "UPDATE Subjects SET latestCorrect = $latestCorrect, latestIncorrect = $latestIncorrect WHERE id = $id;");
+  final updateValues = {
+    "latestCorrect": latestCorrect,
+    "latestIncorrect": latestIncorrect
+  };
+  return studyDB
+      .update("Subjects", updateValues, where: "id = ?", whereArgs: [id]);
 }
