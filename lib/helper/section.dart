@@ -15,24 +15,22 @@ Future<SectionInfo> createSection(int subjectID, String title) async {
   return section;
 }
 
-/// Sections DataBaseから指定された教科に所属しているセクションIDを取得する
-Future<List<int>> getSectionIDs(int subjectID) async {
-  final idsMap = await studyDB.query('Sections',
-      columns: ["tableID"], where: "subjectID = ?", whereArgs: [subjectID]);
+/// Sections DataBaseから指定された教科に所属しているセクションIDとタイトルを取得する
+Future<Map<int, String>> getSectionSummaries(int subjectID) async {
+  final results = await studyDB.query('Sections',
+      columns: ["tableID", "title"],
+      where: "subjectID = ?",
+      whereArgs: [subjectID]);
 
-  List<int> ids = [];
-  for (var map in idsMap) {
-    ids.add(map.cast()["tableID"]);
-  }
-  return ids;
+  return {for (var e in results) e["tableID"] as int: e["title"] as String};
 }
 
-/// セクションIDからタイトルを取得
-Future<String> sectionIDtoTitle(int id) async {
-  final titlesMap = await studyDB.query('Sections',
-      columns: ["title"], where: "tableID = ?", whereArgs: [id]);
+/// Sections DataBaseから指定された教科に所属しているセクションIDを取得する
+Future<List<int>> getSectionIDs(int subjectID) async {
+  final results = await studyDB.query('Sections',
+      columns: ["tableID"], where: "subjectID = ?", whereArgs: [subjectID]);
 
-  return titlesMap.first["title"].toString();
+  return results.map((e) => e["tableID"] as int).toList();
 }
 
 /// TableIDからSection情報を取得

@@ -17,10 +17,7 @@ class SubjectOverview extends StatefulWidget {
 }
 
 class _SubjectOverviewState extends State<SubjectOverview> {
-  final _formKey = GlobalKey<FormState>();
-  String _createdSectionTitle = "";
-  final List<String> _sectionListStr = <String>[];
-  final List<int> _sectionListID = <int>[];
+  late Map<int, String> _sectionSummaries = {};
 
   bool loading = true;
 
@@ -30,19 +27,11 @@ class _SubjectOverviewState extends State<SubjectOverview> {
   @override
   void initState() {
     super.initState();
-
     subInfo = widget.subInfo;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 保存されているセクションをリストに追加
-      final ids = await getSectionIDs(widget.subInfo.id);
-      for (var id in ids) {
-        final title = await sectionIDtoTitle(id);
-        setState(() {
-          _sectionListStr.add(title);
-          _sectionListID.add(id);
-        });
-      }
+      _sectionSummaries = await getSectionSummaries(widget.subInfo.id);
       setState(() => loading = false);
     });
   }
@@ -75,12 +64,12 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                   Padding(
                       padding: const EdgeInsets.all(7.0),
                       child: FilledButton(
-                          onPressed: _sectionListID.isNotEmpty
+                          onPressed: _sectionSummaries.isNotEmpty
                               ? () async {
                                   setState(() => loading = true);
 
-                                  final mis =
-                                      await getMiQuestions(_sectionListID);
+                                  final mis = await getMiQuestions(
+                                      _sectionSummaries.keys.toList());
                                   if (!mounted) return;
 
                                   if (mis.isEmpty) {
@@ -130,7 +119,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                 ],
               ),
               Text(
-                "セクション数:${_sectionListID.length}",
+                "セクション数:${_sectionSummaries.length}",
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
@@ -138,18 +127,19 @@ class _SubjectOverviewState extends State<SubjectOverview> {
               ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: _sectionListID.length,
-                  itemBuilder: ((context, index) => Dismissible(
-                      key: Key(_sectionListStr[index]),
+                  itemCount: _sectionSummaries.length,
+                  itemBuilder: ((context, index) {
+                    final id = _sectionSummaries.keys.elementAt(index);
+                    final title = _sectionSummaries.values.elementAt(index);
+
+                    return Dismissible(
+                      key: Key(id.toString()),
                       onDismissed: (direction) async {
-                        await removeSection(
-                            widget.subInfo.id, _sectionListID[index]);
+                        await removeSection(widget.subInfo.id, id);
                         if (!mounted) return;
 
-                        _sectionListID.removeAt(index);
-
                         setState(() {
-                          _sectionListStr.removeAt(index);
+                          _sectionSummaries.remove(id);
                         });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -161,8 +151,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             context: context,
                             builder: (context) {
                               return AlertDialog(
-                                title:
-                                    Text('${_sectionListStr[index]}を削除しますか？'),
+                                title: Text('$titleを削除しますか？'),
                                 content: const Text('この操作は取り消せません。'),
                                 actions: [
                                   TextButton(
@@ -212,8 +201,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return "セクション名を入力してください";
-                                        } else if (value ==
-                                            _sectionListStr[index]) {
+                                        } else if (value == title) {
                                           return "新しいセクション名を入力してください";
                                         } else {
                                           newTitle = value;
@@ -225,12 +213,12 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                 );
                               });
                           if (!(res ?? false)) return null;
-                          await renameSectionName(
-                              _sectionListID[index], newTitle);
+
+                          await renameSectionName(id, newTitle);
                           if (!mounted) return false;
 
                           setState(() {
-                            _sectionListStr[index] = newTitle;
+                            _sectionSummaries[id] = newTitle;
                           });
 
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -252,10 +240,9 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                               alignment: Alignment.centerRight,
                               child: Icon(Icons.title))),
                       child: ListTile(
-                        title: Text(_sectionListStr[index]),
+                        title: Text(title),
                         onTap: () async {
-                          final secInfo =
-                              await getSectionData(_sectionListID[index]);
+                          final secInfo = await getSectionData(id);
                           if (!mounted) return;
 
                           Navigator.push(context,
@@ -265,14 +252,20 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             );
                           })));
                         },
-                      )))),
+                      ),
+                    );
+                  })),
             ]),
           )),
       floatingActionButton: FloatingActionButton(
-          onPressed: (() {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
+        onPressed: (() {
+          showDialog(
+            context: context,
+            builder: (context) {
+              final formKey = GlobalKey<FormState>();
+              late String createdSectionTitle;
+
+              return AlertDialog(
                   title: const Text("セクションを作成"),
                   actions: <Widget>[
                     TextButton(
@@ -280,14 +273,14 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                         child: const Text("キャンセル")),
                     TextButton(
                         onPressed: (() async {
-                          if (_formKey.currentState!.validate()) {
+                          if (formKey.currentState!.validate()) {
                             final section = await createSection(
-                                widget.subInfo.id, _createdSectionTitle);
+                                widget.subInfo.id, createdSectionTitle);
                             if (!mounted) return;
 
                             setState(() {
-                              _sectionListID.add(section.tableID);
-                              _sectionListStr.add(_createdSectionTitle);
+                              _sectionSummaries
+                                  .addAll({section.tableID: section.title});
                             });
                             Navigator.pop(context);
 
@@ -303,7 +296,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                         child: const Text("決定")),
                   ],
                   content: Form(
-                      key: _formKey,
+                      key: formKey,
                       child: TextFormField(
                         decoration: const InputDecoration(
                             labelText: "セクション名",
@@ -313,15 +306,17 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                           if (value == null || value.isEmpty) {
                             return "セクション名を入力してください";
                           } else {
-                            _createdSectionTitle = value;
+                            createdSectionTitle = value;
                             return null;
                           }
                         },
-                      ))),
-            );
-          }),
-          tooltip: "セクションを作成",
-          child: const Icon(Icons.add)),
+                      )));
+            },
+          );
+        }),
+        tooltip: "セクションを作成",
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
