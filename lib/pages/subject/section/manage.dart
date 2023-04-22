@@ -135,6 +135,12 @@ class _SectionManagePageState extends State<SectionManagePage> {
                       actions: [
                         IconButton(
                             onPressed: () async {
+                              // フォームに変化があった時のみ保存する
+                              if (!formChanged) {
+                                Navigator.of(context).pop();
+                                return;
+                              }
+
                               if (_formKey.currentState!.validate()) {
                                 final miQuestion = MiQuestion(
                                     id: mi != null
