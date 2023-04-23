@@ -86,12 +86,12 @@ class _SettingPageState extends State<SettingPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: ListTile(
                     title: const Text("アプリ情報"),
-                    subtitle: Text("v${MyApp.packageInfo.buildNumber}"),
+                    subtitle: Text("v${MyApp.packageInfo.version}"),
                     trailing: Icon(Icons.info, color: colorScheme.primary),
                     onTap: () => showAboutDialog(
                         context: context,
                         applicationName: "Leasy",
-                        applicationVersion: "v${MyApp.packageInfo.buildNumber}",
+                        applicationVersion: "v${MyApp.packageInfo.version}",
                         applicationLegalese: "(c) 2023 CoreNion\n",
                         children: [
                           TextButton(
