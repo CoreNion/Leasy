@@ -238,11 +238,11 @@ class __HowToContentState extends State<_HowToContent> {
                       ]),
                       Column(
                         children: <Widget>[
-                          Expanded(
+                          const Expanded(
                             flex: 2,
                             child: SingleChildScrollView(
                               child: Column(
-                                children: const <Widget>[
+                                children: <Widget>[
                                   Text(
                                     "問題 #1",
                                     textAlign: TextAlign.center,

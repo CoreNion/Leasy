@@ -262,9 +262,9 @@ class _SectionPageState extends State<SectionPage> {
                     background: Container(
                       color: Colors.red,
                       padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const <Widget>[
+                        children: <Widget>[
                           Icon(Icons.delete),
                           Icon(Icons.delete)
                         ],
