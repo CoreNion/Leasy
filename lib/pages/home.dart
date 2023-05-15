@@ -111,8 +111,8 @@ class _HomeState extends State<Home> {
                   minItemWidth: 270,
                   horizontalGridMargin: 20,
                   horizontalGridSpacing: 30,
-                  verticalGridSpacing: 10,
                   verticalGridMargin: 20,
+                  verticalGridSpacing: 30,
                   children: subejctWidgetList,
                 );
               } else {
@@ -273,180 +273,184 @@ class SubjectWidget extends StatefulWidget {
 
 class _SubjectWidgetState extends State<SubjectWidget> {
   late SubjectInfo currentInfo;
+  late Offset tapPosition;
+  late List<PopupMenuEntry<String>> menuItems;
 
   @override
   void initState() {
     super.initState();
-
     currentInfo = widget.subInfo;
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenSize = MediaQuery.of(context).size;
 
-    return Stack(alignment: Alignment.bottomRight, children: [
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-              onLongPress: () => setState(() {
-                    HapticFeedback.lightImpact();
-                    Home.showDropDown = true;
-                  }),
-              onSecondaryTapUp: (details) => setState(() {
-                    Home.showDropDown = true;
-                  }),
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 150),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10))),
-                onPressed: (() {
-                  HapticFeedback.lightImpact();
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (builder) =>
-                              SubjectOverview(subInfo: currentInfo)));
-                }),
-                child: Text(
-                  currentInfo.title,
-                  style: const TextStyle(
-                      fontSize: 25, fontWeight: FontWeight.bold),
-                ),
-              )),
-          const SizedBox(height: 50)
-        ],
-      ),
-      IgnorePointer(
-          ignoring: !Home.showDropDown,
-          child: AnimatedOpacity(
-              opacity: Home.showDropDown ? 1 : 0,
-              duration: const Duration(milliseconds: 100),
-              child: Container(
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                      color: colorScheme.background,
-                      borderRadius: BorderRadius.circular(17)),
-                  width: 200,
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    ListTile(
-                      leading: Icon(Icons.title, color: colorScheme.primary),
-                      title: const Text("名前を変更"),
-                      onTap: () async {
-                        setState(() {
-                          Home.showDropDown = false;
-                        });
+    final menuItems = <PopupMenuEntry<String>>[
+      PopupMenuItem<String>(
+        value: 'Value1',
+        child: Wrap(
+          spacing: 10,
+          children: <Widget>[
+            Icon(Icons.title, color: colorScheme.primary),
+            const Text('名前を変更'),
+          ],
+        ),
+        onTap: () async {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final formKey = GlobalKey<FormState>();
 
-                        final formKey = GlobalKey<FormState>();
-                        setState(() {
-                          Home.showDropDown = false;
-                        });
-
-                        late String newTitle;
-                        final res = await showDialog<bool?>(
-                            context: context,
-                            builder: (builder) {
-                              return AlertDialog(
-                                title: const Text("新しい名前を入力"),
-                                actions: [
-                                  TextButton(
-                                      onPressed: (() =>
-                                          Navigator.pop(context, false)),
-                                      child: const Text("キャンセル")),
-                                  TextButton(
-                                      onPressed: (() {
-                                        if (formKey.currentState!.validate()) {
-                                          Navigator.pop(context, true);
-                                        }
-                                      }),
-                                      child: const Text("決定")),
-                                ],
-                                content: Form(
-                                  key: formKey,
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                        labelText: "教科名",
-                                        icon: Icon(Icons.book),
-                                        hintText: "教科名を入力"),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return "教科名を入力してください";
-                                      } else if (value ==
-                                          widget.subInfo.title) {
-                                        return "新しい教科名を入力してください";
-                                      } else {
-                                        newTitle = value;
-                                        return null;
-                                      }
-                                    },
-                                  ),
-                                ),
-                              );
-                            });
-                        if (!(res ?? false)) return;
-
-                        await renameSubjectName(widget.subInfo.id, newTitle);
-
-                        setState(() {
-                          currentInfo = SubjectInfo(
-                              title: newTitle,
-                              id: currentInfo.id,
-                              latestCorrect: currentInfo.latestCorrect,
-                              latestIncorrect: currentInfo.latestIncorrect);
-                        });
-
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('名前を変更しました')));
-                        }
-                      },
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.delete_forever,
-                          color: colorScheme.primary),
-                      title: const Text("削除"),
-                      onTap: () async {
-                        setState(() {
-                          Home.showDropDown = false;
-                        });
-
-                        final confirm = await showDialog(
-                            context: context,
-                            builder: ((context) {
-                              return AlertDialog(
-                                title:
-                                    Text('"${widget.subInfo.title}"を削除しますか？'),
-                                content: const Text(
-                                    '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text('いいえ'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text('はい'),
-                                  ),
-                                ],
-                              );
-                            }));
-
-                        if (confirm ?? false) {
-                          await removeSubject(widget.subInfo.id);
-
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('削除しました')));
-                            Home.removeSubjectWidget(context, widget.index);
+            late String newTitle;
+            final res = await showDialog<bool?>(
+                context: context,
+                builder: (builder) {
+                  return AlertDialog(
+                    title: const Text("新しい名前を入力"),
+                    actions: [
+                      TextButton(
+                          onPressed: (() => Navigator.pop(context, false)),
+                          child: const Text("キャンセル")),
+                      TextButton(
+                          onPressed: (() {
+                            if (formKey.currentState!.validate()) {
+                              Navigator.pop(context, true);
+                            }
+                          }),
+                          child: const Text("決定")),
+                    ],
+                    content: Form(
+                      key: formKey,
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: "教科名",
+                            icon: Icon(Icons.book),
+                            hintText: "教科名を入力"),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "教科名を入力してください";
+                          } else if (value == widget.subInfo.title) {
+                            return "新しい教科名を入力してください";
+                          } else {
+                            newTitle = value;
+                            return null;
                           }
-                        }
-                      },
-                    )
-                  ]))))
-    ]);
+                        },
+                      ),
+                    ),
+                  );
+                });
+            if (!(res ?? false)) return;
+
+            await renameSubjectName(widget.subInfo.id, newTitle);
+
+            setState(() {
+              currentInfo = SubjectInfo(
+                  title: newTitle,
+                  id: currentInfo.id,
+                  latestCorrect: currentInfo.latestCorrect,
+                  latestIncorrect: currentInfo.latestIncorrect);
+            });
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+            }
+          });
+        },
+      ),
+      PopupMenuItem<String>(
+        value: 'Value2',
+        child: Wrap(
+          spacing: 10,
+          children: <Widget>[
+            Icon(Icons.delete_forever, color: colorScheme.error),
+            const Text('削除'),
+          ],
+        ),
+        onTap: () async {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final confirm = await showDialog(
+                context: context,
+                builder: ((context) {
+                  return AlertDialog(
+                    title: Text('"${widget.subInfo.title}"を削除しますか？'),
+                    content: const Text(
+                        '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('いいえ'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('はい'),
+                      ),
+                    ],
+                  );
+                }));
+
+            if (confirm ?? false) {
+              await removeSubject(widget.subInfo.id);
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('削除しました')));
+                Home.removeSubjectWidget(context, widget.index);
+              }
+            }
+          });
+        },
+      ),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+            onTapDown: (d) => setState(() => tapPosition = d.globalPosition),
+            onSecondaryTap: () {
+              HapticFeedback.lightImpact();
+              showMenu(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                      tapPosition.dx,
+                      tapPosition.dy,
+                      screenSize.width - tapPosition.dx,
+                      screenSize.height - tapPosition.dy),
+                  items: menuItems);
+            },
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 150),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              onPressed: (() {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (builder) =>
+                            SubjectOverview(subInfo: currentInfo)));
+              }),
+              onLongPress: () {
+                HapticFeedback.lightImpact();
+                showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(
+                        tapPosition.dx,
+                        tapPosition.dy,
+                        screenSize.width - tapPosition.dx,
+                        screenSize.height - tapPosition.dy),
+                    items: menuItems);
+              },
+              child: Text(
+                currentInfo.title,
+                style:
+                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+            )),
+      ],
+    );
   }
 }
