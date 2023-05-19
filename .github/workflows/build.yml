@@ -42,7 +42,7 @@ jobs:
           path: app-release.ipa
           
   build_android:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -56,9 +56,9 @@ jobs:
         with:
           flutter-version: '3.x'
           channel: 'stable'
-          # cache: false
-          # cache-key: flutter_linux
-          # cache-path: ${{ runner.tool_cache }}/flutter_linux
+          cache: false
+          cache-key: flutter_linux
+          cache-path: ${{ runner.tool_cache }}/flutter_linux
 
       - name: Install dependencies
         run: flutter pub get
