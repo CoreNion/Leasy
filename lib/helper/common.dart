@@ -18,6 +18,9 @@ import 'dummy.dart' if (dart.library.html) 'dart:html';
 import 'dummy.dart'
     if (dart.library.js) 'package:sqlite3/src/wasm/file_system/indexed_db.dart';
 
+import './upgrader.dart';
+
+const int dataBaseVersion = 4;
 late Database studyDB;
 
 /// データベースを読み込み・作成する関数
@@ -31,7 +34,8 @@ Future<void> loadStudyDataBase() async {
         await db.execute(
             "CREATE TABLE Questions(id integer primary key autoincrement, sectionID int, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int)");
       },
-      version: 3);
+      onUpgrade: databaseUpgrader,
+      version: dataBaseVersion);
 
   if (kIsWeb) {
     studyDB =
