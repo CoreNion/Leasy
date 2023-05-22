@@ -58,6 +58,39 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
       setState(() => loading = false);
     });
+
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
+
+  /// キーボード検知時の処理
+  bool _onKey(KeyEvent event) {
+    final key = event.logicalKey.keyLabel;
+
+    // KeyDownでかつDialogなどが表示されていない場合のみ実行
+    if (event is KeyDownEvent && ModalRoute.of(context)?.isCurrent == true) {
+      // 問題中に1~4のキーが押されたらそれで解答する
+      if (!setInputQuestion && !answered && key.contains(RegExp(r'[1-4]'))) {
+        // 解答後のUIにする
+        setState(() => answered = true);
+
+        if (currentMi.answer == int.parse(key)) {
+          onCorrect(context);
+        } else {
+          onIncorrect(context, "${currentMi.answer}番");
+        }
+      } else if (key == "Arrow Left" || key == "Arrow Right") {
+        // 左右キーが押された時の処理
+        if (key == "Arrow Left" && currentQuestionIndex != 1) {
+          // 問題を戻る、最初の問題の場合は何もしない
+          setQuestion(currentQuestionIndex - 1);
+        } else if (key == "Arrow Right") {
+          // 問題を進む
+          setQuestion(currentQuestionIndex + 1);
+        }
+      }
+    }
+
+    return false;
   }
 
   /// 指定された問題に表示を書き換える関数
