@@ -409,15 +409,15 @@ class _SubjectWidgetState extends State<SubjectWidget> {
       children: [
         GestureDetector(
             onTapDown: (d) => setState(() => tapPosition = d.globalPosition),
-            onSecondaryTap: () {
+            onSecondaryTapDown: (details) {
               HapticFeedback.lightImpact();
               showMenu(
                   context: context,
                   position: RelativeRect.fromLTRB(
-                      tapPosition.dx,
-                      tapPosition.dy,
-                      screenSize.width - tapPosition.dx,
-                      screenSize.height - tapPosition.dy),
+                      details.globalPosition.dx,
+                      details.globalPosition.dy,
+                      screenSize.width - details.globalPosition.dx,
+                      screenSize.height - details.globalPosition.dy),
                   items: menuItems);
             },
             child: FilledButton(
