@@ -78,8 +78,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
         } else {
           onIncorrect(context, "${currentMi.answer}番");
         }
-      } else if (key == "Arrow Left" || key == "Arrow Right") {
-        // 左右キーが押された時の処理
+      } else if (!widget.testMode) {
+        /* 左右キーが押された時の処理(通常学習モードのみ) */
         if (key == "Arrow Left" && currentQuestionIndex != 1) {
           // 問題を戻る、最初の問題の場合は何もしない
           setQuestion(currentQuestionIndex - 1);
