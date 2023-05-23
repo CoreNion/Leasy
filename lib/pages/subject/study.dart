@@ -296,13 +296,10 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   @override
   Widget build(BuildContext context) {
-    final answered = records[currentQuestionIndex - 1].value ?? false;
-
     return WillPopScope(
         onWillPop: () async {
-          // 最終問題が終わっていない場合は警告
-          if (currentQuestionIndex < records.length ||
-              (currentQuestionIndex == records.length && !answered)) {
+          // 全問題が終わっていない場合は警告
+          if (records.map((e) => e.value).contains(null)) {
             final res = await showDialog<bool>(
                 context: context,
                 builder: (context) {
