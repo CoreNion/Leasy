@@ -70,7 +70,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     // KeyDownでかつDialogなどが表示されていない場合のみ実行
     if (event is KeyDownEvent && ModalRoute.of(context)?.isCurrent == true) {
       // 問題中に1~4のキーが押されたらそれで解答する
-      if (!setInputQuestion && !answered && key.contains(RegExp(r'[1-4]'))) {
+      if (!setInputQuestion && !answered && key.contains(RegExp('^[1-4]'))) {
         // 解答後のUIにする
         setState(() => answered = true);
 
