@@ -64,6 +64,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   /// キーボード検知時の処理
   bool _onKey(KeyEvent event) {
+    if (!mounted) return false;
     final key = event.logicalKey.keyLabel;
 
     // KeyDownでかつDialogなどが表示されていない場合のみ実行
