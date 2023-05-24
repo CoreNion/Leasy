@@ -77,7 +77,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
         if (currentMi.answer == int.parse(key)) {
           onCorrect(context);
         } else {
-          onIncorrect(context, "${currentMi.answer}番");
+          onIncorrect(context);
         }
       } else if (!widget.testMode) {
         /* 左右キーが押された時の処理(通常学習モードのみ) */
@@ -167,7 +167,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                     if (currentMi.answer == entry.key + 1) {
                       onCorrect(context);
                     } else {
-                      onIncorrect(context, "${currentMi.answer}番");
+                      onIncorrect(context);
                     }
                   },
             child: Text(
@@ -231,7 +231,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                         if (inputAnswer == correctAnswer) {
                           onCorrect(context);
                         } else {
-                          onIncorrect(context, correctAnswer);
+                          onIncorrect(context);
                         }
                       }
                     },
@@ -266,13 +266,13 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
   }
 
   /// 不正解時の処理
-  void onIncorrect(BuildContext context, String correctAnswer) {
+  void onIncorrect(BuildContext context) {
     const duration = Duration(milliseconds: 1500);
     StatusAlert.show(
       context,
       duration: duration,
       title: '不正解',
-      subtitle: '正解は「$correctAnswer」です',
+      subtitle: '正解は「${currentMi.choices[currentMi.answer - 1]}」です',
       configuration: const IconConfiguration(icon: Icons.close),
       maxWidth: 260,
     );
@@ -287,12 +287,10 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           MapEntry(records[currentQuestionIndex - 1].key, false);
     });
 
-    if (widget.testMode) {
-      // 次の問題に進む
-      Future.delayed(duration).then((value) {
-        setQuestion(currentQuestionIndex + 1);
-      });
-    }
+    // 次の問題に進む
+    Future.delayed(duration).then((value) {
+      setQuestion(currentQuestionIndex + 1);
+    });
   }
 
   @override
