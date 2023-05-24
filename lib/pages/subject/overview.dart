@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../class/subject.dart';
 import '../../helper/question.dart';
@@ -39,6 +40,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -135,96 +137,11 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
                     return Dismissible(
                       key: Key(id.toString()),
-                      onDismissed: (direction) async {
-                        await removeSection(widget.subInfo.id, id);
-                        if (!mounted) return;
-
-                        setState(() {
-                          _sectionSummaries.remove(id);
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('削除しました')));
-                      },
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text('$titleを削除しますか？'),
-                                content: const Text('この操作は取り消せません。'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text('はい'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text('いいえ'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                          await showRemoveDialog(title, id);
                         } else if (direction == DismissDirection.endToStart) {
-                          final formKey = GlobalKey<FormState>();
-                          late String newTitle;
-
-                          final res = await showDialog<bool?>(
-                              context: context,
-                              builder: (builder) {
-                                return AlertDialog(
-                                  title: const Text("新しい名前を入力"),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: (() =>
-                                            Navigator.pop(context, false)),
-                                        child: const Text("キャンセル")),
-                                    TextButton(
-                                        onPressed: (() {
-                                          if (formKey.currentState!
-                                              .validate()) {
-                                            Navigator.pop(context, true);
-                                          }
-                                        }),
-                                        child: const Text("決定")),
-                                  ],
-                                  content: Form(
-                                    key: formKey,
-                                    child: TextFormField(
-                                      decoration: const InputDecoration(
-                                          labelText: "セクション名",
-                                          icon: Icon(Icons.book),
-                                          hintText: "セクション名を入力"),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return "セクション名を入力してください";
-                                        } else if (value == title) {
-                                          return "新しいセクション名を入力してください";
-                                        } else {
-                                          newTitle = value;
-                                          return null;
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                );
-                              });
-                          if (!(res ?? false)) return null;
-
-                          await renameSectionName(id, newTitle);
-                          if (!mounted) return false;
-
-                          setState(() {
-                            _sectionSummaries[id] = newTitle;
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('名前を変更しました')));
-                          return false;
+                          await showRenameDialog(title, id);
                         }
                         return null;
                       },
@@ -240,19 +157,56 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                           child: const Align(
                               alignment: Alignment.centerRight,
                               child: Icon(Icons.title))),
-                      child: ListTile(
-                        title: Text(title),
-                        onTap: () async {
-                          final secInfo = await getSectionData(id);
-                          if (!mounted) return;
-
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: ((context) {
-                            return SectionPage(
-                              sectionInfo: secInfo,
-                            );
-                          })));
+                      child: GestureDetector(
+                        onSecondaryTapDown: (details) {
+                          HapticFeedback.lightImpact();
+                          showMenu(
+                            context: context,
+                            position: RelativeRect.fromLTRB(
+                                details.globalPosition.dx,
+                                details.globalPosition.dy,
+                                screenSize.width - details.globalPosition.dx,
+                                screenSize.height - details.globalPosition.dy),
+                            items: [
+                              PopupMenuItem(
+                                  value: 1,
+                                  child: Row(children: [
+                                    Icon(Icons.title,
+                                        color: colorScheme.primary),
+                                    const SizedBox(width: 10),
+                                    const Text("名前を変更")
+                                  ]),
+                                  onTap: () => WidgetsBinding.instance
+                                      .addPostFrameCallback(
+                                          (_) => showRenameDialog(title, id))),
+                              PopupMenuItem(
+                                  value: 0,
+                                  child: Row(children: [
+                                    Icon(Icons.delete,
+                                        color: colorScheme.error),
+                                    const SizedBox(width: 10),
+                                    const Text("削除")
+                                  ]),
+                                  onTap: () => WidgetsBinding.instance
+                                      .addPostFrameCallback(
+                                          (_) => showRemoveDialog(title, id)))
+                            ],
+                          );
                         },
+                        child: ListTile(
+                          title: Text(title),
+                          onTap: () async {
+                            final secInfo = await getSectionData(id);
+                            if (!mounted) return;
+
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: ((context) {
+                              return SectionPage(
+                                sectionInfo: secInfo,
+                              );
+                            })));
+                          },
+                        ),
                       ),
                     );
                   })),
@@ -319,5 +273,98 @@ class _SubjectOverviewState extends State<SubjectOverview> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  /// セクション名を変更するダイアログを表示する
+  Future<void> showRenameDialog(String oldTitle, int id) async {
+    final formKey = GlobalKey<FormState>();
+    late String newTitle;
+
+    final res = await showDialog<bool?>(
+        context: context,
+        builder: (builder) {
+          return AlertDialog(
+            title: const Text("新しい名前を入力"),
+            actions: [
+              TextButton(
+                  onPressed: (() => Navigator.pop(context, false)),
+                  child: const Text("キャンセル")),
+              TextButton(
+                  onPressed: (() {
+                    if (formKey.currentState!.validate()) {
+                      Navigator.pop(context, true);
+                    }
+                  }),
+                  child: const Text("決定")),
+            ],
+            content: Form(
+              key: formKey,
+              child: TextFormField(
+                decoration: const InputDecoration(
+                    labelText: "セクション名",
+                    icon: Icon(Icons.book),
+                    hintText: "セクション名を入力"),
+                initialValue: oldTitle,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "セクション名を入力してください";
+                  } else if (value == oldTitle) {
+                    return "新しいセクション名を入力してください";
+                  } else {
+                    newTitle = value;
+                    return null;
+                  }
+                },
+              ),
+            ),
+          );
+        });
+    if (!(res ?? false)) return;
+
+    // DB上の名前を変更
+    await renameSectionName(id, newTitle);
+    if (!mounted) return;
+
+    // リスト上の名前を変更
+    setState(() {
+      _sectionSummaries[id] = newTitle;
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+    return;
+  }
+
+  Future<void> showRemoveDialog(String title, int id) async {
+    final res = await showDialog<bool?>(
+        context: context,
+        builder: (builder) {
+          return AlertDialog(
+            title: Text('$titleを削除しますか？'),
+            content: const Text('この操作は取り消せません。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('はい'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('いいえ'),
+              ),
+            ],
+          );
+        });
+    if (!(res ?? false)) return;
+
+    await removeSection(widget.subInfo.id, id);
+    if (!mounted) return;
+
+    setState(() {
+      _sectionSummaries.remove(id);
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('削除しました')));
+    return;
   }
 }

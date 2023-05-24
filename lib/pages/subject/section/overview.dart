@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../helper/question.dart';
 import '../../../helper/section.dart';
@@ -112,6 +113,7 @@ class _SectionPageState extends State<SectionPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
         resizeToAvoidBottomInset: false,
@@ -225,39 +227,9 @@ class _SectionPageState extends State<SectionPage> {
 
                   return Dismissible(
                     key: Key(id.toString()),
-                    onDismissed: (direction) async {
-                      await removeQuestion(id);
-                      if (!mounted) return;
-
-                      setState(() {
-                        _questionSummaries.remove(id);
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('削除しました')));
-                    },
                     confirmDismiss: (direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text('${index + 1}番目の問題を削除しますか？'),
-                            content: const Text('この操作は取り消せません。'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('はい'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('いいえ'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
+                      await showRemoveDialog(value.key, id);
+                      return null;
                     },
                     background: Container(
                       color: Colors.red,
@@ -270,48 +242,73 @@ class _SectionPageState extends State<SectionPage> {
                         ],
                       ),
                     ),
-                    child: ListTile(
-                      title: Text(
-                        value.key,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      leading: Icon(Icons.circle,
-                          color: value.value != null
-                              ? (value.value! ? Colors.green : Colors.red)
-                              : Colors.grey),
-                      onTap: ((() async {
-                        final question = await getMiQuestion(id);
-                        if (!mounted) return;
+                    child: GestureDetector(
+                      onSecondaryTapDown: (details) {
+                        HapticFeedback.lightImpact();
+                        showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(
+                              details.globalPosition.dx,
+                              details.globalPosition.dy,
+                              screenSize.width - details.globalPosition.dx,
+                              screenSize.height - details.globalPosition.dy),
+                          items: [
+                            PopupMenuItem(
+                                value: 0,
+                                child: Row(children: [
+                                  Icon(Icons.delete, color: colorScheme.error),
+                                  const SizedBox(width: 10),
+                                  const Text("削除")
+                                ]),
+                                onTap: () => WidgetsBinding.instance
+                                    .addPostFrameCallback(
+                                        (_) => showRemoveDialog(value.key, id)))
+                          ],
+                        );
+                      },
+                      child: ListTile(
+                        title: Text(
+                          value.key,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        leading: Icon(Icons.circle,
+                            color: value.value != null
+                                ? (value.value! ? Colors.green : Colors.red)
+                                : Colors.grey),
+                        onTap: ((() async {
+                          final question = await getMiQuestion(id);
+                          if (!mounted) return;
 
-                        late MiQuestion? newMi;
-                        if (checkLargeSC(context)) {
-                          newMi = await showDialog(
-                              context: context,
-                              builder: (builder) {
-                                return Dialog(
-                                    child: FractionallySizedBox(
-                                  widthFactor: 0.6,
-                                  child: SectionManagePage(
+                          late MiQuestion? newMi;
+                          if (checkLargeSC(context)) {
+                            newMi = await showDialog(
+                                context: context,
+                                builder: (builder) {
+                                  return Dialog(
+                                      child: FractionallySizedBox(
+                                    widthFactor: 0.6,
+                                    child: SectionManagePage(
+                                      sectionID: secInfo.tableID,
+                                      miQuestion: question,
+                                    ),
+                                  ));
+                                });
+                          } else {
+                            newMi = await showModalBottomSheet(
+                                backgroundColor: Colors.transparent,
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (builder) {
+                                  return SectionManagePage(
                                     sectionID: secInfo.tableID,
                                     miQuestion: question,
-                                  ),
-                                ));
-                              });
-                        } else {
-                          newMi = await showModalBottomSheet(
-                              backgroundColor: Colors.transparent,
-                              context: context,
-                              isScrollControlled: true,
-                              useSafeArea: true,
-                              builder: (builder) {
-                                return SectionManagePage(
-                                  sectionID: secInfo.tableID,
-                                  miQuestion: question,
-                                );
-                              });
-                        }
-                        await updateQuestion(newMi);
-                      })),
+                                  );
+                                });
+                          }
+                          await updateQuestion(newMi);
+                        })),
+                      ),
                     ),
                   );
                 }),
@@ -351,5 +348,39 @@ class _SectionPageState extends State<SectionPage> {
           tooltip: "問題を作成",
           child: const Icon(Icons.add),
         ));
+  }
+
+  /// 問題を削除するダイアログを表示する
+  Future<void> showRemoveDialog(String title, int id) async {
+    final result = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('$titleを削除しますか？'),
+          content: const Text('この操作は取り消せません。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('はい'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('いいえ'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == true) {
+      await removeQuestion(id);
+      if (!mounted) return;
+
+      setState(() {
+        _questionSummaries.remove(id);
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('削除しました')));
+    }
   }
 }
