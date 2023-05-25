@@ -26,10 +26,10 @@ class SectionStudyPage extends StatefulWidget {
 class _SectionStudyPageState extends State<SectionStudyPage> {
   bool loading = true;
 
-  // 現在の問題番号(Index)
-  int currentQuestionIndex = 1;
-  // 解答済みか
-  bool answered = false;
+  // 現在の問題
+  int currentQuestionIndex = 0;
+  // 解答済みかのリスト
+  late List<bool> answered;
 
   // 現在学習している問題
   late MiQuestion currentMi;
@@ -49,6 +49,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     // テストモードの場合は問題をシャッフル
     records =
         widget.questionIDs.map((e) => MapEntry<int, bool?>(e, null)).toList();
+    answered = List.generate(records.length, (index) => false);
     if (widget.testMode) records.shuffle();
 
     // 最初に表示する問題を設定
@@ -70,9 +71,11 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     // KeyDownでかつDialogなどが表示されていない場合のみ実行
     if (event is KeyDownEvent && ModalRoute.of(context)?.isCurrent == true) {
       // 問題中に1~4のキーが押されたらそれで解答する
-      if (!setInputQuestion && !answered && key.contains(RegExp('^[1-4]'))) {
+      if (!setInputQuestion &&
+          !answered[currentQuestionIndex] &&
+          key.contains(RegExp('^[1-4]'))) {
         // 解答後のUIにする
-        setState(() => answered = true);
+        setState(() => answered[currentQuestionIndex] = true);
 
         if (currentMi.answer == int.parse(key)) {
           onCorrect(context);
@@ -81,12 +84,12 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
         }
       } else if (!widget.testMode) {
         /* 左右キーが押された時の処理(通常学習モードのみ) */
-        if (key == "Arrow Left" && currentQuestionIndex != 1) {
-          // 問題を戻る、最初の問題の場合は何もしない
-          setQuestion(currentQuestionIndex - 1);
+        if (key == "Arrow Left") {
+          // 問題を戻る処理を実行
+          requestMoveQuestion(0);
         } else if (key == "Arrow Right") {
-          // 問題を進む
-          setQuestion(currentQuestionIndex + 1);
+          // 問題を進める処理を実行
+          requestMoveQuestion(1);
         }
       }
     }
@@ -94,51 +97,65 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
     return false;
   }
 
-  /// 指定された問題に表示を書き換える関数
-  Future<void> setQuestion(int questionIndex) async {
-    // 上限未満場合のみ実行
-    if (questionIndex <= records.length) {
-      setState(() => loading = true);
-      // 問題を取得し、Indexなどを設定
-      currentMi = await getMiQuestion(records[questionIndex - 1].key);
-      setState(() {
-        setInputQuestion = currentMi.isInput;
-        answered = records[questionIndex - 1].value != null;
+  /// 問題を前後に移動することを要求された時の処理
+  ///
+  /// [requestNum] 0: 戻る, 1: 進む
+  Future<void> requestMoveQuestion(int requestNum) async {
+    late int questionIndex;
+    if (requestNum == 0 && currentQuestionIndex != 0) {
+      // 戻る処理、最初の問題ではない場合のみ実行
+      questionIndex = currentQuestionIndex - 1;
+    } else if (requestNum == 1 && currentQuestionIndex + 2 <= records.length) {
+      // 進める処理、上限未満で現在の問題が解答済みの場合のみ実行
+      if (answered[currentQuestionIndex]) {
+        questionIndex = currentQuestionIndex + 1;
+      } else {
+        return;
+      }
+    } else {
+      // 限界以上を求められていて、全ての問題が解き終わっていたら終了するかを尋ねる
+      if (!records.map((e) => e.value).contains(null)) {
+        final correct = records.where((e) => e.value == true).length;
+        final incorrect = records.where((e) => e.value == false).length;
 
-        // 入力問題の入力済みテキストを削除
-        textController.clear();
-
-        currentQuestionIndex = questionIndex;
-        loading = false;
-      });
-    } else if (questionIndex > records.length &&
-        !records.map((e) => e.value).contains(null)) {
-      final correct = records.where((e) => e.value == true).length;
-      final incorrect = records.where((e) => e.value == false).length;
-
-      // 最後の問題より上かつ全ての問題が解き終わっていたら終了するかを尋ねる
-      showDialog<bool?>(
-          context: context,
-          builder: ((context) => AlertDialog(
-                title: const Text("All Done!"),
-                content: Text(
-                    '最後の問題が終了しました。\n結果は、$correct問正解・$incorrect問不正解でした。\n学習モードを終了しますか？'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('いいえ'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context)
-                        ..pop()
-                        ..pop(records);
-                    },
-                    child: const Text('はい'),
-                  ),
-                ],
-              )));
+        showDialog<bool?>(
+            context: context,
+            builder: ((context) => AlertDialog(
+                  title: const Text("All Done!"),
+                  content: Text(
+                      '最後の問題が終了しました。\n結果は、$correct問正解・$incorrect問不正解でした。\n学習モードを終了しますか？'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('いいえ'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context)
+                          ..pop()
+                          ..pop(records);
+                      },
+                      child: const Text('はい'),
+                    ),
+                  ],
+                )));
+      }
+      return;
     }
+
+    setState(() => loading = true);
+    // 問題を取得し、Indexなどを設定
+    currentMi = await getMiQuestion(records[questionIndex].key);
+    setState(() {
+      setInputQuestion = currentMi.isInput;
+      answered[questionIndex] = records[questionIndex].value != null;
+
+      // 入力問題の入力済みテキストを削除
+      textController.clear();
+
+      currentQuestionIndex = questionIndex;
+      loading = false;
+    });
   }
 
   /// 選択問題の解答部分
@@ -151,18 +168,19 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           width: double.infinity,
           child: ElevatedButton(
             style: ButtonStyle(
-                backgroundColor: (answered
+                backgroundColor: (answered[currentQuestionIndex]
                     ? ((currentMi.answer == entry.key + 1)
                         ? MaterialStateProperty.all(Colors.green)
                         : MaterialStateProperty.all(Colors.red))
                     : null),
-                foregroundColor:
-                    answered ? MaterialStateProperty.all(Colors.white) : null),
-            onPressed: answered
+                foregroundColor: answered[currentQuestionIndex]
+                    ? MaterialStateProperty.all(Colors.white)
+                    : null),
+            onPressed: answered[currentQuestionIndex]
                 ? null
                 : () {
                     // 解答後のUIにする
-                    setState(() => answered = true);
+                    setState(() => answered[currentQuestionIndex] = true);
 
                     if (currentMi.answer == entry.key + 1) {
                       onCorrect(context);
@@ -207,7 +225,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
         ),
         Container(
             margin: const EdgeInsets.only(top: 5, bottom: 10),
-            child: answered
+            child: answered[currentQuestionIndex]
                 ? Text(
                     "正解: $correctAnswer",
                     style: const TextStyle(
@@ -221,12 +239,12 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
           width: double.infinity,
           height: 50,
           child: FilledButton(
-              onPressed: answered
+              onPressed: answered[currentQuestionIndex]
                   ? null
                   : () {
                       if (_formKey.currentState!.validate()) {
                         // 解答後のUIにする
-                        setState(() => answered = true);
+                        setState(() => answered[currentQuestionIndex] = true);
 
                         if (inputAnswer == correctAnswer) {
                           onCorrect(context);
@@ -255,13 +273,13 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
     setState(() {
       // 正解を記録
-      records[currentQuestionIndex - 1] =
-          MapEntry(records[currentQuestionIndex - 1].key, true);
+      records[currentQuestionIndex] =
+          MapEntry(records[currentQuestionIndex].key, true);
     });
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
-      setQuestion(currentQuestionIndex + 1);
+      requestMoveQuestion(1);
     });
   }
 
@@ -283,13 +301,13 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
     // 不正解を記録
     setState(() {
-      records[currentQuestionIndex - 1] =
-          MapEntry(records[currentQuestionIndex - 1].key, false);
+      records[currentQuestionIndex] =
+          MapEntry(records[currentQuestionIndex].key, false);
     });
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
-      setQuestion(currentQuestionIndex + 1);
+      requestMoveQuestion(1);
     });
   }
 
@@ -341,7 +359,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                       child: Column(
                         children: <Widget>[
                           Text(
-                            "問題 #$currentQuestionIndex",
+                            "問題 #${currentQuestionIndex + 1}",
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                                 fontSize: 25, fontWeight: FontWeight.bold),
@@ -380,15 +398,7 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                   ],
                   onTap: loading
                       ? null
-                      : (selectedIndex) {
-                          if (selectedIndex == 0 && currentQuestionIndex != 1) {
-                            // 戻るボタン、最初の問題の場合は何もしない
-                            setQuestion(currentQuestionIndex - 1);
-                          } else if (selectedIndex == 1) {
-                            // 進むボタン
-                            setQuestion(currentQuestionIndex + 1);
-                          }
-                        },
+                      : (selectedIndex) => requestMoveQuestion(selectedIndex),
                 ),
         ));
   }
