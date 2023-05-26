@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:responsive_grid_list/responsive_grid_list.dart';
+import 'package:mimosa/pages/subjects.dart';
 
 import '../main.dart';
 import '../utility.dart';
 import '../helper/subject.dart';
-import '../class/subject.dart';
 import 'setup.dart';
 import 'create.dart';
 import 'setting.dart';
@@ -14,14 +13,6 @@ import 'subject/overview.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
 
-  /// 強化のドロップダウンを表示するか
-  static bool showDropDown = false;
-
-  /// 教科リストから指定されたindexのWidgetを削除する
-  static void removeSubjectWidget(BuildContext context, int index) {
-    context.findAncestorStateOfType<_HomeState>()!.removeSubjectWidget(index);
-  }
-
   @override
   State<Home> createState() => _HomeState();
 }
@@ -29,14 +20,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int pageIndex = 0;
 
-  // トップに表示される教科のWidgetのリスト
-  static List<Widget> subejctWidgetList = [];
-
-  void removeSubjectWidget(int index) {
-    setState(() {
-      subejctWidgetList.removeAt(index);
-    });
-  }
+  GlobalKey subjectListKey = GlobalKey();
 
   @override
   void initState() {
@@ -84,94 +68,10 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final largeSC = checkLargeSC(context);
 
     final List<Widget> tabPages = <Widget>[
-      GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          setState(() {
-            Home.showDropDown = false;
-          });
-        },
-        child: FutureBuilder(
-          future: getSubjectInfos(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final subjects = snapshot.data!;
-              if (subjects.isNotEmpty) {
-                subejctWidgetList = subjects
-                    .asMap()
-                    .entries
-                    .map((e) => SubjectWidget(subInfo: e.value, index: e.key))
-                    .toList();
-
-                return ResponsiveGridList(
-                  minItemWidth: 270,
-                  horizontalGridMargin: 20,
-                  horizontalGridSpacing: 30,
-                  verticalGridMargin: 20,
-                  verticalGridSpacing: 30,
-                  children: subejctWidgetList,
-                );
-              } else {
-                return Stack(alignment: Alignment.bottomCenter, children: [
-                  Align(
-                      alignment: Alignment.center,
-                      child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 500),
-                          child: Container(
-                              margin: const EdgeInsets.all(15),
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                  color: colorScheme.background,
-                                  border:
-                                      Border.all(color: colorScheme.outline),
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10))),
-                              child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text("教科が一つもありません！",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20)),
-                                    const Divider(),
-                                    SizedBox.fromSize(
-                                        size: const Size.fromHeight(10)),
-                                    const Text("学習を開始するには、まずは教科を作成してください。",
-                                        style: TextStyle(fontSize: 17))
-                                  ])))),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("教科を作成する",
-                          style: TextStyle(
-                              color: colorScheme.primary,
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold)),
-                      Icon(
-                        Icons.keyboard_double_arrow_down,
-                        size: 70,
-                        color: colorScheme.primary,
-                      ),
-                    ],
-                  )
-                ]);
-              }
-            } else if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              return const Center(
-                child: Text("？"),
-              );
-            }
-          },
-        ),
-      ),
+      SubjectListPage(key: subjectListKey),
       const CreateSubjectPage(),
       const SettingPage(),
     ];
@@ -218,11 +118,8 @@ class _HomeState extends State<Home> {
               // 作成処理
               final subInfo = await createSubject(title);
 
-              // 教科Widgetに追加
-              setState(() {
-                subejctWidgetList.add(SubjectWidget(
-                    subInfo: subInfo, index: subejctWidgetList.length));
-              });
+              // 教科一覧を更新
+              subjectListKey.currentState!.setState(() {});
 
               // 教科ページへ移動
               if (context.mounted) {
@@ -257,200 +154,6 @@ class _HomeState extends State<Home> {
         selectedIndex: pageIndex,
       ),
       body: tabPages[pageIndex],
-    );
-  }
-}
-
-class SubjectWidget extends StatefulWidget {
-  final SubjectInfo subInfo;
-  final int index;
-
-  const SubjectWidget({super.key, required this.subInfo, required this.index});
-
-  @override
-  State<SubjectWidget> createState() => _SubjectWidgetState();
-}
-
-class _SubjectWidgetState extends State<SubjectWidget> {
-  late SubjectInfo currentInfo;
-  late Offset tapPosition;
-  late List<PopupMenuEntry<String>> menuItems;
-
-  @override
-  void initState() {
-    super.initState();
-    currentInfo = widget.subInfo;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final screenSize = MediaQuery.of(context).size;
-
-    final menuItems = <PopupMenuEntry<String>>[
-      PopupMenuItem<String>(
-        value: 'Value1',
-        child: Wrap(
-          spacing: 10,
-          children: <Widget>[
-            Icon(Icons.title, color: colorScheme.primary),
-            const Text('名前を変更'),
-          ],
-        ),
-        onTap: () async {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            final formKey = GlobalKey<FormState>();
-
-            late String newTitle;
-            final res = await showDialog<bool?>(
-                context: context,
-                builder: (builder) {
-                  return AlertDialog(
-                    title: const Text("新しい名前を入力"),
-                    actions: [
-                      TextButton(
-                          onPressed: (() => Navigator.pop(context, false)),
-                          child: const Text("キャンセル")),
-                      TextButton(
-                          onPressed: (() {
-                            if (formKey.currentState!.validate()) {
-                              Navigator.pop(context, true);
-                            }
-                          }),
-                          child: const Text("決定")),
-                    ],
-                    content: Form(
-                      key: formKey,
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                            labelText: "教科名",
-                            icon: Icon(Icons.book),
-                            hintText: "教科名を入力"),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "教科名を入力してください";
-                          } else if (value == widget.subInfo.title) {
-                            return "新しい教科名を入力してください";
-                          } else {
-                            newTitle = value;
-                            return null;
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                });
-            if (!(res ?? false)) return;
-
-            await renameSubjectName(widget.subInfo.id, newTitle);
-
-            setState(() {
-              currentInfo = SubjectInfo(
-                  title: newTitle,
-                  id: currentInfo.id,
-                  latestCorrect: currentInfo.latestCorrect,
-                  latestIncorrect: currentInfo.latestIncorrect);
-            });
-
-            if (context.mounted) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
-            }
-          });
-        },
-      ),
-      PopupMenuItem<String>(
-        value: 'Value2',
-        child: Wrap(
-          spacing: 10,
-          children: <Widget>[
-            Icon(Icons.delete_forever, color: colorScheme.error),
-            const Text('削除'),
-          ],
-        ),
-        onTap: () async {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            final confirm = await showDialog(
-                context: context,
-                builder: ((context) {
-                  return AlertDialog(
-                    title: Text('"${widget.subInfo.title}"を削除しますか？'),
-                    content: const Text(
-                        '警告！その教科のセクションや問題などが全て削除されます！\nこの操作は取り消せません！'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('いいえ'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('はい'),
-                      ),
-                    ],
-                  );
-                }));
-
-            if (confirm ?? false) {
-              await removeSubject(widget.subInfo.id);
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('削除しました')));
-                Home.removeSubjectWidget(context, widget.index);
-              }
-            }
-          });
-        },
-      ),
-    ];
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-            onTapDown: (d) => setState(() => tapPosition = d.globalPosition),
-            onSecondaryTapDown: (details) {
-              HapticFeedback.lightImpact();
-              showMenu(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                      details.globalPosition.dx,
-                      details.globalPosition.dy,
-                      screenSize.width - details.globalPosition.dx,
-                      screenSize.height - details.globalPosition.dy),
-                  items: menuItems);
-            },
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 150),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10))),
-              onPressed: (() {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (builder) =>
-                            SubjectOverview(subInfo: currentInfo)));
-              }),
-              onLongPress: () {
-                HapticFeedback.lightImpact();
-                showMenu(
-                    context: context,
-                    position: RelativeRect.fromLTRB(
-                        tapPosition.dx,
-                        tapPosition.dy,
-                        screenSize.width - tapPosition.dx,
-                        screenSize.height - tapPosition.dy),
-                    items: menuItems);
-              },
-              child: Text(
-                currentInfo.title,
-                style:
-                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-              ),
-            )),
-      ],
     );
   }
 }
