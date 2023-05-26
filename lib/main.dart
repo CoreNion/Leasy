@@ -44,6 +44,9 @@ class MyApp extends StatefulWidget {
   /// ThemeModeの設定
   static ThemeMode themeMode = ThemeMode.system;
 
+  /// アプリがアップデートされたか
+  static bool updated = false;
+
   static void rootSetState(BuildContext context, Function fun) {
     context.findAncestorStateOfType<_MyAppState>()!.rootSetState(fun);
   }
@@ -102,12 +105,22 @@ class _MyAppState extends State<MyApp> {
               await prefs.setBool("CustomColor", false);
               await prefs.setString("ThemeMode", "system");
               await prefs.setInt("SeedColor", MyApp.seedColor.value);
+              await prefs.setString("AppVersion", MyApp.packageInfo.version);
+            }
+
+            // バージョン情報のロード
+            MyApp.packageInfo = await PackageInfo.fromPlatform();
+
+            // バージョンアップデート確認
+            final version = prefs.getString("AppVersion");
+            if (version == null || version != MyApp.packageInfo.version) {
+              // 最新のバージョンを記録
+              await prefs.setString("AppVersion", MyApp.packageInfo.version);
+              MyApp.updated = true;
             }
 
             // データベースのロード
             await loadStudyDataBase();
-            // バージョン情報のロード
-            MyApp.packageInfo = await PackageInfo.fromPlatform();
 
             MyApp.prefs = prefs;
             return prefs;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mimosa/pages/subjects.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import '../utility.dart';
@@ -62,6 +63,29 @@ class _HomeState extends State<Home> {
         }
         await MyApp.prefs.setBool("setup", true);
         setState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+          padding: const EdgeInsets.all(10),
+          content: Text(
+              "アプリはv${MyApp.packageInfo.version}に更新されました。\nアップデートの内容は、サイトをご覧ください。"),
+          leading: const Icon(Icons.upgrade),
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              },
+              child: const Text('閉じる'),
+            ),
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                launchUrl(Uri.https("github.com", "/CoreNion/Leasy"));
+              },
+              child: const Text('サイトを開く'),
+            ),
+          ],
+        ));
       }
     });
   }
