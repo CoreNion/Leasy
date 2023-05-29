@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mimosa/widgets/overview.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../class/subject.dart';
@@ -219,26 +220,8 @@ class _SubjectListPageState extends State<SubjectListPage> {
             return Stack(alignment: Alignment.bottomCenter, children: [
               Align(
                   alignment: Alignment.center,
-                  child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: Container(
-                          margin: const EdgeInsets.all(15),
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                              color: colorScheme.background,
-                              border: Border.all(color: colorScheme.outline),
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10))),
-                          child:
-                              Column(mainAxisSize: MainAxisSize.min, children: [
-                            const Text("教科が一つもありません！",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 20)),
-                            const Divider(),
-                            SizedBox.fromSize(size: const Size.fromHeight(10)),
-                            const Text("学習を開始するには、まずは教科を作成してください。",
-                                style: TextStyle(fontSize: 17))
-                          ])))),
+                  child: dialogLikeMessage(colorScheme, "教科が一つもありません！",
+                      "学習を開始するには、まずは教科を作成してください。")),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

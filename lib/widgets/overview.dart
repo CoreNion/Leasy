@@ -66,3 +66,30 @@ Column scoreBoard(
     ],
   );
 }
+
+/// 教科などが無い時に出る、ダイアログライクなメッセージ
+ConstrainedBox dialogLikeMessage(
+    ColorScheme colorScheme, String title, String content) {
+  return ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 500),
+    child: Container(
+      margin: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+          color: colorScheme.background,
+          border: Border.all(color: colorScheme.outline),
+          borderRadius: const BorderRadius.all(Radius.circular(10))),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          const Divider(),
+          SizedBox.fromSize(size: const Size.fromHeight(10)),
+          Text(content, style: const TextStyle(fontSize: 17)),
+        ],
+      ),
+    ),
+  );
+}
