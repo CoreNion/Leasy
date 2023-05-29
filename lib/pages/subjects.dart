@@ -14,8 +14,11 @@ class SubjectListPage extends StatefulWidget {
 }
 
 class _SubjectListPageState extends State<SubjectListPage> {
-  // 教科Widgetのリスト
+  /// 教科Widgetのリスト
   static List<Widget> subejctWidgetList = [];
+
+  /// ボタンが押された時のタップ位置
+  late Offset tapPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +36,6 @@ class _SubjectListPageState extends State<SubjectListPage> {
             // 教科Widgetのリストに、各教科のWidgetを作成して追加
             subejctWidgetList = subjects.asMap().entries.map((e) {
               SubjectInfo currentInfo = e.value;
-              late Offset tapPosition;
 
               // 長押しや右クリックした時に出るメニューのアイテム
               final menuItems = <PopupMenuEntry<String>>[
