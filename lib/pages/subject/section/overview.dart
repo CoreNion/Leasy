@@ -217,102 +217,121 @@ class _SectionPageState extends State<SectionPage> {
                         onlyIncorrect = val;
                       })),
               const Divider(),
-              ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: _questionSummaries.length,
-                itemBuilder: ((context, index) {
-                  final id = _questionSummaries.keys.elementAt(index);
-                  final value = _questionSummaries.values.elementAt(index);
+              _questionSummaries.isNotEmpty
+                  ? ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: _questionSummaries.length,
+                      itemBuilder: ((context, index) {
+                        final id = _questionSummaries.keys.elementAt(index);
+                        final value =
+                            _questionSummaries.values.elementAt(index);
 
-                  return Dismissible(
-                    key: Key(id.toString()),
-                    confirmDismiss: (direction) async {
-                      await showRemoveDialog(value.key, id);
-                      return null;
-                    },
-                    background: Container(
-                      color: Colors.red,
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Icon(Icons.delete),
-                          Icon(Icons.delete)
-                        ],
-                      ),
-                    ),
-                    child: GestureDetector(
-                      onSecondaryTapDown: (details) {
-                        HapticFeedback.lightImpact();
-                        showMenu(
-                          context: context,
-                          position: RelativeRect.fromLTRB(
-                              details.globalPosition.dx,
-                              details.globalPosition.dy,
-                              screenSize.width - details.globalPosition.dx,
-                              screenSize.height - details.globalPosition.dy),
-                          items: [
-                            PopupMenuItem(
-                                value: 0,
-                                child: Row(children: [
-                                  Icon(Icons.delete, color: colorScheme.error),
-                                  const SizedBox(width: 10),
-                                  const Text("削除")
-                                ]),
-                                onTap: () => WidgetsBinding.instance
-                                    .addPostFrameCallback(
-                                        (_) => showRemoveDialog(value.key, id)))
-                          ],
+                        return Dismissible(
+                          key: Key(id.toString()),
+                          confirmDismiss: (direction) async {
+                            await showRemoveDialog(value.key, id);
+                            return null;
+                          },
+                          background: Container(
+                            color: Colors.red,
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Icon(Icons.delete),
+                                Icon(Icons.delete)
+                              ],
+                            ),
+                          ),
+                          child: GestureDetector(
+                            onSecondaryTapDown: (details) {
+                              HapticFeedback.lightImpact();
+                              showMenu(
+                                context: context,
+                                position: RelativeRect.fromLTRB(
+                                    details.globalPosition.dx,
+                                    details.globalPosition.dy,
+                                    screenSize.width -
+                                        details.globalPosition.dx,
+                                    screenSize.height -
+                                        details.globalPosition.dy),
+                                items: [
+                                  PopupMenuItem(
+                                      value: 0,
+                                      child: Row(children: [
+                                        Icon(Icons.delete,
+                                            color: colorScheme.error),
+                                        const SizedBox(width: 10),
+                                        const Text("削除")
+                                      ]),
+                                      onTap: () => WidgetsBinding.instance
+                                          .addPostFrameCallback((_) =>
+                                              showRemoveDialog(value.key, id)))
+                                ],
+                              );
+                            },
+                            child: ListTile(
+                              title: Text(
+                                value.key,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              leading: Icon(Icons.circle,
+                                  color: value.value != null
+                                      ? (value.value!
+                                          ? Colors.green
+                                          : Colors.red)
+                                      : Colors.grey),
+                              onTap: ((() async {
+                                final question = await getMiQuestion(id);
+                                if (!mounted) return;
+
+                                late MiQuestion? newMi;
+                                if (checkLargeSC(context)) {
+                                  newMi = await showDialog(
+                                      context: context,
+                                      builder: (builder) {
+                                        return Dialog(
+                                            child: FractionallySizedBox(
+                                          widthFactor: 0.6,
+                                          child: SectionManagePage(
+                                            sectionID: secInfo.tableID,
+                                            miQuestion: question,
+                                          ),
+                                        ));
+                                      });
+                                } else {
+                                  newMi = await showModalBottomSheet(
+                                      backgroundColor: Colors.transparent,
+                                      context: context,
+                                      isScrollControlled: true,
+                                      useSafeArea: true,
+                                      builder: (builder) {
+                                        return SectionManagePage(
+                                          sectionID: secInfo.tableID,
+                                          miQuestion: question,
+                                        );
+                                      });
+                                }
+                                await updateQuestion(newMi);
+                              })),
+                            ),
+                          ),
                         );
-                      },
-                      child: ListTile(
-                        title: Text(
-                          value.key,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        leading: Icon(Icons.circle,
-                            color: value.value != null
-                                ? (value.value! ? Colors.green : Colors.red)
-                                : Colors.grey),
-                        onTap: ((() async {
-                          final question = await getMiQuestion(id);
-                          if (!mounted) return;
-
-                          late MiQuestion? newMi;
-                          if (checkLargeSC(context)) {
-                            newMi = await showDialog(
-                                context: context,
-                                builder: (builder) {
-                                  return Dialog(
-                                      child: FractionallySizedBox(
-                                    widthFactor: 0.6,
-                                    child: SectionManagePage(
-                                      sectionID: secInfo.tableID,
-                                      miQuestion: question,
-                                    ),
-                                  ));
-                                });
-                          } else {
-                            newMi = await showModalBottomSheet(
-                                backgroundColor: Colors.transparent,
-                                context: context,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (builder) {
-                                  return SectionManagePage(
-                                    sectionID: secInfo.tableID,
-                                    miQuestion: question,
-                                  );
-                                });
-                          }
-                          await updateQuestion(newMi);
-                        })),
-                      ),
-                    ),
-                  );
-                }),
-              ),
+                      }),
+                    )
+                  : Center(
+                      child: Column(children: [
+                      const SizedBox(height: 20),
+                      !loading
+                          ? dialogLikeMessage(colorScheme, "問題が一つもありません！",
+                              "問題を作成するには、右下の+ボタンから作成してください。")
+                          : const SizedBox(
+                              height: 70,
+                              width: 70,
+                              child: CircularProgressIndicator(),
+                            )
+                    ])),
             ],
           )),
         ),

@@ -55,163 +55,177 @@ class _SubjectOverviewState extends State<SubjectOverview> {
         ],
       ),
       body: Padding(
-          padding: const EdgeInsets.all(7.0),
-          child: SingleChildScrollView(
-            child: Column(children: <Widget>[
-              scoreBoard(colorScheme, true, subInfo.latestCorrect,
-                  subInfo.latestIncorrect),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Padding(
-                      padding: const EdgeInsets.all(7.0),
-                      child: FilledButton(
-                          onPressed: _sectionSummaries.isNotEmpty
-                              ? () async {
-                                  setState(() => loading = true);
+        padding: const EdgeInsets.all(7.0),
+        child: SingleChildScrollView(
+          child: Column(children: <Widget>[
+            scoreBoard(colorScheme, true, subInfo.latestCorrect,
+                subInfo.latestIncorrect),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.all(7.0),
+                    child: FilledButton(
+                        onPressed: _sectionSummaries.isNotEmpty
+                            ? () async {
+                                setState(() => loading = true);
 
-                                  final qIDs = await getMiQuestionsID(
-                                      _sectionSummaries.keys.toList());
-                                  if (!mounted) return;
+                                final qIDs = await getMiQuestionsID(
+                                    _sectionSummaries.keys.toList());
+                                if (!mounted) return;
 
-                                  if (qIDs.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
-                                    setState(() => loading = false);
-                                    return;
-                                  }
-
-                                  final record = await Navigator.of(context)
-                                      .push<List<MapEntry<int, bool?>>?>(
-                                          MaterialPageRoute(
-                                    builder: (context) => SectionStudyPage(
-                                      questionIDs: qIDs,
-                                      testMode: true,
-                                    ),
-                                  ));
-                                  if (record == null) {
-                                    setState(() => loading = false);
-                                    return;
-                                  }
-
-                                  final correct = record
-                                      .where((entry) => entry.value!)
-                                      .length;
-                                  final inCorrect = record
-                                      .where((entry) => !(entry.value!))
-                                      .length;
-
-                                  // 記録を保存
-                                  await updateSubjectRecord(
-                                      subInfo.id, correct, inCorrect);
-
-                                  if (!mounted) return;
-                                  setState(() {
-                                    loading = false;
-                                    subInfo = SubjectInfo(
-                                        title: subInfo.title,
-                                        id: subInfo.id,
-                                        latestCorrect: correct,
-                                        latestIncorrect: inCorrect);
-                                  });
+                                if (qIDs.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
+                                  setState(() => loading = false);
+                                  return;
                                 }
-                              : null,
-                          child: const Text("テストを開始する"))),
-                ],
-              ),
-              Text(
-                "セクション数:${_sectionSummaries.length}",
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              const Divider(),
-              ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: _sectionSummaries.length,
-                  itemBuilder: ((context, index) {
-                    final id = _sectionSummaries.keys.elementAt(index);
-                    final title = _sectionSummaries.values.elementAt(index);
 
-                    return Dismissible(
-                      key: Key(id.toString()),
-                      confirmDismiss: (direction) async {
-                        if (direction == DismissDirection.startToEnd) {
-                          await showRemoveDialog(title, id);
-                        } else if (direction == DismissDirection.endToStart) {
-                          await showRenameDialog(title, id);
-                        }
-                        return null;
-                      },
-                      background: Container(
-                          color: Colors.red,
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Icon(Icons.delete))),
-                      secondaryBackground: Container(
-                          color: Colors.blue,
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: const Align(
-                              alignment: Alignment.centerRight,
-                              child: Icon(Icons.title))),
-                      child: GestureDetector(
-                        onSecondaryTapDown: (details) {
-                          HapticFeedback.lightImpact();
-                          showMenu(
-                            context: context,
-                            position: RelativeRect.fromLTRB(
-                                details.globalPosition.dx,
-                                details.globalPosition.dy,
-                                screenSize.width - details.globalPosition.dx,
-                                screenSize.height - details.globalPosition.dy),
-                            items: [
-                              PopupMenuItem(
-                                  value: 1,
-                                  child: Row(children: [
-                                    Icon(Icons.title,
-                                        color: colorScheme.primary),
-                                    const SizedBox(width: 10),
-                                    const Text("名前を変更")
-                                  ]),
-                                  onTap: () => WidgetsBinding.instance
-                                      .addPostFrameCallback(
-                                          (_) => showRenameDialog(title, id))),
-                              PopupMenuItem(
-                                  value: 0,
-                                  child: Row(children: [
-                                    Icon(Icons.delete,
-                                        color: colorScheme.error),
-                                    const SizedBox(width: 10),
-                                    const Text("削除")
-                                  ]),
-                                  onTap: () => WidgetsBinding.instance
-                                      .addPostFrameCallback(
-                                          (_) => showRemoveDialog(title, id)))
-                            ],
-                          );
+                                final record = await Navigator.of(context)
+                                    .push<List<MapEntry<int, bool?>>?>(
+                                        MaterialPageRoute(
+                                  builder: (context) => SectionStudyPage(
+                                    questionIDs: qIDs,
+                                    testMode: true,
+                                  ),
+                                ));
+                                if (record == null) {
+                                  setState(() => loading = false);
+                                  return;
+                                }
+
+                                final correct = record
+                                    .where((entry) => entry.value!)
+                                    .length;
+                                final inCorrect = record
+                                    .where((entry) => !(entry.value!))
+                                    .length;
+
+                                // 記録を保存
+                                await updateSubjectRecord(
+                                    subInfo.id, correct, inCorrect);
+
+                                if (!mounted) return;
+                                setState(() {
+                                  loading = false;
+                                  subInfo = SubjectInfo(
+                                      title: subInfo.title,
+                                      id: subInfo.id,
+                                      latestCorrect: correct,
+                                      latestIncorrect: inCorrect);
+                                });
+                              }
+                            : null,
+                        child: const Text("テストを開始する"))),
+              ],
+            ),
+            Text(
+              "セクション数:${_sectionSummaries.length}",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const Divider(),
+            _sectionSummaries.isNotEmpty
+                ? ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: _sectionSummaries.length,
+                    itemBuilder: ((context, index) {
+                      final id = _sectionSummaries.keys.elementAt(index);
+                      final title = _sectionSummaries.values.elementAt(index);
+
+                      return Dismissible(
+                        key: Key(id.toString()),
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            await showRemoveDialog(title, id);
+                          } else if (direction == DismissDirection.endToStart) {
+                            await showRenameDialog(title, id);
+                          }
+                          return null;
                         },
-                        child: ListTile(
-                          title: Text(title),
-                          onTap: () async {
-                            final secInfo = await getSectionData(id);
-                            if (!mounted) return;
-
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: ((context) {
-                              return SectionPage(
-                                sectionInfo: secInfo,
-                              );
-                            })));
+                        background: Container(
+                            color: Colors.red,
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Icon(Icons.delete))),
+                        secondaryBackground: Container(
+                            color: Colors.blue,
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: const Align(
+                                alignment: Alignment.centerRight,
+                                child: Icon(Icons.title))),
+                        child: GestureDetector(
+                          onSecondaryTapDown: (details) {
+                            HapticFeedback.lightImpact();
+                            showMenu(
+                              context: context,
+                              position: RelativeRect.fromLTRB(
+                                  details.globalPosition.dx,
+                                  details.globalPosition.dy,
+                                  screenSize.width - details.globalPosition.dx,
+                                  screenSize.height -
+                                      details.globalPosition.dy),
+                              items: [
+                                PopupMenuItem(
+                                    value: 1,
+                                    child: Row(children: [
+                                      Icon(Icons.title,
+                                          color: colorScheme.primary),
+                                      const SizedBox(width: 10),
+                                      const Text("名前を変更")
+                                    ]),
+                                    onTap: () => WidgetsBinding.instance
+                                        .addPostFrameCallback((_) =>
+                                            showRenameDialog(title, id))),
+                                PopupMenuItem(
+                                    value: 0,
+                                    child: Row(children: [
+                                      Icon(Icons.delete,
+                                          color: colorScheme.error),
+                                      const SizedBox(width: 10),
+                                      const Text("削除")
+                                    ]),
+                                    onTap: () => WidgetsBinding.instance
+                                        .addPostFrameCallback(
+                                            (_) => showRemoveDialog(title, id)))
+                              ],
+                            );
                           },
+                          child: ListTile(
+                            title: Text(title),
+                            onTap: () async {
+                              final secInfo = await getSectionData(id);
+                              if (!mounted) return;
+
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: ((context) {
+                                return SectionPage(
+                                  sectionInfo: secInfo,
+                                );
+                              })));
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  })),
-            ]),
-          )),
+                      );
+                    }))
+                : Center(
+                    child: Column(children: [
+                    const SizedBox(height: 20),
+                    !loading
+                        ? dialogLikeMessage(colorScheme, "セクションが一つもありません！",
+                            "Leasyでは、教科の中で単語帳をジャンルや範囲別などに分けられるように設計されています。\n右下の+ボタンからセクションを作成してください。")
+                        : const SizedBox(
+                            height: 70,
+                            width: 70,
+                            child: CircularProgressIndicator(),
+                          ),
+                  ]))
+          ]),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: (() {
           showDialog(
