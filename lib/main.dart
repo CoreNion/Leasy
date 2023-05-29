@@ -105,7 +105,6 @@ class _MyAppState extends State<MyApp> {
               await prefs.setBool("CustomColor", false);
               await prefs.setString("ThemeMode", "system");
               await prefs.setInt("SeedColor", MyApp.seedColor.value);
-              await prefs.setString("AppVersion", MyApp.packageInfo.version);
             }
 
             // バージョン情報のロード
