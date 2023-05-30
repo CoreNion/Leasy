@@ -321,7 +321,7 @@ class _NoteDescContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Text(
-          "Leasyでは、教科 -> セクション -> 問題の構造で学習を管理しています。\n基本的に問題の学習やテストは、各セクション内で行います。\nなお、教科内の全ての問題のテストを実施することも可能です。",
+          "Leasyでは、教科 -> セクション -> 問題の構造で学習を管理しています。\n基本的に問題の学習やテストは、各セクション内で行います。\nセクションを通して、お好みに問題をジャンルや範囲別などに分類してご利用ください。",
           style: TextStyle(fontSize: 15),
         ),
         const SizedBox(height: 15),

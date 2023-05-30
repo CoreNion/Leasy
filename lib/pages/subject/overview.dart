@@ -216,7 +216,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     const SizedBox(height: 20),
                     !loading
                         ? dialogLikeMessage(colorScheme, "セクションが一つもありません！",
-                            "Leasyでは、教科の中で単語帳をジャンルや範囲別などに分けられるように設計されています。\n右下の+ボタンからセクションを作成してください。")
+                            "Leasyでは、問題(覚えたい単語類など)を、セクションを通してジャンルや範囲別などに分類できるように設計されています。\n右下の+ボタンからセクションを作成してください。")
                         : const SizedBox(
                             height: 70,
                             width: 70,
