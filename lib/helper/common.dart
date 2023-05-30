@@ -3,6 +3,7 @@
 import 'dart:io' as io;
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -142,4 +143,23 @@ Future<bool> importDataBase() async {
     throw e;
   });
   return true;
+}
+
+/// データベースファイルにデモファイルを利用する関数
+Future<void> useDemoFile() async {
+  // データベースが開かれている場合は閉じる
+  if (studyDB.isOpen) {
+    await studyDB.close();
+  }
+
+  // 既存ファイル削除
+  await deleteStudyDataBase();
+
+  // デモファイルをコピー
+  final path = (await getApplicationSupportDirectory()).path;
+  await io.File(p.join(path, "study.db")).writeAsBytes(
+      (await rootBundle.load('assets/demo.db')).buffer.asUint8List());
+
+  // データベースを再読み込み
+  await loadStudyDataBase();
 }

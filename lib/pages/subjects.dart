@@ -4,6 +4,7 @@ import 'package:mimosa/widgets/overview.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../class/subject.dart';
+import '../helper/common.dart';
 import '../helper/subject.dart';
 import './subject/overview.dart';
 
@@ -221,7 +222,19 @@ class _SubjectListPageState extends State<SubjectListPage> {
               Align(
                   alignment: Alignment.center,
                   child: dialogLikeMessage(colorScheme, "教科が一つもありません！",
-                      "学習を開始するには、まずは教科を作成してください。")),
+                      "学習を開始するには、最初に教科を作成してください。\n初めて利用する方は、まずはデモ教科を作成し操作に慣れることをおすすめします。",
+                      actions: [
+                        OutlinedButton(
+                            onPressed: () async {
+                              await useDemoFile();
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('デモ教科を作成しました')));
+                              setState(() {});
+                            },
+                            child: const Text("デモ教科を作成"))
+                      ])),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
