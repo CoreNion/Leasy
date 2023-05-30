@@ -69,7 +69,8 @@ Column scoreBoard(
 
 /// 教科などが無い時に出る、ダイアログライクなメッセージ
 ConstrainedBox dialogLikeMessage(
-    ColorScheme colorScheme, String title, String content) {
+    ColorScheme colorScheme, String title, String content,
+    {List<Widget>? actions}) {
   return ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 500),
     child: Container(
@@ -88,6 +89,9 @@ ConstrainedBox dialogLikeMessage(
           const Divider(),
           SizedBox.fromSize(size: const Size.fromHeight(10)),
           Text(content, style: const TextStyle(fontSize: 17)),
+          SizedBox.fromSize(size: const Size.fromHeight(10)),
+          if (actions != null)
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: actions)
         ],
       ),
     ),
