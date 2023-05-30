@@ -63,7 +63,7 @@ class _HomeState extends State<Home> {
         }
         await MyApp.prefs.setBool("setup", true);
         setState(() {});
-      } else {
+      } else if (MyApp.updated) {
         ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
           padding: const EdgeInsets.all(10),
           content: Text(
@@ -80,7 +80,8 @@ class _HomeState extends State<Home> {
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                launchUrl(Uri.https("github.com", "/CoreNion/Leasy"));
+                launchUrl(Uri.https("github.com",
+                    "/CoreNion/Leasy/releases/tag/v${MyApp.packageInfo.version}"));
               },
               child: const Text('サイトを開く'),
             ),
