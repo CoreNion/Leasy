@@ -403,7 +403,6 @@ class __SettingContentState extends State<_SettingContent> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    kIsWeb ? imported = true : imported = false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -424,15 +423,11 @@ class __SettingContentState extends State<_SettingContent> {
                     borderRadius: const BorderRadius.all(Radius.circular(10))),
                 child: ListTile(
                     title: const Text("学習データをインポート"),
-                    subtitle: const Text(!kIsWeb
-                        ? "バックアップされたファイルから、学習データをインポートします。"
-                        : "現在、Web版は非対応"),
+                    subtitle: const Text("バックアップされたファイルから、学習データをインポートします。"),
                     trailing: loading
                         ? const CircularProgressIndicator()
                         : Icon(
-                            !kIsWeb
-                                ? (imported ? Icons.check : Icons.upload)
-                                : Icons.close,
+                            imported ? Icons.check : Icons.upload,
                             color: colorScheme.primary,
                           ),
                     onTap: !imported
@@ -468,20 +463,26 @@ class __SettingContentState extends State<_SettingContent> {
                                       ));
                               return false;
                             });
+
                             setState(() {
                               loading = false;
                             });
-
                             if (!res || !mounted) return;
+
+                            HapticFeedback.lightImpact();
                             StatusAlert.show(
                               context,
                               duration: const Duration(seconds: 2),
                               title: 'インポート完了！',
+                              subtitle:
+                                  kIsWeb ? "設定が終了次第、ブラウザが再読み込みされます。" : null,
                               configuration: const IconConfiguration(
                                   icon: Icons.check_circle),
-                              maxWidth: 260,
+                              maxWidth: 300,
                             );
-                            HapticFeedback.lightImpact();
+                            setState(() {
+                              imported = true;
+                            });
                           }
                         : null),
               )

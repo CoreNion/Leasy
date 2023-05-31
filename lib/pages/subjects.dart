@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mimosa/widgets/overview.dart';
@@ -7,6 +8,8 @@ import '../class/subject.dart';
 import '../helper/common.dart';
 import '../helper/subject.dart';
 import './subject/overview.dart';
+
+import '../helper/dummy.dart' if (dart.library.html) 'dart:html' as html;
 
 class SubjectListPage extends StatefulWidget {
   const SubjectListPage({super.key});
@@ -230,8 +233,17 @@ class _SubjectListPageState extends State<SubjectListPage> {
 
                               if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('デモ教科を作成しました')));
+                                  const SnackBar(
+                                      content: Text(
+                                          'デモ教科を作成しました！${kIsWeb ? "\n読み込みのために、数秒後にサイトを再読み込みします。" : ""}')));
                               setState(() {});
+
+                              // Web版の場合はデータベースを完全に読み込むためにリロード
+                              if (kIsWeb) {
+                                Future.delayed(const Duration(seconds: 3), () {
+                                  html.window.location.reload();
+                                });
+                              }
                             },
                             child: const Text("デモ教科を作成"))
                       ])),

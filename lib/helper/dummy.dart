@@ -4,3 +4,4 @@ dynamic context;
 dynamic AnchorElement;
 dynamic AsynchronousIndexedDbFileSystem;
 dynamic IndexedDbFileSystem;
+dynamic window;

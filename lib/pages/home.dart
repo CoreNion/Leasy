@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mimosa/pages/subjects.dart';
@@ -10,6 +11,8 @@ import 'setup.dart';
 import 'create.dart';
 import 'setting.dart';
 import 'subject/overview.dart';
+
+import '../helper/dummy.dart' if (dart.library.html) 'dart:html' as html;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -62,6 +65,9 @@ class _HomeState extends State<Home> {
                   child: const SizedBox(height: 650, child: SetupPage())));
         }
         await MyApp.prefs.setBool("setup", true);
+
+        // Web版の場合はデータベースなどを完全に読み込むためにリロード
+        if (kIsWeb) html.window.location.reload();
         setState(() {});
       } else if (MyApp.updated) {
         ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
