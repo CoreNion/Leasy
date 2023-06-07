@@ -18,7 +18,7 @@ class SubjectOverview extends StatefulWidget {
 }
 
 class _SubjectOverviewState extends State<SubjectOverview> {
-  late Map<int, String> _sectionSummaries = {};
+  late Map<int, MapEntry<String, double>> _sectionSummaries = {};
 
   bool loading = true;
 
@@ -132,8 +132,18 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     shrinkWrap: true,
                     itemCount: _sectionSummaries.length,
                     itemBuilder: ((context, index) {
+                      // セクションID
                       final id = _sectionSummaries.keys.elementAt(index);
-                      final title = _sectionSummaries.values.elementAt(index);
+
+                      // セクションの完了率
+                      final vals = _sectionSummaries.values.elementAt(index);
+                      final ratio = vals.value.isNaN ? null : vals.value;
+
+                      // セクションのタイトル
+                      final title = vals.key;
+                      // リスト用のタイトル (完了率を含む)
+                      final exTitle =
+                          "$title (${ratio != null ? '${(ratio * 100).ceil()}%完了' : '問題未作成'})";
 
                       return Dismissible(
                         key: Key(id.toString()),
@@ -195,7 +205,9 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             );
                           },
                           child: ListTile(
-                            title: Text(title),
+                            title: Text(exTitle),
+                            subtitle:
+                                LinearProgressIndicator(value: ratio ?? 0),
                             onTap: () async {
                               final secInfo = await getSectionData(id);
                               if (!mounted) return;
@@ -247,9 +259,12 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                 widget.subInfo.id, createdSectionTitle);
                             if (!mounted) return;
 
+                            // セクション一覧に追加
                             setState(() {
-                              _sectionSummaries
-                                  .addAll({section.tableID: section.title});
+                              _sectionSummaries.addAll({
+                                section.tableID:
+                                    MapEntry(section.title, double.nan)
+                              });
                             });
                             Navigator.pop(context);
 
@@ -339,9 +354,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     await renameSectionName(id, newTitle);
     if (!mounted) return;
 
-    // リスト上の名前を変更
+    // 完了率を取得し、MapEntryを新しいタイトルのエントリーに置き換え
+    final oldEntry = _sectionSummaries[id]!.value;
     setState(() {
-      _sectionSummaries[id] = newTitle;
+      _sectionSummaries[id] = MapEntry(newTitle, oldEntry);
     });
 
     ScaffoldMessenger.of(context)
