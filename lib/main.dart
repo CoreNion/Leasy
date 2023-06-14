@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_sign_in_dartio/google_sign_in_dartio.dart';
 
 import './helper/common.dart';
 import 'pages/home.dart';
@@ -15,6 +16,12 @@ void main() async {
   if (kIsWeb || Platform.isIOS || Platform.isAndroid) {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  } else {
+    const env = "GOOGLE_CLIENT_ID_DESKTOP";
+    if (const bool.hasEnvironment(env)) {
+      GoogleSignInDart.register(
+          clientId: const String.fromEnvironment("GOOGLE_CLIENT_ID_DESKTOP"));
+    }
   }
 
   sqfliteFfiInit();

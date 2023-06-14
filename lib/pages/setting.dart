@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
+import 'package:googleapis/drive/v3.dart' as drive;
 
 import '../helper/common.dart';
 import '../main.dart';
@@ -299,8 +305,8 @@ class _DataSettingsState extends State<DataSettings> {
             ),
             const Divider(),
             ListTile(
-              title: const Text("学習データをバックアップ"),
-              subtitle: const Text("学習帳データをバックアップします。"),
+              title: const Text("学習データをバックアップ (ローカル)"),
+              subtitle: const Text("学習帳データを任意の場所にバックアップします。"),
               trailing: Icon(
                 Icons.download,
                 color: colorScheme.primary,
@@ -338,6 +344,51 @@ class _DataSettingsState extends State<DataSettings> {
 
                 ScaffoldMessenger.of(context)
                     .showSnackBar(const SnackBar(content: Text("データを保存しました。")));
+              },
+            ),
+            ListTile(
+              title: const Text("Google Driveと同期"),
+              subtitle: const Text(
+                  "学習帳データをGoogle Driveに保存し、複数の端末でも同じ学習帳を利用できるようにします。"),
+              trailing: Icon(
+                Icons.add_to_drive,
+                color: colorScheme.primary,
+              ),
+              onTap: () async {
+                const iosEnv = "GOOGLE_CLIENT_ID_IOS";
+
+                late googleSignIn.GoogleSignInAccount? account;
+                googleSignIn.GoogleSignIn signIn = googleSignIn.GoogleSignIn(
+                    clientId:
+                        Platform.isIOS && const bool.hasEnvironment(iosEnv)
+                            ? const String.fromEnvironment(iosEnv)
+                            : null,
+                    scopes: [drive.DriveApi.driveAppdataScope]);
+                account = await signIn.signIn();
+
+                final httpClient = (await signIn.authenticatedClient())!;
+                final driveAPI = drive.DriveApi(httpClient);
+                final uploadedFile = drive.File();
+                uploadedFile.parents = ["appDataFolder"];
+                uploadedFile.name = "study.db";
+
+                final dbFile = File(studyDB.path);
+                await driveAPI.files.create(
+                  uploadedFile,
+                  uploadMedia:
+                      drive.Media(dbFile.openRead(), dbFile.lengthSync()),
+                );
+
+                final res = (await driveAPI.files.list(
+                        spaces: 'appDataFolder',
+                        $fields: 'files(id, name, createdTime)'))
+                    .files!
+                    .map((e) => e.name)
+                    .toList()
+                    .toString();
+                print("DONE!:" + res);
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Google Driveに保存できました！$res")));
               },
             ),
             ListTile(

@@ -54,6 +54,10 @@ dependencies:
   file_picker: ^5.3.0
   flutter_file_dialog: ^3.0.0
   sqlite3: ^1.11.0
+  googleapis: ^11.2.0
+  google_sign_in_dartio: ^0.2.2+1
+  google_sign_in: ^6.1.4
+  extension_google_sign_in_as_googleapis_auth: ^2.0.10
 
 flutter_native_splash:
   color: '#d3edfb'
