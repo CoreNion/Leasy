@@ -5,7 +5,6 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -356,37 +355,68 @@ class _DataSettingsState extends State<DataSettings> {
               ),
               onTap: () async {
                 const iosEnv = "GOOGLE_CLIENT_ID_IOS";
-
                 late googleSignIn.GoogleSignInAccount? account;
+
+                // GoogleSignInの認証を設定
                 googleSignIn.GoogleSignIn signIn = googleSignIn.GoogleSignIn(
                     clientId:
                         Platform.isIOS && const bool.hasEnvironment(iosEnv)
                             ? const String.fromEnvironment(iosEnv)
                             : null,
                     scopes: [drive.DriveApi.driveAppdataScope]);
-                account = await signIn.signIn();
 
+                // サインイン済みか確認
+                if (await signIn.isSignedIn()) {
+                  // サインイン済みであれば自動サインイン
+                  account = await signIn.signInSilently();
+                } else {
+                  // 初回サインイン
+                  account = await signIn.signIn();
+                }
+
+                // ドライブにアクセスするためのAuthClientを取得し、ドライブAPIにアクセス
                 final httpClient = (await signIn.authenticatedClient())!;
                 final driveAPI = drive.DriveApi(httpClient);
+
+                // アップロード用のメタデータを構築
                 final uploadedFile = drive.File();
                 uploadedFile.parents = ["appDataFolder"];
                 uploadedFile.name = "study.db";
 
+                // ローカルのデータベースファイル
                 final dbFile = File(studyDB.path);
-                await driveAPI.files.create(
-                  uploadedFile,
-                  uploadMedia:
-                      drive.Media(dbFile.openRead(), dbFile.lengthSync()),
-                );
+
+                // ドライブにstudy.dbが存在するか確認
+                final studyList = (await driveAPI.files.list(
+                        spaces: 'appDataFolder',
+                        q: "name = 'study.db'",
+                        $fields: 'files(id, name, createdTime)'))
+                    .files;
+                if (studyList == null || studyList.isEmpty) {
+                  // 存在しない場合、ドライブにファイルを新規作成
+                  await driveAPI.files.create(
+                    uploadedFile,
+                    uploadMedia:
+                        drive.Media(dbFile.openRead(), dbFile.lengthSync()),
+                  );
+                } else {
+                  // 存在する場合、そのデータを上書き保存
+                  // 上書き保存の場合、メタデータは空でOK(むしろ空じゃないとエラー)
+                  await driveAPI.files.update(
+                    drive.File(),
+                    studyList.first.id!,
+                    uploadMedia:
+                        drive.Media(dbFile.openRead(), dbFile.lengthSync()),
+                  );
+                }
 
                 final res = (await driveAPI.files.list(
                         spaces: 'appDataFolder',
-                        $fields: 'files(id, name, createdTime)'))
+                        $fields: 'files(id, name, createdTime, modifiedTime)'))
                     .files!
-                    .map((e) => e.name)
+                    .map((e) => "${e.name}, 更新日時:${e.modifiedTime}")
                     .toList()
                     .toString();
-                print("DONE!:" + res);
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Google Driveに保存できました！$res")));
               },
