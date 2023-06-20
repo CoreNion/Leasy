@@ -7,11 +7,8 @@ import 'package:flutter_picker/Picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
-import 'package:googleapis/drive/v3.dart' as drive;
-
 import '../helper/common.dart';
+import '../helper/cloud/google.dart';
 import '../main.dart';
 import '../utility.dart';
 import 'setup.dart';
@@ -354,71 +351,22 @@ class _DataSettingsState extends State<DataSettings> {
                 color: colorScheme.primary,
               ),
               onTap: () async {
-                const iosEnv = "GOOGLE_CLIENT_ID_IOS";
-                late googleSignIn.GoogleSignInAccount? account;
+                if (!(await MiGoogleService.signIn())) {
+                  if (!mounted) return;
 
-                // GoogleSignInの認証を設定
-                googleSignIn.GoogleSignIn signIn = googleSignIn.GoogleSignIn(
-                    clientId:
-                        Platform.isIOS && const bool.hasEnvironment(iosEnv)
-                            ? const String.fromEnvironment(iosEnv)
-                            : null,
-                    scopes: [drive.DriveApi.driveAppdataScope]);
-
-                // サインイン済みか確認
-                if (await signIn.isSignedIn()) {
-                  // サインイン済みであれば自動サインイン
-                  account = await signIn.signInSilently();
-                } else {
-                  // 初回サインイン
-                  account = await signIn.signIn();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("ログインがキャンセルされました")));
+                  return;
                 }
 
-                // ドライブにアクセスするためのAuthClientを取得し、ドライブAPIにアクセス
-                final httpClient = (await signIn.authenticatedClient())!;
-                final driveAPI = drive.DriveApi(httpClient);
+                await MiGoogleService.uploadToAppFolder(
+                    "study.db", File(studyDB.path));
 
-                // アップロード用のメタデータを構築
-                final uploadedFile = drive.File();
-                uploadedFile.parents = ["appDataFolder"];
-                uploadedFile.name = "study.db";
-
-                // ローカルのデータベースファイル
-                final dbFile = File(studyDB.path);
-
-                // ドライブにstudy.dbが存在するか確認
-                final studyList = (await driveAPI.files.list(
-                        spaces: 'appDataFolder',
-                        q: "name = 'study.db'",
-                        $fields: 'files(id, name, createdTime)'))
-                    .files;
-                if (studyList == null || studyList.isEmpty) {
-                  // 存在しない場合、ドライブにファイルを新規作成
-                  await driveAPI.files.create(
-                    uploadedFile,
-                    uploadMedia:
-                        drive.Media(dbFile.openRead(), dbFile.lengthSync()),
-                  );
-                } else {
-                  // 存在する場合、そのデータを上書き保存
-                  // 上書き保存の場合、メタデータは空でOK(むしろ空じゃないとエラー)
-                  await driveAPI.files.update(
-                    drive.File(),
-                    studyList.first.id!,
-                    uploadMedia:
-                        drive.Media(dbFile.openRead(), dbFile.lengthSync()),
-                  );
-                }
-
-                final res = (await driveAPI.files.list(
-                        spaces: 'appDataFolder',
-                        $fields: 'files(id, name, createdTime, modifiedTime)'))
-                    .files!
-                    .map((e) => "${e.name}, 更新日時:${e.modifiedTime}")
-                    .toList()
-                    .toString();
+                final res = (await MiGoogleService.getAppDriveFiles())!
+                    .map((e) => "${e.name} : ${e.modifiedTime}")
+                    .toList();
                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Google Driveに保存できました！$res")));
+                    SnackBar(content: Text("Google Driveに保存できました！\n$res")));
               },
             ),
             ListTile(
