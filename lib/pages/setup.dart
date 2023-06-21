@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mimosa/pages/setting.dart';
 import 'package:status_alert/status_alert.dart';
 
 import '../main.dart';
+import '../widgets/settings/general.dart';
 import '../helper/common.dart';
 
 class SetupPage extends StatefulWidget {
