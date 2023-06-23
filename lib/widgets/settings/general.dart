@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 
 import '../../helper/common.dart';
-import '../../helper/cloud/google.dart';
 import '../../main.dart';
+import '../../pages/settings/cloud.dart';
+import '../../utility.dart';
 
 /// 画面系の設定を行うWidget
 class ScreenSettings extends StatefulWidget {
@@ -230,30 +230,28 @@ class _DataSettingsState extends State<DataSettings> {
               },
             ),
             ListTile(
-              title: const Text("Google Driveと同期"),
-              subtitle: const Text(
-                  "学習帳データをGoogle Driveに保存し、複数の端末でも同じ学習帳を利用できるようにします。"),
+              title: const Text("クラウドと同期"),
+              subtitle:
+                  const Text("学習帳データをクラウドサービスに保存し、複数の端末でも同じ学習帳を利用できるようにします。"),
               trailing: Icon(
-                Icons.add_to_drive,
+                Icons.cloud,
                 color: colorScheme.primary,
               ),
               onTap: () async {
-                if (!(await MiGoogleService.signIn())) {
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("ログインがキャンセルされました")));
-                  return;
+                if (checkLargeSC(context)) {
+                  showDialog(
+                      context: context,
+                      builder: (builder) {
+                        return const Dialog(
+                            child: FractionallySizedBox(
+                          widthFactor: 0.6,
+                          child: CloudSyncPage(),
+                        ));
+                      });
+                } else {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const CloudSyncPage()));
                 }
-
-                await MiGoogleService.uploadToAppFolder(
-                    "study.db", File(studyDB.path));
-
-                final res = (await MiGoogleService.getAppDriveFiles())!
-                    .map((e) => "${e.name} : ${e.modifiedTime}")
-                    .toList();
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Google Driveに保存できました！\n$res")));
               },
             ),
             ListTile(
