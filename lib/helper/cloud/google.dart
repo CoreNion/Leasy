@@ -7,6 +7,9 @@ import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
 
+import '../../main.dart';
+import '../../class/cloud.dart';
+
 const _iosEnv = "GOOGLE_CLIENT_ID_IOS";
 
 googleSignIn.GoogleSignIn? _signIn;
@@ -69,6 +72,10 @@ class MiGoogleService {
     if (_account == null) {
       return false;
     } else {
+      // クラウド同期の設定を保存
+      MyApp.cloudType = CloudType.google;
+      MyApp.prefs.setString("CloudType", "google");
+
       return true;
     }
   }
@@ -79,6 +86,10 @@ class MiGoogleService {
       throw Exception("GoogleSignIn is not initialized");
     }
     await _signIn!.disconnect();
+
+    // クラウド同期の設定を保存
+    MyApp.cloudType = CloudType.none;
+    MyApp.prefs.setString("CloudType", "none");
   }
 
   /// Googleドライブからアプリ内ファイル一覧を取得する

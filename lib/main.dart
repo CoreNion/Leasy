@@ -9,6 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in_dartio/google_sign_in_dartio.dart';
 
+import './class/cloud.dart';
 import './helper/common.dart';
 import 'pages/home.dart';
 
@@ -53,6 +54,9 @@ class MyApp extends StatefulWidget {
 
   /// アプリがアップデートされたか
   static bool updated = false;
+
+  /// どこのクラウドに接続しているか
+  static CloudType cloudType = CloudType.none;
 
   static void rootSetState(BuildContext context, Function fun) {
     context.findAncestorStateOfType<_MyAppState>()!.rootSetState(fun);
@@ -112,6 +116,7 @@ class _MyAppState extends State<MyApp> {
               await prefs.setBool("CustomColor", false);
               await prefs.setString("ThemeMode", "system");
               await prefs.setInt("SeedColor", MyApp.seedColor.value);
+              await prefs.setString("CloudType", "none");
             }
 
             // バージョン情報のロード
@@ -123,6 +128,23 @@ class _MyAppState extends State<MyApp> {
               // 最新のバージョンを記録
               await prefs.setString("AppVersion", MyApp.packageInfo.version);
               MyApp.updated = true;
+            }
+
+            // クラウド同期の状況を確認
+            final cloudStatus = prefs.getString("CloudType");
+            if (cloudStatus == null) {
+              await prefs.setString("CloudType", "none");
+            } else {
+              switch (cloudStatus) {
+                case "google":
+                  MyApp.cloudType = CloudType.google;
+                  break;
+                case "icloud":
+                  MyApp.cloudType = CloudType.icloud;
+                  break;
+                default:
+                  MyApp.cloudType = CloudType.none;
+              }
             }
 
             // データベースのロード
