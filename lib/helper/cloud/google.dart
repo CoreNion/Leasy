@@ -80,6 +80,18 @@ class MiGoogleService {
     }
   }
 
+  /// Googleアカウントのサインイン状態を確認する
+  static Future<googleSignIn.GoogleSignInAccount?> checkLoginStatus() async {
+    final s = await _initSignIn();
+
+    if (await s.isSignedIn()) {
+      _account = await s.signInSilently();
+    } else {
+      return null;
+    }
+    return _account!;
+  }
+
   /// Googleアカウントからサインアウトする
   static Future<void> signOut() async {
     if (_signIn == null) {
