@@ -20,7 +20,7 @@ void main() async {
   } else {
     const env = "GOOGLE_CLIENT_ID_DESKTOP";
     if (const bool.hasEnvironment(env)) {
-      GoogleSignInDart.register(
+      await GoogleSignInDart.register(
           clientId: const String.fromEnvironment("GOOGLE_CLIENT_ID_DESKTOP"));
     }
   }
