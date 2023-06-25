@@ -4,6 +4,7 @@ import 'dart:io' as io;
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:mimosa/helper/cloud/google.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
+import '../class/cloud.dart';
+import '../main.dart';
 import 'dummy.dart' if (dart.library.js) 'dart:js';
 import 'dummy.dart' if (dart.library.html) 'dart:html';
 import 'dummy.dart'
@@ -37,6 +40,15 @@ Future<void> loadStudyDataBase() async {
         await databaseFactoryFfiWeb.openDatabase("study.db", options: options);
   } else {
     final path = (await getApplicationSupportDirectory()).path;
+    if (!(MyApp.cloudType == CloudType.none)) {
+      final file = io.File(p.join(path, "study.db"));
+
+      // クラウドのstudy.dbをダウンロード
+      if (MyApp.cloudType == CloudType.google) {
+        await MiGoogleService.downloadFromAppFolder("study.db", file);
+      }
+    }
+
     studyDB = await databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
         options: options);
   }

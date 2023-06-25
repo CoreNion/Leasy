@@ -31,9 +31,19 @@ Future<googleSignIn.GoogleSignIn> _initSignIn() async {
   }
 }
 
-/// AuthClientの初期化
+/// AuthClientの初期化 (ログインが必要)
 Future<AuthClient> _initAuth() async {
-  _authClient ??= await (await _initSignIn()).authenticatedClient();
+  // 既存の情報を使ってログインを行う
+  final s = await _initSignIn();
+  if (await s.isSignedIn() == false) {
+    throw Exception("ログインされていません");
+  }
+  _account ??= await s.signInSilently();
+  if (_account == null) {
+    throw Exception("アカウント情報がありません、再ログインしてください");
+  }
+
+  _authClient ??= await s.authenticatedClient();
   if (_authClient == null) {
     throw Exception("AuthClientの初期化に失敗しました");
   } else {
@@ -41,7 +51,7 @@ Future<AuthClient> _initAuth() async {
   }
 }
 
-/// DriveApiの初期化
+/// DriveApiの初期化 (ログインが必要)
 Future<drive.DriveApi> _initDriveApi() async {
   _driveApi ??= drive.DriveApi(await _initAuth());
   if (_driveApi == null) {
@@ -146,6 +156,29 @@ class MiGoogleService {
         studyList.first.id!,
         uploadMedia: drive.Media(file.openRead(), file.lengthSync()),
       );
+    }
+  }
+
+  /// Googleドライブから指定されたファイルをダウンロードする
+  static Future<void> downloadFromAppFolder(
+      String downloadName, File file) async {
+    final driveAPI = await _initDriveApi();
+
+    // ドライブからファイルを取得
+    final fileList = (await driveAPI.files.list(
+            spaces: 'appDataFolder',
+            q: "name = '$downloadName'",
+            $fields: 'files(id, name, createdTime)'))
+        .files;
+
+    if (fileList == null || fileList.isEmpty) {
+      // 存在しない場合はエラー
+      throw Exception("ファイルが見つかりませんでした");
+    } else {
+      // 存在する場合はダウンロード
+      final media = await driveAPI.files.get(fileList.first.id!,
+          downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media?;
+      await media!.stream.pipe(file.openWrite());
     }
   }
 }
