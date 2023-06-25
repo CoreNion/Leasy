@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../class/cloud.dart';
 import '../../helper/cloud/common.dart';
 import '../../helper/cloud/google.dart';
 import '../../helper/common.dart';
@@ -38,6 +39,23 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                       accountInfo: snapshot.data!,
                     ),
                     const SizedBox(height: 20),
+                    ElevatedButton(
+                        onPressed: snapshot.data!.type == CloudType.none
+                            ? () async {
+                                if (!(await MiGoogleService.signIn())) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text("ログインがキャンセルされました")));
+                                  return;
+                                }
+
+                                setState(() {});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("ログイン完了")));
+                              }
+                            : null,
+                        child: const Text("ログインする")),
+                    const SizedBox(height: 10),
                     ElevatedButton(
                         onPressed: () async {
                           if (!(await MiGoogleService.signIn())) {
