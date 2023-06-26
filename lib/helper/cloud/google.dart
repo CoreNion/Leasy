@@ -25,7 +25,7 @@ Future<googleSignIn.GoogleSignIn> _initSignIn() async {
           : null,
       scopes: [drive.DriveApi.driveAppdataScope]);
   if (_signIn == null) {
-    throw Exception("GoogleSignIn is not initialized!?");
+    throw InitSignInException("Googleサインインの初期化に失敗しました。");
   } else {
     return _signIn!;
   }
@@ -36,16 +36,16 @@ Future<AuthClient> _initAuth() async {
   // 既存の情報を使ってログインを行う
   final s = await _initSignIn();
   if (await s.isSignedIn() == false) {
-    throw Exception("ログインされていません");
+    throw SignInException("ログインされていません");
   }
   _account ??= await s.signInSilently();
   if (_account == null) {
-    throw Exception("アカウント情報がありません、再ログインしてください");
+    throw SignInException("アカウント情報がありません、再ログインしてください");
   }
 
   _authClient ??= await s.authenticatedClient();
   if (_authClient == null) {
-    throw Exception("AuthClientの初期化に失敗しました");
+    throw AuthException("AuthClientの初期化に失敗しました");
   } else {
     return _authClient!;
   }
@@ -55,7 +55,7 @@ Future<AuthClient> _initAuth() async {
 Future<drive.DriveApi> _initDriveApi() async {
   _driveApi ??= drive.DriveApi(await _initAuth());
   if (_driveApi == null) {
-    throw Exception("DriveApiの初期化に失敗しました");
+    throw FileApiException("DriveApiの初期化に失敗しました");
   } else {
     return _driveApi!;
   }
@@ -105,7 +105,7 @@ class MiGoogleService {
   /// Googleアカウントからサインアウトする
   static Future<void> signOut() async {
     if (_signIn == null) {
-      throw Exception("GoogleSignIn is not initialized");
+      throw InitSignInException("Googleサインインが初期化されていません");
     }
     await _signIn!.disconnect();
 
@@ -173,7 +173,7 @@ class MiGoogleService {
 
     if (fileList == null || fileList.isEmpty) {
       // 存在しない場合はエラー
-      throw Exception("ファイルが見つかりませんでした");
+      throw FileApiException("ファイルが見つかりませんでした");
     } else {
       // 存在する場合はダウンロード
       final media = await driveAPI.files.get(fileList.first.id!,
