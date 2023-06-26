@@ -10,7 +10,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in_dartio/google_sign_in_dartio.dart';
 
 import './class/cloud.dart';
-import './helper/common.dart';
 import 'pages/home.dart';
 
 void main() async {
@@ -146,9 +145,6 @@ class _MyAppState extends State<MyApp> {
                   MyApp.cloudType = CloudType.none;
               }
             }
-
-            // データベースのロード
-            await loadStudyDataBase();
 
             MyApp.prefs = prefs;
             return prefs;

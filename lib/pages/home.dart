@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mimosa/pages/subjects.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../class/cloud.dart';
+import '../helper/cloud/google.dart';
+import '../helper/common.dart';
 import '../main.dart';
 import '../utility.dart';
 import '../helper/subject.dart';
@@ -13,6 +15,7 @@ import 'setting.dart';
 import 'subject/overview.dart';
 
 import '../helper/dummy.dart' if (dart.library.html) 'dart:html' as html;
+import 'subjects.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -26,9 +29,12 @@ class _HomeState extends State<Home> {
 
   GlobalKey subjectListKey = GlobalKey();
 
+  late Future<void> _loadDB;
+
   @override
   void initState() {
     super.initState();
+    _loadDB = loadStudyDataBase();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 起動時にダイナミックカラーが読み込まれない問題の対策
@@ -97,6 +103,8 @@ class _HomeState extends State<Home> {
     });
   }
 
+  bool _loading = true;
+
   @override
   Widget build(BuildContext context) {
     final largeSC = checkLargeSC(context);
@@ -117,74 +125,143 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text(pageTitles[pageIndex]),
       ),
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (selectedIndex) async {
-          HapticFeedback.mediumImpact();
+      body: FutureBuilder(
+          future: _loadDB,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                bool hideButton = false;
+                late String content;
+                if (snapshot.error is SignInException) {
+                  content = "サインイン情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
+                } else if (snapshot.error is AuthException) {
+                  content = "認証情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
+                } else {
+                  content = "データベースの読み込みに失敗しました。\n${snapshot.error.toString()}";
+                }
 
-          // 作成ボタンが押されたらダイアログ/モーダルを表示
-          if (selectedIndex == 1) {
-            late String? title;
-            if (largeSC) {
-              title = await showDialog(
+                await showDialog(
                   context: context,
+                  barrierDismissible: false,
                   builder: (builder) {
-                    return Dialog(
-                        child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500.0),
-                      child: tabPages[1],
-                    ));
-                  });
+                    return WillPopScope(
+                      onWillPop: () async => false,
+                      child: AlertDialog(
+                        title: const Text("エラー"),
+                        content: Text(content),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: hideButton
+                                ? null
+                                : () async {
+                                    setState(() => hideButton = true);
+                                    await MiGoogleService.signOut();
+                                    await MiGoogleService.signIn();
+
+                                    if (!mounted) return;
+                                    Navigator.pop(context);
+                                    _loadDB = loadStudyDataBase();
+                                    setState(() {
+                                      _loading = true;
+                                    });
+                                  },
+                            child: const Text("再ログイン"),
+                          ),
+                          TextButton(
+                            onPressed: hideButton
+                                ? null
+                                : () {
+                                    Navigator.pop(context);
+                                  },
+                            child: const Text("閉じる"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              });
+              return Container();
+            } else if (snapshot.connectionState == ConnectionState.done) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                setState(() {
+                  _loading = false;
+                });
+              });
+              return tabPages[pageIndex];
             } else {
-              title = await showModalBottomSheet<String?>(
-                  backgroundColor: Colors.transparent,
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  builder: (context) {
-                    return tabPages[1];
-                  });
+              return const Center(child: CircularProgressIndicator());
             }
+          }),
+      bottomNavigationBar: _loading
+          ? null
+          : NavigationBar(
+              onDestinationSelected: (selectedIndex) async {
+                HapticFeedback.mediumImpact();
 
-            if (title != null) {
-              // 作成処理
-              final subInfo = await createSubject(title);
+                // 作成ボタンが押されたらダイアログ/モーダルを表示
+                if (selectedIndex == 1) {
+                  late String? title;
+                  if (largeSC) {
+                    title = await showDialog(
+                        context: context,
+                        builder: (builder) {
+                          return Dialog(
+                              child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 500.0),
+                            child: tabPages[1],
+                          ));
+                        });
+                  } else {
+                    title = await showModalBottomSheet<String?>(
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (context) {
+                          return tabPages[1];
+                        });
+                  }
 
-              // 教科一覧を更新
-              subjectListKey.currentState!.setState(() {});
+                  if (title != null) {
+                    // 作成処理
+                    final subInfo = await createSubject(title);
 
-              // 教科ページへ移動
-              if (context.mounted) {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: ((context) =>
-                            SubjectOverview(subInfo: subInfo))));
-              }
-            }
-          } else {
-            setState(() => pageIndex = selectedIndex);
-          }
-        },
-        destinations: const <Widget>[
-          NavigationDestination(
-            icon: Icon(Icons.home),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add),
-            selectedIcon: Icon(Icons.add),
-            label: '教科を作成',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings),
-            selectedIcon: Icon(Icons.settings),
-            label: '設定',
-          ),
-        ],
-        selectedIndex: pageIndex,
-      ),
-      body: tabPages[pageIndex],
+                    // 教科一覧を更新
+                    subjectListKey.currentState!.setState(() {});
+
+                    // 教科ページへ移動
+                    if (context.mounted) {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) =>
+                                  SubjectOverview(subInfo: subInfo))));
+                    }
+                  }
+                } else {
+                  setState(() => pageIndex = selectedIndex);
+                }
+              },
+              destinations: const <Widget>[
+                NavigationDestination(
+                  icon: Icon(Icons.home),
+                  selectedIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.add),
+                  selectedIcon: Icon(Icons.add),
+                  label: '教科を作成',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings),
+                  selectedIcon: Icon(Icons.settings),
+                  label: '設定',
+                ),
+              ],
+              selectedIndex: pageIndex,
+            ),
     );
   }
 }
