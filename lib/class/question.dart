@@ -14,6 +14,10 @@ class MiQuestion {
 
   final bool? latestCorrect;
 
+  final int totalCorrect;
+
+  final int totalInCorrect;
+
   MiQuestion(
       {required this.id,
       required this.sectionID,
@@ -21,6 +25,8 @@ class MiQuestion {
       required this.choices,
       required this.answer,
       required this.isInput,
+      required this.totalCorrect,
+      required this.totalInCorrect,
       this.latestCorrect});
 
   // DataBaseの形式のMapに変換する関数
@@ -36,7 +42,10 @@ class MiQuestion {
         'choice4': choices[3],
         'answer': answer,
         'input': isInput ? 1 : 0,
-        'latestCorrect': latestCorrect != null ? (latestCorrect! ? 1 : 0) : null
+        'latestCorrect':
+            latestCorrect != null ? (latestCorrect! ? 1 : 0) : null,
+        'totalCorrect': totalCorrect,
+        'totalInCorrect': totalInCorrect
       };
     }
   }
@@ -57,6 +66,8 @@ class MiQuestion {
         isInput: (map["input"] as int) == 1 ? true : false,
         latestCorrect: (map["latestCorrect"] as int?) != null
             ? ((map["latestCorrect"] as int) == 1 ? true : false)
-            : null);
+            : null,
+        totalCorrect: map["totalCorrect"] as int,
+        totalInCorrect: map["totalInCorrect"] as int);
   }
 }

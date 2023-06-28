@@ -54,10 +54,31 @@ Future<int> updateMiQuestion(int id, MiQuestion question) async {
 }
 
 /// 指定されたMiQuestionの学習記録の更新
-Future<int> updateQuestionRecord(int questionID, bool correct) {
-  final updateValues = {"latestCorrect": correct ? 1 : 0};
-  return studyDB.update("Questions", updateValues,
+Future<void> updateQuestionRecord(int questionID, bool correct) async {
+  // 最新の正誤の更新
+  final updateLatestCorrectVal = {"latestCorrect": correct ? 1 : 0};
+  await studyDB.update("Questions", updateLatestCorrectVal,
       where: "id = ?", whereArgs: [questionID]);
+
+  /* 合計正解数/不正解数の更新 */
+  // 今までの合計正解数/不正解数を取得
+  late int totalCorrests;
+  final totalMap = await studyDB.query('Questions',
+      columns: [correct ? "totalCorrect" : "totalInCorrect"],
+      where: "id = ?",
+      whereArgs: [questionID]);
+  for (var map in totalMap) {
+    totalCorrests = map[correct ? "totalCorrect" : "totalInCorrect"] as int;
+  }
+
+  // 合計正解数/不正解数を更新
+  await studyDB.update(
+      "Questions",
+      {
+        correct ? "totalCorrect" : "totalInCorrect": totalCorrests + 1,
+      },
+      where: "id = ?",
+      whereArgs: [questionID]);
 }
 
 /// 指定されたセクションの学習記録を取得

@@ -31,9 +31,22 @@ Future<void> loadStudyDataBase() async {
         await db.execute(
             "CREATE TABLE Sections(subjectID int, title text, tableID integer primary key autoincrement, latestStudyMode text)");
         await db.execute(
-            "CREATE TABLE Questions(id integer primary key autoincrement, sectionID int, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int)");
+            "CREATE TABLE Questions(id integer primary key autoincrement, sectionID int, question text, choice1 text, choice2 text, choice3 text, choice4 text, answer int, input int, latestCorrect int, totalCorrect int, totalInCorrect int)");
       },
-      version: 3);
+      onUpgrade: (db, oldVersion, newVersion) async {
+        switch (oldVersion) {
+          case 3:
+            // 合計正解数・不正解数を追加
+            await db.execute(
+                "ALTER TABLE Questions ADD COLUMN totalCorrect int DEFAULT 0");
+            await db.execute(
+                "ALTER TABLE Questions ADD COLUMN totalInCorrect int DEFAULT 0");
+            break;
+          default:
+            break;
+        }
+      },
+      version: 4);
 
   if (kIsWeb) {
     studyDB =

@@ -150,7 +150,9 @@ class _SectionManagePageState extends State<SectionManagePage> {
                                     choices: fieldChoices,
                                     answer: fieldAnswerNum,
                                     isInput: selectedInputType[1],
-                                    sectionID: widget.sectionID);
+                                    sectionID: widget.sectionID,
+                                    totalCorrect: 0,
+                                    totalInCorrect: 0);
 
                                 Navigator.pop(context, miQuestion);
                               }
