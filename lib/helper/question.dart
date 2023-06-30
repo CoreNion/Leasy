@@ -12,21 +12,19 @@ Future<int> removeQuestion(int questionID) async {
 }
 
 /// 指定された単一セクションのMiQuestion概要(IDと問題/正誤)を取得
-Future<Map<int, MapEntry<String, bool?>>> getMiQuestionSummaries(
-    int sectionID) async {
+Future<List<MiQuestionSummary>> getMiQuestionSummaries(int sectionID) async {
   final results = await studyDB.query('Questions',
-      columns: ["id", "question", "latestCorrect"],
+      columns: [
+        "id",
+        "question",
+        "latestCorrect",
+        "totalCorrect",
+        "totalInCorrect"
+      ],
       where: "sectionID = ?",
       whereArgs: [sectionID]);
 
-  return {
-    for (var e in results)
-      e["id"] as int: MapEntry(
-          e["question"] as String,
-          (e["latestCorrect"] as int?) != null
-              ? ((e["latestCorrect"] as int) == 1 ? true : false)
-              : null)
-  };
+  return results.map((e) => MiQuestionSummary.tableMapToModel(e)).toList();
 }
 
 /// データベース上の指定されたセクションのMiQuestionのID一覧を取得

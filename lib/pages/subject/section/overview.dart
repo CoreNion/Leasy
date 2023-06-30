@@ -21,7 +21,7 @@ class SectionPage extends StatefulWidget {
 
 class _SectionPageState extends State<SectionPage> {
   bool loading = true;
-  Map<int, MapEntry<String, bool?>> _questionSummaries = {};
+  Map<int, MiQuestionSummary> _questionSummaries = {};
 
   /// 現在のセクションの情報
   late SectionInfo secInfo;
@@ -37,13 +37,17 @@ class _SectionPageState extends State<SectionPage> {
     secInfo = widget.sectionInfo;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 保存されている問題をリストに追加
+      // 保存されている問題をMapに追加
       final summaries =
           await getMiQuestionSummaries(widget.sectionInfo.tableID);
+      Map<int, MiQuestionSummary> res = {};
+      for (var qs in summaries) {
+        res.addAll({qs.id: qs});
+      }
       if (!mounted) return;
 
       setState(() {
-        _questionSummaries = summaries;
+        _questionSummaries = res;
         loading = false;
       });
     });
@@ -59,20 +63,20 @@ class _SectionPageState extends State<SectionPage> {
       if (_questionSummaries.containsKey(id)) {
         // 既存の問題の場合はMiQuestionなどを更新
         await updateMiQuestion(id, newQuestion);
-
-        if (!mounted) return;
-        setState(() {
-          _questionSummaries[id] = MapEntry(newQuestion.question, null);
-        });
       } else {
         // IDが存在しない場合は作成
         await createQuestion(newQuestion);
-        if (!mounted) return;
-
-        setState(() {
-          _questionSummaries.addAll({id: MapEntry(newQuestion.question, null)});
-        });
       }
+      if (!mounted) return;
+
+      setState(() {
+        _questionSummaries[id] = MiQuestionSummary(
+            id: id,
+            question: newQuestion.question,
+            totalCorrect: 0,
+            totalInCorrect: 0,
+            latestCorrect: null);
+      });
     }
     setState(() => loading = false);
   }
@@ -104,7 +108,12 @@ class _SectionPageState extends State<SectionPage> {
 
       if (!mounted) return;
       setState(() {
-        _questionSummaries[id] = MapEntry(_questionSummaries[id]!.key, correct);
+        _questionSummaries[id] = MiQuestionSummary(
+            id: id,
+            question: _questionSummaries[id]!.question,
+            totalCorrect: 0,
+            totalInCorrect: 0,
+            latestCorrect: null);
       });
     }
     setState(() => loading = false);
@@ -137,10 +146,10 @@ class _SectionPageState extends State<SectionPage> {
                   colorScheme,
                   secInfo.latestStudyMode == "test",
                   _questionSummaries.values
-                      .where((correct) => correct.value ?? false)
+                      .where((qs) => qs.latestCorrect ?? false)
                       .length,
                   _questionSummaries.values
-                      .where((correct) => !(correct.value ?? false))
+                      .where((qs) => !(qs.latestCorrect ?? false))
                       .length),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -154,7 +163,8 @@ class _SectionPageState extends State<SectionPage> {
                                 final sendQs = onlyIncorrect
                                     ? _questionSummaries.entries
                                         .where((entry) =>
-                                            !(entry.value.value ?? false))
+                                            !(entry.value.latestCorrect ??
+                                                false))
                                         .map((entry) => entry.key)
                                         .toList()
                                     : _questionSummaries.keys.toList();
@@ -224,13 +234,18 @@ class _SectionPageState extends State<SectionPage> {
                       itemCount: _questionSummaries.length,
                       itemBuilder: ((context, index) {
                         final id = _questionSummaries.keys.elementAt(index);
-                        final value =
-                            _questionSummaries.values.elementAt(index);
+                        final qs = _questionSummaries.values.elementAt(index);
+
+                        // 正解率を計算
+                        final ratio = qs.totalCorrect == 0
+                            ? 0.toDouble()
+                            : qs.totalCorrect /
+                                (qs.totalCorrect + qs.totalInCorrect);
 
                         return Dismissible(
                           key: Key(id.toString()),
                           confirmDismiss: (direction) async {
-                            await showRemoveDialog(value.key, id);
+                            await showRemoveDialog(qs.question, id);
                             return null;
                           },
                           background: Container(
@@ -267,18 +282,20 @@ class _SectionPageState extends State<SectionPage> {
                                       ]),
                                       onTap: () => WidgetsBinding.instance
                                           .addPostFrameCallback((_) =>
-                                              showRemoveDialog(value.key, id)))
+                                              showRemoveDialog(
+                                                  qs.question, id)))
                                 ],
                               );
                             },
                             child: ListTile(
                               title: Text(
-                                value.key,
+                                qs.question,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              subtitle: LinearProgressIndicator(value: ratio),
                               leading: Icon(Icons.circle,
-                                  color: value.value != null
-                                      ? (value.value!
+                                  color: qs.latestCorrect != null
+                                      ? (qs.latestCorrect!
                                           ? Colors.green
                                           : Colors.red)
                                       : Colors.grey),
