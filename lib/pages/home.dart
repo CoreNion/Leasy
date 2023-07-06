@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../class/cloud.dart';
+import '../helper/cloud/common.dart';
 import '../helper/cloud/google.dart';
 import '../helper/common.dart';
 import '../main.dart';
@@ -155,8 +156,8 @@ class _HomeState extends State<Home> {
                                 ? null
                                 : () async {
                                     setState(() => hideButton = true);
-                                    await MiGoogleService.signOut();
-                                    await MiGoogleService.signIn();
+                                    await CloudService.signOutTemporarily();
+                                    await CloudService.signIn(MyApp.cloudType);
 
                                     if (!mounted) return;
                                     Navigator.pop(context);

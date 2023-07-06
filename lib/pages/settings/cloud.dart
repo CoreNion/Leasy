@@ -7,6 +7,7 @@ import '../../helper/cloud/common.dart';
 import '../../helper/cloud/google.dart';
 import '../../helper/common.dart';
 import '../../widgets/settings/cloud.dart';
+import '../../main.dart';
 
 class CloudSyncPage extends StatefulWidget {
   const CloudSyncPage({super.key});
@@ -58,7 +59,7 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                         onPressed: () async {
-                          if (!(await MiGoogleService.signIn())) {
+                          if (!(await CloudService.signIn(MyApp.cloudType))) {
                             if (!mounted) return;
 
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -67,23 +68,18 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                             return;
                           }
 
-                          await MiGoogleService.uploadToAppFolder(
+                          await CloudService.uploadFile(
                               "study.db", File(studyDB.path));
 
-                          final res =
-                              (await MiGoogleService.getAppDriveFiles())!
-                                  .map((e) => "${e.name} : ${e.modifiedTime}")
-                                  .toList();
-
                           setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text("Google Driveに保存できました！\n$res")));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("クラウドに保存できました！")));
                         },
                         child: const Text("クラウドに保存する")),
                     const SizedBox(height: 20),
                     ElevatedButton(
                         onPressed: () async {
-                          await MiGoogleService.signOut();
+                          await CloudService.signOut();
                           if (!mounted) return;
 
                           setState(() {});
@@ -100,7 +96,7 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                 return const Center(child: Text("エラーが発生しました"));
               }
             },
-            future: getCloudInfo()),
+            future: CloudService.getCloudInfo()),
       ),
     );
   }
