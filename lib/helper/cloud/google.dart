@@ -114,6 +114,14 @@ class MiGoogleService {
     MyApp.prefs.setString("CloudType", "none");
   }
 
+  /// Googleアカウントから一時的にサインアウトする
+  static Future<void> signOutTemporarily() async {
+    if (_signIn == null) {
+      throw InitSignInException("Googleサインインが初期化されていません");
+    }
+    await _signIn!.signOut();
+  }
+
   /// Googleドライブからアプリ内ファイル一覧を取得する
   static Future<List<drive.File>?> getAppDriveFiles() async {
     final driveAPI = await _initDriveApi();
