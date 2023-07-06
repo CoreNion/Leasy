@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../class/cloud.dart';
 import '../../helper/cloud/common.dart';
-import '../../helper/cloud/google.dart';
 import '../../helper/common.dart';
 import '../../widgets/settings/cloud.dart';
 import '../../main.dart';
@@ -43,7 +42,33 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                     ElevatedButton(
                         onPressed: snapshot.data!.type == CloudType.none
                             ? () async {
-                                if (!(await MiGoogleService.signIn())) {
+                                // どこのクラウドにログインするか尋ねる
+                                final cloudType = await showDialog<CloudType>(
+                                    context: context,
+                                    builder: (context) {
+                                      return SimpleDialog(
+                                        title: const Text("接続するクラウドを選択"),
+                                        children: [
+                                          SimpleDialogOption(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                  context, CloudType.google);
+                                            },
+                                            child: const Text("Google"),
+                                          ),
+                                          SimpleDialogOption(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                  context, CloudType.icloud);
+                                            },
+                                            child: const Text("iCloud"),
+                                          ),
+                                        ],
+                                      );
+                                    });
+                                if (cloudType == null) return;
+
+                                if (!(await CloudService.signIn(cloudType))) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                           content: Text("ログインがキャンセルされました")));

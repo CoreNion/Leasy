@@ -58,6 +58,7 @@ dependencies:
   google_sign_in_dartio: ^0.2.2+1
   google_sign_in: ^6.1.4
   extension_google_sign_in_as_googleapis_auth: ^2.0.10
+  icloud_storage: ^2.2.0
 
 flutter_native_splash:
   color: '#d3edfb'

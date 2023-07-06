@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../class/cloud.dart';
 import '../../main.dart';
 import 'google.dart';
+import 'icloud.dart';
 
 class CloudService {
   /// 接続中のクラウドの情報を取得する
@@ -15,6 +16,8 @@ class CloudService {
       } else {
         return CloudAccountInfo(type: CloudType.none, email: null);
       }
+    } else if (cloudType == CloudType.icloud) {
+      return CloudAccountInfo(type: CloudType.icloud, email: null);
     } else {
       return CloudAccountInfo(type: CloudType.none, email: null);
     }
@@ -24,6 +27,8 @@ class CloudService {
   static Future<bool> signIn(CloudType cloudType) async {
     if (cloudType == CloudType.google) {
       return await MiGoogleService.signIn();
+    } else if (cloudType == CloudType.icloud) {
+      return await MiiCloudService.signIn();
     } else {
       return false;
     }
@@ -34,6 +39,8 @@ class CloudService {
     final cloudType = MyApp.cloudType;
     if (cloudType == CloudType.google) {
       await MiGoogleService.signOut();
+    } else if (cloudType == CloudType.icloud) {
+      await MiiCloudService.signOut();
     }
   }
 
@@ -50,6 +57,8 @@ class CloudService {
     final cloudType = MyApp.cloudType;
     if (cloudType == CloudType.google) {
       await MiGoogleService.uploadToAppFolder(uploadName, file);
+    } else if (cloudType == CloudType.icloud) {
+      await MiiCloudService.uploadFile(uploadName, file);
     }
   }
 
@@ -58,6 +67,8 @@ class CloudService {
     final cloudType = MyApp.cloudType;
     if (cloudType == CloudType.google) {
       await MiGoogleService.downloadFromAppFolder(downloadName, file);
+    } else if (cloudType == CloudType.icloud) {
+      await MiiCloudService.downloadFile(downloadName, file);
     }
   }
 }
