@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../class/cloud.dart';
+import '../class/subject.dart';
 import '../helper/cloud/common.dart';
-import '../helper/cloud/google.dart';
 import '../helper/common.dart';
 import '../main.dart';
 import '../utility.dart';
@@ -226,7 +226,13 @@ class _HomeState extends State<Home> {
 
                   if (title != null) {
                     // 作成処理
-                    final subInfo = await createSubject(title);
+                    final id = DateTime.now().millisecondsSinceEpoch;
+                    final subInfo = SubjectInfo(
+                        title: title,
+                        latestCorrect: 0,
+                        latestIncorrect: 0,
+                        id: id);
+                    await createSubject(subInfo);
 
                     // 教科一覧を更新
                     subjectListKey.currentState!.setState(() {});

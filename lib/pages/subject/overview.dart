@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../class/section.dart';
 import '../../class/subject.dart';
 import '../../helper/question.dart';
 import '../../helper/section.dart';
@@ -255,15 +256,20 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     TextButton(
                         onPressed: (() async {
                           if (formKey.currentState!.validate()) {
-                            final section = await createSection(
-                                widget.subInfo.id, createdSectionTitle);
+                            final id = DateTime.now().millisecondsSinceEpoch;
+                            final secInfo = SectionInfo(
+                                tableID: id,
+                                latestStudyMode: "none",
+                                title: createdSectionTitle,
+                                subjectID: widget.subInfo.id);
+                            await createSection(secInfo);
                             if (!mounted) return;
 
                             // セクション一覧に追加
                             setState(() {
                               _sectionSummaries.addAll({
-                                section.tableID:
-                                    MapEntry(section.title, double.nan)
+                                secInfo.tableID:
+                                    MapEntry(secInfo.title, double.nan)
                               });
                             });
                             Navigator.pop(context);
@@ -272,7 +278,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             Navigator.push(context,
                                 MaterialPageRoute(builder: ((context) {
                               return SectionPage(
-                                sectionInfo: section,
+                                sectionInfo: secInfo,
                               );
                             })));
                           }
