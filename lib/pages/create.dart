@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../class/subject.dart';
+import '../helper/subject.dart';
+
 class CreateSubjectPage extends StatefulWidget {
   const CreateSubjectPage({super.key});
 
@@ -10,6 +13,7 @@ class CreateSubjectPage extends StatefulWidget {
 class _CreateSubjectStatePage extends State<CreateSubjectPage> {
   final _formKey = GlobalKey<FormState>();
   String _title = "";
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,22 +61,49 @@ class _CreateSubjectStatePage extends State<CreateSubjectPage> {
                               },
                             ),
                             SizedBox.fromSize(size: const Size.fromHeight(40)),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                  minimumSize: const Size(double.infinity, 55),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10))),
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  // タイトルを報告しながら、元のページに戻る
-                                  Navigator.pop(context, _title);
-                                }
-                              },
-                              child: const Text("教科を作成",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17)),
-                            ),
+                            FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                    minimumSize:
+                                        const Size(double.infinity, 55),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10))),
+                                onPressed: _loading
+                                    ? null
+                                    : () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() => _loading = true);
+
+                                          // 教科の作成処理
+                                          final id = DateTime.now()
+                                              .millisecondsSinceEpoch;
+                                          final subInfo = SubjectInfo(
+                                              title: _title,
+                                              latestCorrect: 0,
+                                              latestIncorrect: 0,
+                                              id: id);
+                                          await createSubject(subInfo);
+
+                                          // 教科情報を報告しながら、元のページに戻る
+                                          if (!mounted) return;
+                                          Navigator.pop(context, subInfo);
+                                        }
+                                      },
+                                icon: _loading
+                                    ? Container(
+                                        width: 24,
+                                        height: 24,
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: CircularProgressIndicator(
+                                          color: colorScheme.onSurface,
+                                          strokeWidth: 3,
+                                        ),
+                                      )
+                                    : const Icon(Icons.add),
+                                label: const Text("教科を作成",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17))),
                           ])))
             ])));
   }

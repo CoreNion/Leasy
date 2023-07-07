@@ -9,7 +9,6 @@ import '../helper/cloud/common.dart';
 import '../helper/common.dart';
 import '../main.dart';
 import '../utility.dart';
-import '../helper/subject.dart';
 import 'setup.dart';
 import 'create.dart';
 import 'setting.dart';
@@ -202,9 +201,9 @@ class _HomeState extends State<Home> {
 
                 // 作成ボタンが押されたらダイアログ/モーダルを表示
                 if (selectedIndex == 1) {
-                  late String? title;
+                  late SubjectInfo? subInfo;
                   if (largeSC) {
-                    title = await showDialog(
+                    subInfo = await showDialog(
                         context: context,
                         builder: (builder) {
                           return Dialog(
@@ -214,7 +213,7 @@ class _HomeState extends State<Home> {
                           ));
                         });
                   } else {
-                    title = await showModalBottomSheet<String?>(
+                    subInfo = await showModalBottomSheet<SubjectInfo?>(
                         backgroundColor: Colors.transparent,
                         context: context,
                         isScrollControlled: true,
@@ -224,16 +223,7 @@ class _HomeState extends State<Home> {
                         });
                   }
 
-                  if (title != null) {
-                    // 作成処理
-                    final id = DateTime.now().millisecondsSinceEpoch;
-                    final subInfo = SubjectInfo(
-                        title: title,
-                        latestCorrect: 0,
-                        latestIncorrect: 0,
-                        id: id);
-                    await createSubject(subInfo);
-
+                  if (subInfo != null) {
                     // 教科一覧を更新
                     subjectListKey.currentState!.setState(() {});
 
@@ -243,7 +233,7 @@ class _HomeState extends State<Home> {
                           context,
                           MaterialPageRoute(
                               builder: ((context) =>
-                                  SubjectOverview(subInfo: subInfo))));
+                                  SubjectOverview(subInfo: subInfo!))));
                     }
                   }
                 } else {
