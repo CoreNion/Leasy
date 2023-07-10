@@ -2,8 +2,20 @@ import 'dart:io';
 
 import '../../class/cloud.dart';
 import '../../main.dart';
+import '../common.dart';
+
 import 'google.dart';
 import 'icloud.dart';
+
+/// クラウドが設定されている場合、直ちに学習データを保存する関数
+Future<void> saveToCloud() async {
+  final cloudType = MyApp.cloudType;
+
+  if (cloudType != CloudType.none) {
+    final file = File(studyDB.path);
+    return CloudService.uploadFile("study.db", file);
+  }
+}
 
 class CloudService {
   /// 接続中のクラウドの情報を取得する

@@ -1,14 +1,17 @@
 import 'common.dart';
 import '../class/question.dart';
+import 'cloud/common.dart';
 
 /// データベースのセクションに問題を作成する
-Future<int> createQuestion(MiQuestion question) async {
-  return studyDB.insert("Questions", question.toTableMap());
+Future<void> createQuestion(MiQuestion question) async {
+  await studyDB.insert("Questions", question.toTableMap());
+  await saveToCloud();
 }
 
 /// データベース上の指定された問題を削除
-Future<int> removeQuestion(int questionID) async {
-  return studyDB.delete("Questions", where: "id = ?", whereArgs: [questionID]);
+Future<void> removeQuestion(int questionID) async {
+  await studyDB.delete("Questions", where: "id = ?", whereArgs: [questionID]);
+  await saveToCloud();
 }
 
 /// 指定された単一セクションのMiQuestion概要(IDと問題/正誤)を取得
@@ -46,9 +49,10 @@ Future<MiQuestion> getMiQuestion(int id) async {
 }
 
 /// 指定されたIDのMiQuestionの更新
-Future<int> updateMiQuestion(int id, MiQuestion question) async {
-  return studyDB.update("Questions", question.toTableMap(),
+Future<void> updateMiQuestion(int id, MiQuestion question) async {
+  await studyDB.update("Questions", question.toTableMap(),
       where: "id = ?", whereArgs: [id]);
+  await saveToCloud();
 }
 
 /// 指定されたMiQuestionの学習記録の更新
@@ -77,6 +81,8 @@ Future<void> updateQuestionRecord(int questionID, bool correct) async {
       },
       where: "id = ?",
       whereArgs: [questionID]);
+
+  await saveToCloud();
 }
 
 /// 指定されたセクションの学習記録を取得

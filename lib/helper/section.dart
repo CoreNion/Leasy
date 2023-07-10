@@ -1,3 +1,4 @@
+import 'cloud/common.dart';
 import 'common.dart';
 import '../class/section.dart';
 
@@ -56,22 +57,25 @@ Future<SectionInfo> getSectionData(int tableID) async {
 }
 
 /// DataBaseから一致したセクションを削除する
-Future<int> removeSection(int subjectID, int id) async {
+Future<void> removeSection(int subjectID, int id) async {
   // セクション一覧から削除
-  return studyDB.delete("Sections",
+  await studyDB.delete("Sections",
       where: "subjectID = ? AND tableID = ?", whereArgs: [subjectID, id]);
+  await saveToCloud();
 }
 
 // セクション名を変更
-Future<int> renameSectionName(int tableID, String name) {
+Future<void> renameSectionName(int tableID, String name) async {
   final updateValues = {"title": name};
-  return studyDB.update("Sections", updateValues,
+  await studyDB.update("Sections", updateValues,
       where: "tableID = ?", whereArgs: [tableID]);
+  await saveToCloud();
 }
 
 /// 指定されたセクションの概要データの更新
-Future<int> updateSectionRecord(int sectionID, String latestStudyMode) {
+Future<void> updateSectionRecord(int sectionID, String latestStudyMode) async {
   final updateValues = {"latestStudyMode": latestStudyMode};
-  return studyDB.update("Sections", updateValues,
+  await studyDB.update("Sections", updateValues,
       where: "tableID = ?", whereArgs: [sectionID]);
+  await saveToCloud();
 }

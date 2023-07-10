@@ -1,3 +1,4 @@
+import 'cloud/common.dart';
 import 'common.dart';
 import '../class/subject.dart';
 import './section.dart';
@@ -16,33 +17,39 @@ Future<List<SubjectInfo>> getSubjectInfos() async {
 /// データベースに教科を作成する
 Future<void> createSubject(SubjectInfo subInfo) async {
   await studyDB.insert("Subjects", subInfo.toMap());
+  await saveToCloud();
 }
 
 /// データベースから教科を削除する
-Future<int> removeSubject(int id) async {
+Future<void> removeSubject(int id) async {
   // セクションの削除
   final secIDs = await getSectionIDs(id);
   for (var secID in secIDs) {
     await removeSection(id, secID);
   }
+  await studyDB.delete("Subjects", where: "id = ?", whereArgs: [id]);
 
-  return studyDB.delete("Subjects", where: "id = ?", whereArgs: [id]);
+  await saveToCloud();
 }
 
 /// 教科の名前を変更する
-Future<int> renameSubjectName(int id, String newTitle) {
+Future<void> renameSubjectName(int id, String newTitle) async {
   final updateValues = {"title": newTitle};
-  return studyDB
+  await studyDB
       .update("Subjects", updateValues, where: "id = ?", whereArgs: [id]);
+
+  await saveToCloud();
 }
 
 /// データベースに保存されている記録を更新する
-Future<int> updateSubjectRecord(
-    int id, int latestCorrect, int latestIncorrect) {
+Future<void> updateSubjectRecord(
+    int id, int latestCorrect, int latestIncorrect) async {
   final updateValues = {
     "latestCorrect": latestCorrect,
     "latestIncorrect": latestIncorrect
   };
-  return studyDB
+  await studyDB
       .update("Subjects", updateValues, where: "id = ?", whereArgs: [id]);
+
+  await saveToCloud();
 }
