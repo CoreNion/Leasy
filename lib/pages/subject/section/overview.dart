@@ -53,8 +53,13 @@ class _SectionPageState extends State<SectionPage> {
     });
   }
 
+  void _endLoading() {
+    if (!mounted) return;
+    setState(() => loading = false);
+  }
+
   /// Manageの結果からQuestionを更新する関数
-  Future<void> updateQuestion(MiQuestion? newQuestion) async {
+  void updateQuestion(MiQuestion? newQuestion) {
     setState(() => loading = true);
     // 何らかの変更があった場合のみ更新
     if (newQuestion != null) {
@@ -62,10 +67,10 @@ class _SectionPageState extends State<SectionPage> {
 
       if (_questionSummaries.containsKey(id)) {
         // 既存の問題の場合はMiQuestionなどを更新
-        await updateMiQuestion(id, newQuestion);
+        updateMiQuestion(id, newQuestion).then((_) => _endLoading());
       } else {
         // IDが存在しない場合は作成
-        await createQuestion(newQuestion);
+        createQuestion(newQuestion).then((_) => _endLoading());
       }
       if (!mounted) return;
 
@@ -77,8 +82,9 @@ class _SectionPageState extends State<SectionPage> {
             totalInCorrect: 0,
             latestCorrect: null);
       });
+    } else {
+      _endLoading();
     }
-    setState(() => loading = false);
   }
 
   // 学習結果から記録を更新する
@@ -116,7 +122,6 @@ class _SectionPageState extends State<SectionPage> {
             latestCorrect: null);
       });
     }
-    setState(() => loading = false);
   }
 
   @override
@@ -330,7 +335,7 @@ class _SectionPageState extends State<SectionPage> {
                                         );
                                       });
                                 }
-                                await updateQuestion(newMi);
+                                updateQuestion(newMi);
                               })),
                             ),
                           ),

@@ -38,6 +38,11 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     });
   }
 
+  void _endLoading() {
+    if (!mounted) return;
+    setState(() => loading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -315,6 +320,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     final formKey = GlobalKey<FormState>();
     late String newTitle;
 
+    setState(() => loading = true);
+
     final res = await showDialog<bool?>(
         context: context,
         builder: (builder) {
@@ -354,11 +361,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
             ),
           );
         });
-    if (!(res ?? false)) return;
-
-    // DB上の名前を変更
-    await renameSectionName(id, newTitle);
-    if (!mounted) return;
+    if (!(res ?? false)) {
+      _endLoading();
+      return;
+    }
 
     // 完了率を取得し、MapEntryを新しいタイトルのエントリーに置き換え
     final oldEntry = _sectionSummaries[id]!.value;
@@ -366,12 +372,18 @@ class _SubjectOverviewState extends State<SubjectOverview> {
       _sectionSummaries[id] = MapEntry(newTitle, oldEntry);
     });
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+    // DB上の名前を変更
+    renameSectionName(id, newTitle).then((value) {
+      _endLoading();
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+    });
     return;
   }
 
   Future<void> showRemoveDialog(String title, int id) async {
+    setState(() => loading = true);
     final res = await showDialog<bool?>(
         context: context,
         builder: (builder) {
@@ -390,17 +402,21 @@ class _SubjectOverviewState extends State<SubjectOverview> {
             ],
           );
         });
-    if (!(res ?? false)) return;
+    if (!(res ?? false)) {
+      _endLoading();
+      return;
+    }
 
-    await removeSection(widget.subInfo.id, id);
-    if (!mounted) return;
+    removeSection(widget.subInfo.id, id).then((value) {
+      _endLoading();
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('削除しました')));
+    });
 
     setState(() {
       _sectionSummaries.remove(id);
     });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('削除しました')));
     return;
   }
 }
