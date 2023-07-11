@@ -88,16 +88,12 @@ class _SectionPageState extends State<SectionPage> {
   }
 
   // 学習結果から記録を更新する
-  Future<void> updateRecord(
-      List<MapEntry<int, bool?>>? records, bool isTest) async {
+  Future<void> updateRecord(Map<int, bool>? records, bool isTest) async {
     if (records == null) return;
-    setState(() => loading = true);
-
     final latestStudyMode = isTest ? "test" : "normal";
-    // DBに記録を保存
-    await updateSectionRecord(secInfo.tableID, latestStudyMode);
 
     setState(() {
+      loading = true;
       secInfo = SectionInfo(
           subjectID: secInfo.tableID,
           title: secInfo.title,
@@ -105,23 +101,34 @@ class _SectionPageState extends State<SectionPage> {
           tableID: secInfo.tableID);
     });
 
-    // 正解記録を適切な場所に保存する
-    for (var recordEntry in records) {
-      final id = recordEntry.key;
-      final correct = recordEntry.value;
+    // UI上の問題の記録を更新
+    for (var record in records.entries) {
+      final id = record.key;
+      final correct = record.value;
 
-      await updateQuestionRecord(id, correct!);
+      final qs = _questionSummaries[id]!;
+      final newQs = MiQuestionSummary(
+          id: id,
+          question: qs.question,
+          totalCorrect: qs.totalCorrect + (correct ? 1 : 0),
+          totalInCorrect: qs.totalInCorrect + (correct ? 0 : 1),
+          latestCorrect: correct);
 
-      if (!mounted) return;
       setState(() {
-        _questionSummaries[id] = MiQuestionSummary(
-            id: id,
-            question: _questionSummaries[id]!.question,
-            totalCorrect: 0,
-            totalInCorrect: 0,
-            latestCorrect: null);
+        _questionSummaries[id] = newQs;
       });
     }
+
+    // DBにセクションの記録を保存
+    final secTask = updateSectionRecord(secInfo.tableID, latestStudyMode);
+    // DBの各問題の記録を更新
+    final queTask = updateQuestionRecords(records);
+    // 裏で実行
+    Future.wait([secTask, queTask]).then((value) {
+      setState(() {
+        loading = false;
+      });
+    });
   }
 
   @override
@@ -183,7 +190,7 @@ class _SectionPageState extends State<SectionPage> {
 
                                 await updateRecord(
                                     await Navigator.of(context)
-                                        .push<List<MapEntry<int, bool?>>?>(
+                                        .push<Map<int, bool>?>(
                                             MaterialPageRoute(
                                       builder: (context) => SectionStudyPage(
                                         title: secInfo.title,
@@ -203,7 +210,7 @@ class _SectionPageState extends State<SectionPage> {
                               ? () async {
                                   updateRecord(
                                       await Navigator.of(context)
-                                          .push<List<MapEntry<int, bool?>>?>(
+                                          .push<Map<int, bool>?>(
                                               MaterialPageRoute(
                                         builder: (context) => SectionStudyPage(
                                           title: secInfo.title,

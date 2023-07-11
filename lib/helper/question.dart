@@ -56,32 +56,22 @@ Future<void> updateMiQuestion(int id, MiQuestion question) async {
 }
 
 /// 指定されたMiQuestionの学習記録の更新
-Future<void> updateQuestionRecord(int questionID, bool correct) async {
-  // 最新の正誤の更新
-  final updateLatestCorrectVal = {"latestCorrect": correct ? 1 : 0};
-  await studyDB.update("Questions", updateLatestCorrectVal,
-      where: "id = ?", whereArgs: [questionID]);
+Future<void> updateQuestionRecords(Map<int, bool> records) async {
+  final batch = studyDB.batch();
 
-  /* 合計正解数/不正解数の更新 */
-  // 今までの合計正解数/不正解数を取得
-  late int totalCorrests;
-  final totalMap = await studyDB.query('Questions',
-      columns: [correct ? "totalCorrect" : "totalInCorrect"],
-      where: "id = ?",
-      whereArgs: [questionID]);
-  for (var map in totalMap) {
-    totalCorrests = map[correct ? "totalCorrect" : "totalInCorrect"] as int;
+  for (var record in records.entries) {
+    // 最新の正誤の更新
+    final updateLatestCorrectVal = {"latestCorrect": record.value ? 1 : 0};
+    batch.update("Questions", updateLatestCorrectVal,
+        where: "id = ?", whereArgs: [record.key]);
+
+    // 合計正解数/不正解数の更新
+    final colName = record.value ? "totalCorrect" : "totalInCorrect";
+    batch.rawUpdate("UPDATE Questions SET $colName = $colName + 1 WHERE id = ?",
+        [record.key]);
   }
 
-  // 合計正解数/不正解数を更新
-  await studyDB.update(
-      "Questions",
-      {
-        correct ? "totalCorrect" : "totalInCorrect": totalCorrests + 1,
-      },
-      where: "id = ?",
-      whereArgs: [questionID]);
-
+  await batch.commit();
   await saveToCloud();
 }
 
