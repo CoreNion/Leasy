@@ -90,8 +90,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                 }
 
                                 final record = await Navigator.of(context)
-                                    .push<List<MapEntry<int, bool?>>?>(
-                                        MaterialPageRoute(
+                                    .push<Map<int, bool>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
                                     questionIDs: qIDs,
                                     testMode: true,
@@ -102,25 +101,29 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   return;
                                 }
 
-                                final correct = record
-                                    .where((entry) => entry.value!)
-                                    .length;
-                                final inCorrect = record
-                                    .where((entry) => !(entry.value!))
-                                    .length;
-
                                 // 記録を保存
-                                await updateSubjectRecord(
-                                    subInfo.id, correct, inCorrect);
+                                final correct = record.values
+                                    .where((entry) => entry)
+                                    .length;
+                                final inCorrect = record.values
+                                    .where((entry) => !(entry))
+                                    .length;
 
-                                if (!mounted) return;
+                                // UI更新
                                 setState(() {
-                                  loading = false;
                                   subInfo = SubjectInfo(
                                       title: subInfo.title,
                                       id: subInfo.id,
                                       latestCorrect: correct,
                                       latestIncorrect: inCorrect);
+                                });
+
+                                // 記録を保存
+                                updateSubjectRecord(
+                                        subInfo.id, correct, inCorrect)
+                                    .then((value) {
+                                  if (!mounted) return;
+                                  setState(() => loading = false);
                                 });
                               }
                             : null,
