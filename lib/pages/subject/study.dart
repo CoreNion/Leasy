@@ -133,7 +133,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
                       onPressed: () {
                         Navigator.of(context)
                           ..pop()
-                          ..pop(records);
+                          ..pop(Map.fromEntries(records.map(
+                              (e) => MapEntry<int, bool>(e.key, e.value!))));
                       },
                       child: const Text('はい'),
                     ),
@@ -339,7 +340,10 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
               return false;
             }
           } else {
-            Navigator.pop(context, records);
+            Navigator.pop(
+                context,
+                Map.fromEntries(
+                    records.map((e) => MapEntry<int, bool>(e.key, e.value!))));
 
             return false;
           }
