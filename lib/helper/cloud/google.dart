@@ -90,16 +90,29 @@ class MiGoogleService {
     }
   }
 
-  /// Googleアカウントのサインイン状態を確認する
-  static Future<googleSignIn.GoogleSignInAccount?> checkLoginStatus() async {
+  /// Googleアカウントのサインイン状態・データの最終更新時刻を確認する
+  static Future<(googleSignIn.GoogleSignInAccount?, DateTime?)>
+      checkDataStatus() async {
+    // ログイン
     final s = await _initSignIn();
-
     if (await s.isSignedIn()) {
       _account = await s.signInSilently();
     } else {
-      return null;
+      return (null, null);
     }
-    return _account!;
+
+    // study.dbの最終更新を確認
+    final driveAPI = await _initDriveApi();
+    final studyList = (await driveAPI.files.list(
+            spaces: 'appDataFolder',
+            q: "name = 'study.db'",
+            $fields: 'files(id, name, createdTime, modifiedTime)'))
+        .files;
+    if (studyList == null || studyList.isEmpty) {
+      return (_account, null);
+    } else {
+      return (_account, studyList.first.modifiedTime);
+    }
   }
 
   /// Googleアカウントからサインアウトする

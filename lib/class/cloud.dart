@@ -25,7 +25,10 @@ class CloudAccountInfo {
   /// クラウドのアカウントのメールアドレス
   final String? email;
 
-  CloudAccountInfo({required this.type, required this.email});
+  /// 最終同期時刻
+  DateTime? lastSyncTime;
+
+  CloudAccountInfo({required this.type, this.email, this.lastSyncTime});
 }
 
 /// サインイン時の例外

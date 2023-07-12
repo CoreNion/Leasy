@@ -38,83 +38,109 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                     CheckCurrentStatus(
                       accountInfo: snapshot.data!,
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                        onPressed: snapshot.data!.type == CloudType.none
-                            ? () async {
-                                // どこのクラウドにログインするか尋ねる
-                                final cloudType = await showDialog<CloudType>(
-                                    context: context,
-                                    builder: (context) {
-                                      return SimpleDialog(
-                                        title: const Text("接続するクラウドを選択"),
-                                        children: [
-                                          SimpleDialogOption(
-                                            onPressed: () {
-                                              Navigator.pop(
-                                                  context, CloudType.google);
-                                            },
-                                            child: const Text("Google"),
-                                          ),
-                                          SimpleDialogOption(
-                                            onPressed: () {
-                                              Navigator.pop(
-                                                  context, CloudType.icloud);
-                                            },
-                                            child: const Text("iCloud"),
-                                          ),
-                                        ],
-                                      );
-                                    });
-                                if (cloudType == null) return;
+                    const SizedBox(height: 10),
+                    snapshot.data!.type != CloudType.none &&
+                            snapshot.data!.lastSyncTime != null
+                        ? Text(
+                            "最終同期: ${snapshot.data!.lastSyncTime?.toLocal().toString() ?? "一回も同期されていません"}")
+                        : const SizedBox(),
+                    const SizedBox(height: 10),
+                    snapshot.data!.type != CloudType.none
+                        ? ElevatedButton.icon(
+                            onPressed: () async {
+                              if (!(await CloudService.signIn(
+                                  MyApp.cloudType))) {
+                                if (!mounted) return;
 
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("ログインがキャンセルされました")));
+                                return;
+                              }
+
+                              await CloudService.uploadFile(
+                                  "study.db", File(studyDB.path));
+
+                              setState(() {});
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("同期が完了しました！")));
+                              }
+                            },
+                            icon: const Icon(Icons.sync),
+                            label: const Text("今すぐ同期する"))
+                        : const SizedBox(),
+                    const SizedBox(height: 20),
+                    snapshot.data!.type == CloudType.none
+                        ? ElevatedButton(
+                            onPressed: () async {
+                              // どこのクラウドにログインするか尋ねる
+                              final cloudType = await showDialog<CloudType>(
+                                  context: context,
+                                  builder: (context) {
+                                    return SimpleDialog(
+                                      title: const Text("接続するクラウドを選択"),
+                                      children: [
+                                        SimpleDialogOption(
+                                          onPressed: () {
+                                            Navigator.pop(
+                                                context, CloudType.google);
+                                          },
+                                          child: const Text("Google"),
+                                        ),
+                                        SimpleDialogOption(
+                                          onPressed: () {
+                                            Navigator.pop(
+                                                context, CloudType.icloud);
+                                          },
+                                          child: const Text("iCloud"),
+                                        ),
+                                      ],
+                                    );
+                                  });
+                              if (cloudType == null) return;
+
+                              try {
                                 if (!(await CloudService.signIn(cloudType))) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text("ログインがキャンセルされました")));
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text("ログインがキャンセルされました")));
+                                  }
                                   return;
                                 }
+                              } catch (e) {
+                                await CloudService.signOut();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              "ログインに失敗しました。もう一度お試しください。")));
+                                }
+                                return;
+                              }
 
-                                setState(() {});
+                              setState(() {});
+                              if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text("ログイン完了")));
                               }
-                            : null,
-                        child: const Text("ログインする")),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                        onPressed: () async {
-                          if (!(await CloudService.signIn(MyApp.cloudType))) {
-                            if (!mounted) return;
+                            },
+                            child: const Text("ログインする"))
+                        : ElevatedButton(
+                            onPressed: () async {
+                              await CloudService.signOut();
+                              if (!mounted) return;
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("ログインがキャンセルされました")));
-                            return;
-                          }
-
-                          await CloudService.uploadFile(
-                              "study.db", File(studyDB.path));
-
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("クラウドに保存できました！")));
-                        },
-                        child: const Text("クラウドに保存する")),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                        onPressed: () async {
-                          await CloudService.signOut();
-                          if (!mounted) return;
-
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("ログアウトしました")));
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.onError,
-                            foregroundColor: colorScheme.error),
-                        child: const Text("ログアウト"))
+                              setState(() {});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("ログアウトしました")));
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.onError,
+                                foregroundColor: colorScheme.error),
+                            child: const Text("ログアウト")),
                   ],
                 );
               } else {

@@ -22,16 +22,23 @@ class CloudService {
   static Future<CloudAccountInfo> getCloudInfo() async {
     final cloudType = MyApp.cloudType;
     if (cloudType == CloudType.google) {
-      final info = await MiGoogleService.checkLoginStatus();
-      if (info != null) {
-        return CloudAccountInfo(type: CloudType.google, email: info.email);
+      final info = await MiGoogleService.checkDataStatus();
+      if (info != (null, null)) {
+        return CloudAccountInfo(
+            type: CloudType.google,
+            email: info.$1!.email,
+            lastSyncTime: info.$2);
+      } else if (info.$2 == null) {
+        return CloudAccountInfo(
+            type: CloudType.google, email: info.$1!.email, lastSyncTime: null);
       } else {
-        return CloudAccountInfo(type: CloudType.none, email: null);
+        return CloudAccountInfo(type: CloudType.none);
       }
     } else if (cloudType == CloudType.icloud) {
-      return CloudAccountInfo(type: CloudType.icloud, email: null);
+      return CloudAccountInfo(
+          type: CloudType.icloud, email: null, lastSyncTime: null);
     } else {
-      return CloudAccountInfo(type: CloudType.none, email: null);
+      return CloudAccountInfo(type: CloudType.none);
     }
   }
 
