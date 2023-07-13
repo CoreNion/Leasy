@@ -26,7 +26,7 @@ class CloudService {
       if (info != (null, null)) {
         return CloudAccountInfo(
             type: CloudType.google,
-            email: info.$1!.email,
+            email: info.$1?.email,
             lastSyncTime: info.$2);
       } else if (info.$2 == null) {
         return CloudAccountInfo(

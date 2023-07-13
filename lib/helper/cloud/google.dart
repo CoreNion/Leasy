@@ -1,5 +1,6 @@
 // ignore_for_file: library_prefixes
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -7,7 +8,10 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:http/http.dart' as http;
 
 import '../../main.dart';
 import '../../class/cloud.dart';
@@ -61,14 +65,19 @@ Future<AuthClient> _initAuth() async {
     }
     _authClient ??= await _signIn!.authenticatedClient();
   } else {
-    // Authを取得する (googleapis_auth)
-    final refAuth = await clientViaUserConsent(
-        ClientId(_desktopClientID, _desktopClientSecret), [
-      "https://www.googleapis.com/auth/drive.appdata",
-    ], (uri) async {
-      await launchUrlString(uri);
-    });
-    _authClient = refAuth;
+    // 保存されている認証情報を利用
+    final credFile = File(p.join(
+        (await getApplicationSupportDirectory()).path, "google_cred.json"));
+    if (!credFile.existsSync()) {
+      throw SignInException("ログインされていません");
+    }
+
+    final credential =
+        AccessCredentials.fromJson(jsonDecode(await credFile.readAsString()));
+    _authClient = autoRefreshingClient(
+        ClientId(_desktopClientID, _desktopClientSecret),
+        credential,
+        http.Client());
   }
 
   if (_authClient == null) {
@@ -111,7 +120,19 @@ class MiGoogleService {
         return false;
       }
     } else {
-      _initAuth();
+      // Authを取得する (googleapis_auth)
+      final refAuth = await clientViaUserConsent(
+          ClientId(_desktopClientID, _desktopClientSecret), [
+        "https://www.googleapis.com/auth/drive.appdata",
+      ], (uri) async {
+        await launchUrlString(uri);
+      });
+      _authClient = refAuth;
+
+      // 認証情報を保存
+      final credFile = File(p.join(
+          (await getApplicationSupportDirectory()).path, "google_cred.json"));
+      await credFile.writeAsString(jsonEncode(refAuth.credentials.toJson()));
     }
     // クラウド同期の設定を保存
     MyApp.cloudType = CloudType.google;
@@ -149,10 +170,16 @@ class MiGoogleService {
 
   /// Googleアカウントからサインアウトする
   static Future<void> signOut() async {
-    if (_signIn == null) {
-      throw InitSignInException("Googleサインインが初期化されていません");
+    await _signIn?.disconnect();
+    _authClient == null;
+
+    if (!gsiSupported()) {
+      final credFile = File(p.join(
+          (await getApplicationSupportDirectory()).path, "google_cred.json"));
+      if (credFile.existsSync()) {
+        await credFile.delete();
+      }
     }
-    await _signIn!.disconnect();
 
     // クラウド同期の設定を保存
     MyApp.cloudType = CloudType.none;
@@ -161,10 +188,8 @@ class MiGoogleService {
 
   /// Googleアカウントから一時的にサインアウトする
   static Future<void> signOutTemporarily() async {
-    if (_signIn == null) {
-      throw InitSignInException("Googleサインインが初期化されていません");
-    }
-    await _signIn!.signOut();
+    await _signIn?.signOut();
+    _authClient == null;
   }
 
   /// Googleドライブからアプリ内ファイル一覧を取得する
