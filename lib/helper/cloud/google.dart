@@ -1,24 +1,39 @@
-// ignore_for_file: library_prefixes, depend_on_referenced_packages
+// ignore_for_file: library_prefixes
 
 import 'dart:io';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../main.dart';
 import '../../class/cloud.dart';
 
 const _iosEnv = "GOOGLE_CLIENT_ID_IOS";
+const _desktopClientID = String.fromEnvironment("GOOGLE_CLIENT_ID_DESKTOP");
+const _desktopClientSecret =
+    String.fromEnvironment("GOOGLE_CLIENT_SECRET_DESKTOP");
 
 googleSignIn.GoogleSignIn? _signIn;
 googleSignIn.GoogleSignInAccount? _account;
 AuthClient? _authClient;
 drive.DriveApi? _driveApi;
 
+///  google_sign_inの端末か
+bool gsiSupported() {
+  return Platform.isIOS || Platform.isAndroid || kIsWeb;
+}
+
 /// GoogleSignInの初期化
-Future<googleSignIn.GoogleSignIn> _initSignIn() async {
+Future<void> _initSignIn() async {
+  // google_sign_in非対応端末では何もしない
+  if (!(gsiSupported())) {
+    return;
+  }
+
   _signIn ??= googleSignIn.GoogleSignIn(
       clientId: Platform.isIOS && const bool.hasEnvironment(_iosEnv)
           ? const String.fromEnvironment(_iosEnv)
@@ -27,23 +42,35 @@ Future<googleSignIn.GoogleSignIn> _initSignIn() async {
   if (_signIn == null) {
     throw InitSignInException("Googleサインインの初期化に失敗しました。");
   } else {
-    return _signIn!;
+    return;
   }
 }
 
 /// AuthClientの初期化 (ログインが必要)
 Future<AuthClient> _initAuth() async {
-  // 既存の情報を使ってログインを行う
-  final s = await _initSignIn();
-  if (await s.isSignedIn() == false) {
-    throw SignInException("ログインされていません");
-  }
-  _account ??= await s.signInSilently();
-  if (_account == null) {
-    throw SignInException("アカウント情報がありません、再ログインしてください");
+  // 既存の情報を使ってログインを行う (google_sign_in)
+  if (gsiSupported()) {
+    await _initSignIn();
+    if (!(gsiSupported()) || await _signIn!.isSignedIn() == false) {
+      throw SignInException("ログインされていません");
+    }
+
+    _account ??= await _signIn!.signInSilently();
+    if (_account == null) {
+      throw SignInException("アカウント情報がありません、再ログインしてください");
+    }
+    _authClient ??= await _signIn!.authenticatedClient();
+  } else {
+    // Authを取得する (googleapis_auth)
+    final refAuth = await clientViaUserConsent(
+        ClientId(_desktopClientID, _desktopClientSecret), [
+      "https://www.googleapis.com/auth/drive.appdata",
+    ], (uri) async {
+      await launchUrlString(uri);
+    });
+    _authClient = refAuth;
   }
 
-  _authClient ??= await s.authenticatedClient();
   if (_authClient == null) {
     throw AuthException("AuthClientの初期化に失敗しました");
   } else {
@@ -66,39 +93,44 @@ class MiGoogleService {
   /// Googleアカウントにサインインする
   static Future<bool> signIn() async {
     // 初期化
-    final s = await _initSignIn();
+    await _initSignIn();
 
-    if (await s.isSignedIn()) {
-      // サインイン済みの場合はそれを利用する
-      _account = await s.signInSilently();
-      // 何らかの理由でnullの場合はサインインし直す
-      _account ??= await s.signIn();
+    if (gsiSupported()) {
+      if (await _signIn!.isSignedIn()) {
+        // サインイン済みの場合はそれを利用する
+        _account = await _signIn!.signInSilently();
+        // 何らかの理由でnullの場合はサインインし直す
+        _account ??= await _signIn!.signIn();
+      } else {
+        // 初回サインイン
+        _account = await _signIn!.signIn();
+      }
+
+      // キャンセル等でサインインできなかった場合はfalseを返す
+      if (_account == null) {
+        return false;
+      }
     } else {
-      // 初回サインイン
-      _account = await s.signIn();
+      _initAuth();
     }
+    // クラウド同期の設定を保存
+    MyApp.cloudType = CloudType.google;
+    MyApp.prefs.setString("CloudType", "google");
 
-    // キャンセル等でサインインできなかった場合はfalseを返す
-    if (_account == null) {
-      return false;
-    } else {
-      // クラウド同期の設定を保存
-      MyApp.cloudType = CloudType.google;
-      MyApp.prefs.setString("CloudType", "google");
-
-      return true;
-    }
+    return true;
   }
 
   /// Googleアカウントのサインイン状態・データの最終更新時刻を確認する
   static Future<(googleSignIn.GoogleSignInAccount?, DateTime?)>
       checkDataStatus() async {
-    // ログイン
-    final s = await _initSignIn();
-    if (await s.isSignedIn()) {
-      _account = await s.signInSilently();
-    } else {
-      return (null, null);
+    if (gsiSupported()) {
+      // ログイン
+      await _initSignIn();
+      if (await _signIn!.isSignedIn()) {
+        _account = await _signIn!.signInSilently();
+      } else {
+        return (null, null);
+      }
     }
 
     // study.dbの最終更新を確認

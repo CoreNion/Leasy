@@ -55,8 +55,8 @@ dependencies:
   flutter_file_dialog: ^3.0.0
   sqlite3: ^1.11.0
   googleapis: ^11.2.0
-  google_sign_in_dartio: ^0.2.2+1
   google_sign_in: ^6.1.4
+  googleapis_auth: ^1.4.1
   extension_google_sign_in_as_googleapis_auth: ^2.0.10
   icloud_storage: ^2.2.0
 
