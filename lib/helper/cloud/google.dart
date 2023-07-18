@@ -26,15 +26,23 @@ googleSignIn.GoogleSignInAccount? _account;
 AuthClient? _authClient;
 drive.DriveApi? _driveApi;
 
+/// 残っているアカウント関連の変数をnullにする
+void _deleteMemoryData() {
+  _signIn = null;
+  _account = null;
+  _authClient = null;
+  _driveApi = null;
+}
+
 ///  google_sign_inの端末か
-bool gsiSupported() {
+bool _gsiSupported() {
   return Platform.isIOS || Platform.isAndroid || kIsWeb;
 }
 
 /// GoogleSignInの初期化
 Future<void> _initSignIn() async {
   // google_sign_in非対応端末では何もしない
-  if (!(gsiSupported())) {
+  if (!(_gsiSupported())) {
     return;
   }
 
@@ -53,9 +61,9 @@ Future<void> _initSignIn() async {
 /// AuthClientの初期化 (ログインが必要)
 Future<AuthClient> _initAuth() async {
   // 既存の情報を使ってログインを行う (google_sign_in)
-  if (gsiSupported()) {
+  if (_gsiSupported()) {
     await _initSignIn();
-    if (!(gsiSupported()) || await _signIn!.isSignedIn() == false) {
+    if (!(_gsiSupported()) || await _signIn!.isSignedIn() == false) {
       throw SignInException("ログインされていません");
     }
 
@@ -104,7 +112,7 @@ class MiGoogleService {
     // 初期化
     await _initSignIn();
 
-    if (gsiSupported()) {
+    if (_gsiSupported()) {
       if (await _signIn!.isSignedIn()) {
         // サインイン済みの場合はそれを利用する
         _account = await _signIn!.signInSilently();
@@ -144,7 +152,7 @@ class MiGoogleService {
   /// Googleアカウントのサインイン状態・データの最終更新時刻を確認する
   static Future<(googleSignIn.GoogleSignInAccount?, DateTime?)>
       checkDataStatus() async {
-    if (gsiSupported()) {
+    if (_gsiSupported()) {
       // ログイン
       await _initSignIn();
       if (await _signIn!.isSignedIn()) {
@@ -171,9 +179,9 @@ class MiGoogleService {
   /// Googleアカウントからサインアウトする
   static Future<void> signOut() async {
     await _signIn?.disconnect();
-    _authClient == null;
+    _deleteMemoryData();
 
-    if (!gsiSupported()) {
+    if (!_gsiSupported()) {
       final credFile = File(p.join(
           (await getApplicationSupportDirectory()).path, "google_cred.json"));
       if (credFile.existsSync()) {
@@ -189,7 +197,7 @@ class MiGoogleService {
   /// Googleアカウントから一時的にサインアウトする
   static Future<void> signOutTemporarily() async {
     await _signIn?.signOut();
-    _authClient == null;
+    _deleteMemoryData();
   }
 
   /// Googleドライブからアプリ内ファイル一覧を取得する
