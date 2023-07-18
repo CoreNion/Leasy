@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../class/cloud.dart';
@@ -134,8 +137,11 @@ class _HomeState extends State<Home> {
                 late String content;
                 if (snapshot.error is SignInException) {
                   content = "サインイン情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
-                } else if (snapshot.error is AuthException) {
+                } else if (snapshot.error is AuthException ||
+                    snapshot.error is AccessDeniedException) {
                   content = "認証情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
+                } else if (snapshot.error is SocketException) {
+                  content = "サーバー接続時にエラーが発生しました。\nインターネット環境を確認してください。";
                 } else {
                   content = "データベースの読み込みに失敗しました。\n${snapshot.error.toString()}";
                 }

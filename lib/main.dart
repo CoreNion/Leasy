@@ -56,6 +56,9 @@ class MyApp extends StatefulWidget {
 
   static Key rootKey = UniqueKey();
 
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static void resetApp(BuildContext context) {
     // メモリにある設定も削除
     MyApp.seedColor = Colors.blue;
@@ -185,6 +188,7 @@ class _MyAppState extends State<MyApp> {
 
                 return MaterialApp(
                   title: 'Leasy',
+                  navigatorKey: MyApp.navigatorKey,
                   theme: ThemeData(
                       colorScheme: lightScheme,
                       useMaterial3: true,

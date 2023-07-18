@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:http/http.dart' as http;
+
 import '../../class/cloud.dart';
 import '../../main.dart';
 import '../common.dart';
@@ -7,13 +11,78 @@ import '../common.dart';
 import 'google.dart';
 import 'icloud.dart';
 
+/// エラーが発生したときに表示するダイアログ
+Future<void> _showErrorDialog(
+    Object e, String message, Future<void> Function() retry) async {
+  late String m;
+  bool relogin = false;
+
+  if (e is AccessDeniedException || e is AuthException) {
+    m = "クラウドへのアクセスが拒否されました。再ログインが必要です。\n詳細: $e";
+    relogin = true;
+  } else if (e is SocketException || e is http.ClientException) {
+    m = "サーバー接続時にエラーが発生しました。\nインターネット環境を確認してください。\n詳細: $e";
+  } else {
+    m = "不明なエラーが発生しました。\n詳細: $e";
+  }
+
+  bool loading = false;
+  return showDialog(
+      context: MyApp.navigatorKey.currentContext!,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("エラー"),
+            content: Text(m),
+            actions: [
+              TextButton(
+                onPressed: loading
+                    ? null
+                    : () async {
+                        setState(() {
+                          loading = true;
+                        });
+
+                        if (relogin) {
+                          await CloudService.signOutTemporarily();
+                          await CloudService.signIn(MyApp.cloudType);
+                        }
+                        await retry();
+
+                        Navigator.pop(context);
+                      },
+                child: loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(),
+                      )
+                    : const Text("再試行"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("閉じる"),
+              ),
+            ],
+          );
+        });
+      });
+}
+
 /// クラウドが設定されている場合、直ちに学習データを保存する関数
 Future<void> saveToCloud() async {
   final cloudType = MyApp.cloudType;
 
   if (cloudType != CloudType.none) {
     final file = File(studyDB.path);
-    return CloudService.uploadFile("study.db", file);
+
+    try {
+      await CloudService.uploadFile("study.db", file);
+    } catch (e) {
+      await _showErrorDialog(e, "クラウドへの保存に失敗しました。", saveToCloud);
+    }
   }
 }
 
