@@ -267,4 +267,24 @@ class MiGoogleService {
       await media!.stream.pipe(file.openWrite());
     }
   }
+
+  /// Googleドライブから指定されたファイルを削除する
+  static Future<void> deleteCloudFile(String fileName) async {
+    final driveAPI = await _initDriveApi();
+
+    // ドライブからファイルを取得
+    final fileList = (await driveAPI.files.list(
+            spaces: 'appDataFolder',
+            q: "name = '$fileName'",
+            $fields: 'files(id, name, createdTime)'))
+        .files;
+
+    if (fileList == null || fileList.isEmpty) {
+      // 存在しない場合はエラー
+      throw FileApiException("ファイルが見つかりませんでした");
+    } else {
+      // 存在する場合は削除
+      await driveAPI.files.delete(fileList.first.id!);
+    }
+  }
 }

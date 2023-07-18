@@ -103,7 +103,7 @@ class CloudService {
             lastSyncTime: info.$2);
       } else if (info.$2 == null) {
         return CloudAccountInfo(
-            type: CloudType.google, email: info.$1!.email, lastSyncTime: null);
+            type: CloudType.google, email: info.$1?.email, lastSyncTime: null);
       } else {
         return CloudAccountInfo(type: CloudType.none);
       }
@@ -161,6 +161,26 @@ class CloudService {
       await MiGoogleService.downloadFromAppFolder(downloadName, file);
     } else if (cloudType == CloudType.icloud) {
       await MiiCloudService.downloadFile(downloadName, file);
+    }
+  }
+
+  /// 指定されたファイルを削除する
+  static Future<void> deleteCloudFile(String fileName) async {
+    final cloudType = MyApp.cloudType;
+    if (cloudType == CloudType.google) {
+      await MiGoogleService.deleteCloudFile(fileName);
+    } else if (cloudType == CloudType.icloud) {
+      await MiiCloudService.deleteCloudFile(fileName);
+    }
+  }
+
+  /// leasy関連のファイルを削除
+  static Future<void> deleteLeasyFiles() async {
+    final cloudType = MyApp.cloudType;
+    if (cloudType == CloudType.google) {
+      await MiGoogleService.deleteCloudFile("study.db");
+    } else if (cloudType == CloudType.icloud) {
+      await MiGoogleService.deleteCloudFile("study.db");
     }
   }
 }
