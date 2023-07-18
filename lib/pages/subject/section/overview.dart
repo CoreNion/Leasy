@@ -400,6 +400,8 @@ class _SectionPageState extends State<SectionPage> {
 
   /// 問題を削除するダイアログを表示する
   Future<void> showRemoveDialog(String title, int id) async {
+    setState(() => loading = true);
+
     final result = await showDialog(
       context: context,
       builder: (context) {
@@ -430,5 +432,7 @@ class _SectionPageState extends State<SectionPage> {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('削除しました')));
     }
+
+    _endLoading();
   }
 }

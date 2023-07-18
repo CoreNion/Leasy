@@ -30,6 +30,8 @@ Future<void> _showErrorDialog(
   return showDialog(
       context: MyApp.navigatorKey.currentContext!,
       builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
+
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             title: const Text("エラー"),
@@ -52,11 +54,13 @@ Future<void> _showErrorDialog(
                         Navigator.pop(context);
                       },
                 child: loading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(),
-                      )
+                        child: CircularProgressIndicator(
+                          color: colorScheme.onSurface,
+                          strokeWidth: 3,
+                        ))
                     : const Text("再試行"),
               ),
               TextButton(

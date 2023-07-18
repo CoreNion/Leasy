@@ -153,9 +153,6 @@ class _SubjectListPageState extends State<SubjectListPage> {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('削除しました')));
-                          setState(() {
-                            subejctWidgetList.removeAt(e.key);
-                          });
                         }
                       }
                     });
