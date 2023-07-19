@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:status_alert/status_alert.dart';
 
+import '../class/cloud.dart';
+import '../helper/cloud/common.dart';
 import '../main.dart';
+import '../widgets/overview.dart';
+import '../widgets/settings/cloud.dart';
 import '../widgets/settings/general.dart';
 import '../helper/common.dart';
 
@@ -23,11 +28,12 @@ class _SetupPageState extends State<SetupPage> {
     _FirstView(),
     _HowToContent(),
     _NoteDescContent(),
+    _CloudSettingContent(),
     _SettingContent()
   ];
 
-  final titles = ["Welcome to Leasy!", "使い方", "学習の管理", "カスタマイズ"];
-  final bottomButtonTexts = ["始める", "次へ", "次へ", "始めましょう！"];
+  final titles = ["Welcome to Leasy!", "使い方", "学習の管理", "クラウド同期の設定", "カスタマイズ"];
+  final bottomButtonTexts = ["始める", "次へ", "次へ", "次へ", "始めましょう！"];
 
   @override
   Widget build(BuildContext context) {
@@ -386,6 +392,149 @@ class _NoteDescContent extends StatelessWidget {
         )
       ],
     );
+  }
+}
+
+class _CloudSettingContent extends StatefulWidget {
+  const _CloudSettingContent();
+
+  @override
+  State<_CloudSettingContent> createState() => __CloudSettingContentState();
+}
+
+class __CloudSettingContentState extends State<_CloudSettingContent> {
+  late Future<CloudAccountInfo> _loadCloudData;
+  bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCloudData = CloudService.getCloudInfo();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      const Text(
+        "v1.2.0より、学習帳のデータをクラウドサービスにアップロードし、複数端末で同期して使えるようになりました！\nこの機能を利用する場合、GoogleドライブやiCloud(Appleデバイスのみ)でログインしてください。",
+        style: TextStyle(fontSize: 15),
+      ),
+      const SizedBox(height: 15),
+      FutureBuilder(
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData) {
+            return Column(children: [
+              CheckCurrentStatus(
+                accountInfo: snapshot.data!,
+              ),
+              const SizedBox(height: 10),
+              snapshot.data!.type == CloudType.none
+                  ? ElevatedButton(
+                      onPressed: () async {
+                        final appleDevice = Platform.isIOS || Platform.isMacOS;
+
+                        // 必ずお読みくださいを表示
+                        final dialogRes = await showDialog<bool>(
+                            context: context,
+                            builder: (builder) => const WarningDialog(
+                                  titile: "必ずお読みください",
+                                  content:
+                                      "クラウド同期機能を有効化すると、デバイスの起動時や新しいデータが保存されたときなどに、自動でクラウド上のデータと同期するようになります。\n複数端末で単語帳を同時に操作した場合、データに不具合が発生する可能性があるため、複数端末で同時に操作しないようにお願いします。\nデータは選択されたクラウドサービスに保存され、アカウントの容量が少量ですが利用されます。Leasyの運営元ではサーバーを用意していませんのでご注意ください。",
+                                  count: 10,
+                                ));
+                        if (!(dialogRes ?? false) || !mounted) return;
+
+                        // どこのクラウドにログインするか尋ねる
+                        final cloudType = await showDialog<CloudType>(
+                            context: context,
+                            builder: (context) {
+                              return SimpleDialog(
+                                title: const Text("接続するクラウドを選択"),
+                                children: [
+                                  SimpleDialogOption(
+                                    onPressed: () {
+                                      Navigator.pop(context, CloudType.google);
+                                    },
+                                    child: const Text("Google Drive"),
+                                  ),
+                                  appleDevice
+                                      ? SimpleDialogOption(
+                                          onPressed: () {
+                                            Navigator.pop(
+                                                context, CloudType.icloud);
+                                          },
+                                          child: const Text("iCloud Documents"),
+                                        )
+                                      : Container(),
+                                ],
+                              );
+                            });
+                        if (cloudType == null) return;
+
+                        try {
+                          if (!(await CloudService.signIn(cloudType))) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text("ログインがキャンセルされました")));
+                            }
+                            return;
+                          }
+                        } catch (e) {
+                          await CloudService.signOut();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content:
+                                    Text("ログインに失敗しました。もう一度お試しください。\n詳細: $e")));
+                          }
+                          return;
+                        }
+
+                        await saveToCloud();
+
+                        setState(() {
+                          _loadCloudData = CloudService.getCloudInfo();
+                        });
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("ログイン完了")));
+                        }
+                      },
+                      child: const Text("ログインする"))
+                  : FilledButton.icon(
+                      onPressed: () async {
+                        await CloudService.signOut();
+                        if (!mounted) return;
+
+                        setState(() {
+                          _loadCloudData = CloudService.getCloudInfo();
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("ログアウトしました")));
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text("ログアウト")),
+            ]);
+          } else {
+            CloudService.signOut();
+            return Align(
+              alignment: Alignment.center,
+              child: dialogLikeMessage(
+                colorScheme,
+                "エラーが発生しました",
+                "クラウドの情報が取得できませんでした。アカウントはログアウトされました。もう一度お試しください。\n詳細: ${snapshot.error.toString()}",
+              ),
+            );
+          }
+        },
+        future: _loadCloudData,
+      )
+    ]);
   }
 }
 
