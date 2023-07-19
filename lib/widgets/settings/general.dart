@@ -339,10 +339,16 @@ class _DataSettingsState extends State<DataSettings> {
 
 /// 警告ダイアログ
 class WarningDialog extends StatefulWidget {
-  const WarningDialog({super.key, required this.content, this.count});
+  const WarningDialog({
+    super.key,
+    required this.content,
+    this.count,
+    this.titile = "警告",
+  });
 
   final String content;
   final int? count;
+  final String titile;
 
   @override
   State<WarningDialog> createState() => _WarningDialogState();
@@ -390,7 +396,7 @@ class _WarningDialogState extends State<WarningDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("警告"),
+      title: Text(widget.titile),
       content: Text(widget.content),
       actions: [
         TextButton(
