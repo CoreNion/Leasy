@@ -78,12 +78,12 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   icloud_storage: 33b05299e26d1391d724da8d62860e702380a1cd
   package_info_plus: 02d7a575e80f194102bef286361c6c326e4c29ce
-  path_provider_foundation: eaf5b3e458fc0e5fbb9940fb09980e853fe058b8
-  shared_preferences_foundation: e2dae3258e06f44cc55f49d42024fd8dd03c590c
+  path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943
+  shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
   sqflite: a5789cceda41d54d23f31d6de539d65bb14100ea
   sqlite3: fd89671d969f3e73efe503ce203e28b016b58f68
   sqlite3_flutter_libs: 00a50503d69f7ab0fe85a5ff25b33082f4df4ce9
-  url_launcher_macos: 5335912b679c073563f29d89d33d10d459f95451
+  url_launcher_macos: d2691c7dd33ed713bf3544850a623080ec693d95
 
 PODFILE CHECKSUM: 52ce3598ba3a9d91a6b91c248849f83bab8bc598
 

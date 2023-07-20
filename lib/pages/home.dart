@@ -8,10 +8,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../class/cloud.dart';
 import '../class/subject.dart';
-import '../helper/cloud/common.dart';
 import '../helper/common.dart';
 import '../main.dart';
 import '../utility.dart';
+import '../widgets/account_button.dart';
 import 'setup.dart';
 import 'create.dart';
 import 'setting.dart';
@@ -33,6 +33,12 @@ class _HomeState extends State<Home> {
   GlobalKey subjectListKey = GlobalKey();
 
   late Future<void> _loadDB;
+
+  void rebuildUI() {
+    setState(() {
+      _loadDB = loadStudyDataBase();
+    });
+  }
 
   @override
   void initState() {
@@ -133,7 +139,6 @@ class _HomeState extends State<Home> {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               WidgetsBinding.instance.addPostFrameCallback((_) async {
-                bool hideButton = false;
                 late String content;
                 if (snapshot.error is SignInException) {
                   content = "サインイン情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
@@ -156,29 +161,12 @@ class _HomeState extends State<Home> {
                         title: const Text("エラー"),
                         content: Text(content),
                         actions: <Widget>[
+                          AccountButton(
+                              parentSetState: rebuildUI, reLogin: true),
                           TextButton(
-                            onPressed: hideButton
-                                ? null
-                                : () async {
-                                    setState(() => hideButton = true);
-                                    await CloudService.signOutTemporarily();
-                                    await CloudService.signIn(MyApp.cloudType);
-
-                                    if (!mounted) return;
-                                    Navigator.pop(context);
-                                    _loadDB = loadStudyDataBase();
-                                    setState(() {
-                                      _loading = true;
-                                    });
-                                  },
-                            child: const Text("再ログイン"),
-                          ),
-                          TextButton(
-                            onPressed: hideButton
-                                ? null
-                                : () {
-                                    Navigator.pop(context);
-                                  },
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
                             child: const Text("閉じる"),
                           ),
                         ],
