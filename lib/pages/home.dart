@@ -32,83 +32,171 @@ class _HomeState extends State<Home> {
 
   GlobalKey subjectListKey = GlobalKey();
 
-  late Future<void> _loadDB;
+  void firstInit() async {
+    // 初回セットアップ(初期画面)を表示
+    if (!(MyApp.prefs.getBool("setup") ?? false)) {
+      // 大画面デバイスではDialogで表示
+      if (checkLargeSC(context)) {
+        await showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (builder) {
+              return WillPopScope(
+                  onWillPop: () async => false,
+                  child: const Dialog(
+                    child: SizedBox(
+                      height: 600,
+                      width: 700,
+                      child: SetupPage(),
+                    ),
+                  ));
+            });
+      } else {
+        await showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            isScrollControlled: true,
+            enableDrag: false,
+            backgroundColor: Colors.transparent,
+            useSafeArea: true,
+            builder: (builder) => WillPopScope(
+                onWillPop: () async => false,
+                child: const SizedBox(height: 650, child: SetupPage())));
+      }
+      await MyApp.prefs.setBool("setup", true);
 
-  void rebuildUI() {
+      // Web版の場合はデータベースなどを完全に読み込むためにリロード
+      if (kIsWeb) html.window.location.reload();
+    } else if (MyApp.updated) {
+      ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+        padding: const EdgeInsets.all(10),
+        content: Text(
+            "アプリはv${MyApp.packageInfo.version}に更新されました。\nアップデートの内容は、サイトをご覧ください。"),
+        leading: const Icon(Icons.upgrade),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
+            child: const Text('閉じる'),
+          ),
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              launchUrl(Uri.https("github.com",
+                  "/CoreNion/Leasy/releases/tag/v${MyApp.packageInfo.version}"));
+            },
+            child: const Text('サイトを開く'),
+          ),
+        ],
+      ));
+    }
+    // データベース読み込み
+    try {
+      await loadStudyDataBase();
+    } catch (e) {
+      late String content;
+      bool cloudError = true;
+      if (e is SignInException) {
+        content =
+            "サインイン情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。\n詳細: ${e.toString()}";
+      } else if (e is AuthException || e is AccessDeniedException) {
+        content =
+            "認証情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。\n詳細: ${e.toString()}";
+      } else if (e is SocketException) {
+        content =
+            "サーバー接続時にエラーが発生しました。\nインターネット環境を確認してください。\n詳細: ${e.toString()}";
+      } else {
+        cloudError = false;
+        content = "データベースの読み込みに失敗しました。デバイスの空き容量などを確認してください。\n${e.toString()}";
+      }
+
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (builder) {
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: AlertDialog(
+              title: const Text("エラー"),
+              content: Text(content),
+              actions: <Widget>[
+                AccountButton(
+                    parentSetState: () {
+                      Navigator.pop(context);
+                      firstInit();
+                    },
+                    reLogin: true),
+                !cloudError
+                    ? TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          firstInit();
+                        },
+                        child: const Text("再試行"),
+                      )
+                    : Container(),
+                cloudError
+                    ? TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          MyApp.cloudType = CloudType.none;
+
+                          firstInit();
+                        },
+                        child: const Text("一時的にオフラインで使用"),
+                      )
+                    : Container(),
+                TextButton(
+                  child: const Text("データを抽出(サポート用)"),
+                  onPressed: () async {
+                    final res = await backupDataBase().catchError((e) async {
+                      await showDialog(
+                          context: context,
+                          builder: (builder) => AlertDialog(
+                                title: const Text("エラー"),
+                                content: Text(
+                                    "エラーが発生したため、データをバックアップ出来ませんでした。\n詳細:${e.toString()}"),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text("OK"))
+                                ],
+                              ));
+                      return false;
+                    });
+                    if (!res || !mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("データを保存しました。")));
+                  },
+                )
+              ],
+            ),
+          );
+        },
+      );
+      return;
+    }
+
     setState(() {
-      _loadDB = loadStudyDataBase();
+      _loading = false;
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _loadDB = loadStudyDataBase();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 起動時にダイナミックカラーが読み込まれない問題の対策
       MyApp.rootSetState(context, () {});
 
-      // 初回セットアップ(初期画面)を表示
-      if (!(MyApp.prefs.getBool("setup") ?? false)) {
-        // 大画面デバイスではDialogで表示
-        if (checkLargeSC(context)) {
-          await showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (builder) {
-                return WillPopScope(
-                    onWillPop: () async => false,
-                    child: const Dialog(
-                      child: SizedBox(
-                        height: 600,
-                        width: 700,
-                        child: SetupPage(),
-                      ),
-                    ));
-              });
-        } else {
-          await showModalBottomSheet(
-              isDismissible: false,
-              context: context,
-              isScrollControlled: true,
-              enableDrag: false,
-              backgroundColor: Colors.transparent,
-              useSafeArea: true,
-              builder: (builder) => WillPopScope(
-                  onWillPop: () async => false,
-                  child: const SizedBox(height: 650, child: SetupPage())));
-        }
-        await MyApp.prefs.setBool("setup", true);
-
-        // Web版の場合はデータベースなどを完全に読み込むためにリロード
-        if (kIsWeb) html.window.location.reload();
-        setState(() {});
-      } else if (MyApp.updated) {
-        ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
-          padding: const EdgeInsets.all(10),
-          content: Text(
-              "アプリはv${MyApp.packageInfo.version}に更新されました。\nアップデートの内容は、サイトをご覧ください。"),
-          leading: const Icon(Icons.upgrade),
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-              },
-              child: const Text('閉じる'),
-            ),
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                launchUrl(Uri.https("github.com",
-                    "/CoreNion/Leasy/releases/tag/v${MyApp.packageInfo.version}"));
-              },
-              child: const Text('サイトを開く'),
-            ),
-          ],
-        ));
-      }
+      firstInit();
     });
   }
 
@@ -134,59 +222,9 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text(pageTitles[pageIndex]),
       ),
-      body: FutureBuilder(
-          future: _loadDB,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                late String content;
-                if (snapshot.error is SignInException) {
-                  content = "サインイン情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
-                } else if (snapshot.error is AuthException ||
-                    snapshot.error is AccessDeniedException) {
-                  content = "認証情報が利用できませんでした。\n同期を再開するには、もう一度ログインしてください。";
-                } else if (snapshot.error is SocketException) {
-                  content = "サーバー接続時にエラーが発生しました。\nインターネット環境を確認してください。";
-                } else {
-                  content = "データベースの読み込みに失敗しました。\n${snapshot.error.toString()}";
-                }
-
-                await showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (builder) {
-                    return WillPopScope(
-                      onWillPop: () async => false,
-                      child: AlertDialog(
-                        title: const Text("エラー"),
-                        content: Text(content),
-                        actions: <Widget>[
-                          AccountButton(
-                              parentSetState: rebuildUI, reLogin: true),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text("閉じる"),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              });
-              return Container();
-            } else if (snapshot.connectionState == ConnectionState.done) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                setState(() {
-                  _loading = false;
-                });
-              });
-              return tabPages[pageIndex];
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          }),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : tabPages[pageIndex],
       bottomNavigationBar: _loading
           ? null
           : NavigationBar(
