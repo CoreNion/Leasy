@@ -213,6 +213,20 @@ class MiGoogleService {
     return studyList;
   }
 
+  /// ファイルが存在するか確認する
+  static Future<bool> fileExists(String fileName) async {
+    final driveAPI = await _initDriveApi();
+
+    // ドライブからファイルを取得
+    final fileList = (await driveAPI.files.list(
+            spaces: 'appDataFolder',
+            q: "name = '$fileName'",
+            $fields: 'files(id, name, createdTime)'))
+        .files;
+
+    return fileList != null && fileList.isNotEmpty;
+  }
+
   /// Googleドライブに指定されたファイルをアップロードする
   static Future<void> uploadToAppFolder(String uploadName, File file) async {
     final driveAPI = await _initDriveApi();

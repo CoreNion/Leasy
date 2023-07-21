@@ -183,4 +183,16 @@ class CloudService {
       await MiGoogleService.deleteCloudFile("study.db");
     }
   }
+
+  /// ファイルが存在するか確認する
+  static Future<bool> fileExists(String fileName) async {
+    final cloudType = MyApp.cloudType;
+    if (cloudType == CloudType.google) {
+      return await MiGoogleService.fileExists(fileName);
+    } else if (cloudType == CloudType.icloud) {
+      return await MiiCloudService.fileExists(fileName);
+    } else {
+      return false;
+    }
+  }
 }

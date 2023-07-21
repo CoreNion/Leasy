@@ -81,4 +81,12 @@ class MiiCloudService {
     await ICloudStorage.delete(
         containerId: _containerId, relativePath: fileName);
   }
+
+  /// ファイルが存在するか確認する
+  static Future<bool> fileExists(String fileName) async {
+    final list = await ICloudStorage.gather(
+      containerId: _containerId,
+    );
+    return list.first.relativePath == fileName ? true : false;
+  }
 }
