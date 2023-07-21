@@ -13,9 +13,20 @@ const _containerId = String.fromEnvironment("ICLOUD_CONTAINER_ID");
 class MiiCloudService {
   /// iCloudにログインする
   static Future<bool> signIn() async {
+    // 正常に動作するかのチェック
+    final tmpPath = (await getTemporaryDirectory()).path;
+    File(p.join(tmpPath, "test")).writeAsStringSync("test0423");
+
+    // アップロードテスト
+    await MiiCloudService.uploadFile("test", File(p.join(tmpPath, "test")));
+    // ダウンロードテスト
+    await MiiCloudService.downloadFile("test", File(p.join(tmpPath, "test2")));
+    // 削除
+    await MiiCloudService.deleteCloudFile("test");
+
     // クラウド同期の設定を保存
     MyApp.cloudType = CloudType.icloud;
-    MyApp.prefs.setString("CloudType", "icloud");
+    await MyApp.prefs.setString("CloudType", "icloud");
 
     return true;
   }
@@ -24,13 +35,28 @@ class MiiCloudService {
   static Future<void> signOut() async {
     // クラウド同期の設定を保存
     MyApp.cloudType = CloudType.none;
-    MyApp.prefs.setString("CloudType", "none");
+    await MyApp.prefs.setString("CloudType", "none");
   }
 
+  /// iCloudにファイルをアップロードする
   static Future<void> uploadFile(String uploadName, File file) async {
-    await ICloudStorage.upload(containerId: _containerId, filePath: file.path);
+    final completer = Completer();
+
+    await ICloudStorage.upload(
+      containerId: _containerId,
+      filePath: file.path,
+      onProgress: (stream) {
+        stream.listen((event) {
+          if (event >= 1) {
+            completer.complete();
+          }
+        });
+      },
+    );
+    await completer.future;
   }
 
+  /// iCloudからファイルをダウンロードする
   static Future<void> downloadFile(String downloadName, File file) async {
     final completer = Completer();
 
@@ -50,6 +76,7 @@ class MiiCloudService {
     await completer.future;
   }
 
+  /// iCloudのファイルを削除する
   static Future<void> deleteCloudFile(String fileName) async {
     await ICloudStorage.delete(
         containerId: _containerId, relativePath: fileName);

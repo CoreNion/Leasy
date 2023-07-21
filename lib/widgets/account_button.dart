@@ -112,8 +112,11 @@ class AccountButtonState extends State<AccountButton> {
                     } catch (e) {
                       await CloudService.signOut();
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("ログインに失敗しました。もう一度お試しください。\n詳細: $e")));
+                        final text = cloudType == CloudType.icloud
+                            ? "ログインに失敗しました。端末でApple IDに正しくログインされているか、iCloud Driveが有効化されているかを確認してください。\n詳細: $e"
+                            : "ログインに失敗しました。後でもう一度お試しください。\n詳細: $e";
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text(text)));
                         setState(() {
                           loading = false;
                         });
