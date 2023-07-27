@@ -230,30 +230,33 @@ class _DataSettingsState extends State<DataSettings> {
               },
             ),
             ListTile(
-              title: const Text("クラウドと同期"),
-              subtitle:
-                  const Text("学習帳データをクラウドサービスに保存し、複数の端末でも同じ学習帳を利用できるようにします。"),
-              trailing: Icon(
-                Icons.cloud,
-                color: colorScheme.primary,
-              ),
-              onTap: () async {
-                if (checkLargeSC(context)) {
-                  showDialog(
-                      context: context,
-                      builder: (builder) {
-                        return const Dialog(
-                            child: FractionallySizedBox(
-                          widthFactor: 0.6,
-                          child: CloudSyncPage(),
-                        ));
-                      });
-                } else {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const CloudSyncPage()));
-                }
-              },
-            ),
+                title: const Text("クラウド同期"),
+                subtitle:
+                    const Text("学習帳データをクラウドサービスに保存し、複数の端末でも同じ学習帳を利用できるようにします。"),
+                trailing: Icon(
+                  Icons.cloud,
+                  color: colorScheme.primary,
+                ),
+                onTap: () async {
+                  if (checkLargeSC(context)) {
+                    await showDialog(
+                        context: context,
+                        builder: (builder) {
+                          return Dialog(
+                              child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 700.0),
+                            child: const CloudSyncPage(),
+                          ));
+                        });
+                  } else {
+                    await showModalBottomSheet(
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (context) => const CloudSyncPage());
+                  }
+                }),
             ListTile(
                 title: const Text("設定を初期化"),
                 subtitle: const Text("設定を初期化します。学習データは削除されません。"),
