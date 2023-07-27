@@ -123,12 +123,14 @@ class _HomeState extends State<Home> {
               title: const Text("エラー"),
               content: Text(content),
               actions: <Widget>[
-                AccountButton(
-                    parentSetState: () {
-                      Navigator.pop(context);
-                      firstInit();
-                    },
-                    reLogin: true),
+                !(MyApp.cloudType == CloudType.none)
+                    ? AccountButton(
+                        parentSetState: () {
+                          Navigator.pop(context);
+                          firstInit();
+                        },
+                        reLogin: true)
+                    : Container(),
                 !cloudError
                     ? TextButton(
                         onPressed: () {
@@ -149,32 +151,35 @@ class _HomeState extends State<Home> {
                         child: const Text("一時的にオフラインで使用"),
                       )
                     : Container(),
-                TextButton(
-                  child: const Text("データを抽出(サポート用)"),
-                  onPressed: () async {
-                    final res = await backupDataBase().catchError((e) async {
-                      await showDialog(
-                          context: context,
-                          builder: (builder) => AlertDialog(
-                                title: const Text("エラー"),
-                                content: Text(
-                                    "エラーが発生したため、データをバックアップ出来ませんでした。\n詳細:${e.toString()}"),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text("OK"))
-                                ],
-                              ));
-                      return false;
-                    });
-                    if (!res || !mounted) return;
+                !cloudError
+                    ? TextButton(
+                        child: const Text("データを抽出(サポート用)"),
+                        onPressed: () async {
+                          final res =
+                              await backupDataBase().catchError((e) async {
+                            await showDialog(
+                                context: context,
+                                builder: (builder) => AlertDialog(
+                                      title: const Text("エラー"),
+                                      content: Text(
+                                          "エラーが発生したため、データをバックアップ出来ませんでした。\n詳細:${e.toString()}"),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text("OK"))
+                                      ],
+                                    ));
+                            return false;
+                          });
+                          if (!res || !mounted) return;
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("データを保存しました。")));
-                  },
-                )
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("データを保存しました。")));
+                        },
+                      )
+                    : Container(),
               ],
             ),
           );

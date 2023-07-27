@@ -94,12 +94,8 @@ Future<void> deleteStudyDataBase() async {
 
 /// データベースをバックアップする関数
 Future<bool> backupDataBase() async {
-  final path = studyDB.path;
   bool result = true;
-  // DataBaseが開かれている場合は閉じる
-  if (studyDB.isOpen) {
-    await studyDB.close();
-  }
+  final path = await getDataBasePath();
 
   // 保存処理
   if (kIsWeb) {
@@ -133,8 +129,6 @@ Future<bool> backupDataBase() async {
     }
   }
 
-  // データベースの再読み込み
-  await loadStudyDataBase();
   return result;
 }
 

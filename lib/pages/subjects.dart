@@ -266,8 +266,13 @@ class _SubjectListPageState extends State<SubjectListPage> {
             child: CircularProgressIndicator(),
           );
         } else {
-          return const Center(
-            child: Text("？"),
+          return Align(
+            alignment: Alignment.center,
+            child: dialogLikeMessage(
+              colorScheme,
+              "エラーが発生しました",
+              "教科情報が取得できませんでした。単語帳データが破損している可能性があります。\n詳細: ${snapshot.error.toString()}",
+            ),
           );
         }
       },
