@@ -22,6 +22,16 @@ import 'dummy.dart'
 
 late Database studyDB;
 
+/// データベースのデフォルトのパスを取得する関数
+Future<String> getDataBasePath() async {
+  if (kIsWeb) {
+    return "study.db";
+  } else {
+    final path = (await getApplicationSupportDirectory()).path;
+    return p.join(path, "study.db");
+  }
+}
+
 /// データベースを読み込み・作成する関数
 Future<void> loadStudyDataBase() async {
   final options = OpenDatabaseOptions(

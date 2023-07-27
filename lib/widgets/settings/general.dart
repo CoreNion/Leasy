@@ -341,47 +341,68 @@ class _DataSettingsState extends State<DataSettings> {
 class WarningDialog extends StatefulWidget {
   const WarningDialog({
     super.key,
-    required this.content,
-    this.count,
     this.titile = "警告",
+    required this.content,
+    this.count = 5,
+    this.allButtonCount = false,
+    this.yesButtonText = "はい",
+    this.noButtonText = "いいえ",
   });
 
-  final String content;
-  final int? count;
+  // タイトル
   final String titile;
+  // 警告文
+  final String content;
+
+  // ボタンを解放するまでの秒数
+  final int count;
+  // 全てのボタンに制限を設けるか
+  final bool allButtonCount;
+
+  // Trueを返すボタンのテキスト
+  final String yesButtonText;
+  // Falseを返すボタンのテキスト
+  final String noButtonText;
 
   @override
   State<WarningDialog> createState() => _WarningDialogState();
 }
 
 class _WarningDialogState extends State<WarningDialog> {
-  String yesButtonText = "はい (5)";
-  bool openYesButton = false;
+  late String yesButtonText;
+  late String noButtonText;
+  bool openButton = false;
 
-  int count = 5;
+  late int count;
+  late bool allButtonCount;
+
   late Timer timer;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.count != null) {
-      count = widget.count!;
-      yesButtonText = "はい ($count)";
-    }
+    count = widget.count;
+    allButtonCount = widget.allButtonCount;
+
+    yesButtonText = "${widget.yesButtonText} ($count)";
+    noButtonText = '${widget.noButtonText}${allButtonCount ? " ($count)" : ""}';
 
     // 待たせるTimer
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       count = count - 1;
       if (count == 0) {
         setState(() {
-          yesButtonText = "はい";
-          openYesButton = true;
+          yesButtonText = widget.yesButtonText;
+          noButtonText = widget.noButtonText;
+          openButton = true;
         });
         timer.cancel();
       } else {
         setState(() {
-          yesButtonText = "はい ($count)";
+          yesButtonText = "${widget.yesButtonText} ($count)";
+          noButtonText =
+              '${widget.noButtonText}${allButtonCount ? " ($count)" : ""}';
         });
       }
     });
@@ -393,6 +414,11 @@ class _WarningDialogState extends State<WarningDialog> {
     super.dispose();
   }
 
+  void onFalse() {
+    timer.cancel();
+    Navigator.pop(context, false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -401,18 +427,19 @@ class _WarningDialogState extends State<WarningDialog> {
       actions: [
         TextButton(
             // 待ってからボタンを押せるようにする
-            onPressed: openYesButton
+            onPressed: openButton
                 ? () {
                     Navigator.pop(context, true);
                   }
                 : null,
             child: Text(yesButtonText)),
         TextButton(
-            onPressed: () {
-              timer.cancel();
-              Navigator.pop(context, false);
-            },
-            child: const Text("いいえ")),
+            onPressed: widget.allButtonCount
+                ? openButton
+                    ? onFalse
+                    : null
+                : onFalse,
+            child: Text(noButtonText)),
       ],
     );
   }

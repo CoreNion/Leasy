@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../class/cloud.dart';
 import '../helper/cloud/common.dart';
+import '../helper/common.dart';
 import '../main.dart';
 import 'settings/general.dart';
 
@@ -124,7 +125,41 @@ class AccountButtonState extends State<AccountButton> {
                       return;
                     }
 
+                    // 新規ログイン時用の処理
                     if (!widget.reLogin) {
+                      // クラウド上にファイルがある場合はダウンロードするか尋ねる
+                      if (await CloudService.fileExists("study.db")) {
+                        if (!mounted) return;
+                        final res = await showDialog<bool>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (builder) => const WarningDialog(
+                                  content:
+                                      "クラウドにデータが存在します。端末に残っているデータを削除し、クラウド上のデータを端末で利用しますか？\nまたは、クラウド上のデータを削除し、新たに端末上のデータをクラウドにアップロードしますか？",
+                                  count: 7,
+                                  allButtonCount: true,
+                                  yesButtonText: "クラウド上のデータを利用",
+                                  noButtonText: "端末上のデータを利用",
+                                ));
+                        if (res == true) {
+                          try {
+                            await CloudService.downloadFile(
+                                "study.db", File(await getDataBasePath()));
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(
+                                    "ログインには成功しましたが、クラウドからのダウンロードに失敗しました。\n詳細: $e")));
+                            setState(() {
+                              loading = false;
+                            });
+                          }
+                          widget.parentSetState();
+                          return;
+                        }
+                      }
+
+                      // クラウドにデータをアップロード
                       try {
                         await saveToCloud();
                       } catch (e) {
@@ -145,8 +180,8 @@ class AccountButtonState extends State<AccountButton> {
                     });
                     widget.parentSetState();
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("ログイン完了")));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("ログインに成功し、クラウド同期が有効になりました！")));
                     }
                   }
                 : null,
