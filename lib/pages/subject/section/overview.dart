@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mimosa/class/study.dart';
+import 'package:mimosa/pages/subject/study_setting.dart';
+import 'package:mimosa/widgets/dialog.dart';
 
 import '../../../helper/question.dart';
 import '../../../helper/section.dart';
@@ -25,9 +28,6 @@ class _SectionPageState extends State<SectionPage> {
 
   /// 現在のセクションの情報
   late SectionInfo secInfo;
-
-  // 前回間違えた問題のみ学習する
-  bool onlyIncorrect = true;
 
   @override
   void initState() {
@@ -171,34 +171,7 @@ class _SectionPageState extends State<SectionPage> {
                       child: FilledButton(
                         onPressed: _questionSummaries.isNotEmpty
                             ? () async {
-                                // 不正解のみの場合、不正解の問題のみ送る
-                                final sendQs = onlyIncorrect
-                                    ? _questionSummaries.entries
-                                        .where((entry) =>
-                                            !(entry.value.latestCorrect ??
-                                                false))
-                                        .map((entry) => entry.key)
-                                        .toList()
-                                    : _questionSummaries.keys.toList();
-                                if (sendQs.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              '全ての問題が正解しているため、学習モードは実行されません。\nテストを行うか、不正解問題のみ学習をオフにしてください。')));
-                                  return;
-                                }
-
-                                await updateRecord(
-                                    await Navigator.of(context)
-                                        .push<Map<int, bool>?>(
-                                            MaterialPageRoute(
-                                      builder: (context) => SectionStudyPage(
-                                        title: secInfo.title,
-                                        questionIDs: sendQs,
-                                        testMode: false,
-                                      ),
-                                    )),
-                                    false);
+                                await doStudy(false);
                               }
                             : null,
                         child: const Text("学習を開始する"),
@@ -208,36 +181,12 @@ class _SectionPageState extends State<SectionPage> {
                       child: ElevatedButton(
                           onPressed: _questionSummaries.isNotEmpty
                               ? () async {
-                                  updateRecord(
-                                      await Navigator.of(context)
-                                          .push<Map<int, bool>?>(
-                                              MaterialPageRoute(
-                                        builder: (context) => SectionStudyPage(
-                                          title: secInfo.title,
-                                          questionIDs:
-                                              _questionSummaries.keys.toList(),
-                                          testMode: true,
-                                        ),
-                                      )),
-                                      true);
+                                  await doStudy(true);
                                 }
                               : null,
                           child: const Text("テストを開始する"))),
                 ],
               ),
-              SwitchListTile(
-                  title: const Text("不正解・新規作成の問題のみ学習"),
-                  secondary: Icon(
-                    Icons.error,
-                    color: colorScheme.brightness == Brightness.light
-                        ? Colors.orange
-                        : Colors.yellow,
-                  ),
-                  subtitle: const Text("テストモードでは適用されませんが、結果は反映されます。"),
-                  value: onlyIncorrect,
-                  onChanged: (val) => setState(() {
-                        onlyIncorrect = val;
-                      })),
               const Divider(),
               _questionSummaries.isNotEmpty
                   ? ListView.builder(
@@ -434,5 +383,29 @@ class _SectionPageState extends State<SectionPage> {
     }
 
     _endLoading();
+  }
+
+  /// 学習開始系ボタンが押されたときの動作
+  Future<void> doStudy(bool testButton) async {
+    // 学習設定を表示
+    final sett = await showResponsiveDialog(
+        context,
+        StudySettingPage(
+            studyMode: testButton ? StudyMode.test : StudyMode.study,
+            questionsOrSections: _questionSummaries.values.toList()),
+        barTitle: "学習設定") as StudySettings?;
+    if (sett == null || !mounted) return;
+
+    // 設定内容をもとに学習を開始
+    final result =
+        await Navigator.of(context).push<Map<int, bool>?>(MaterialPageRoute(
+      builder: (context) => SectionStudyPage(
+        title: secInfo.title,
+        questionIDs: sett.questionIDs,
+        testMode: sett.studyMode == StudyMode.test,
+      ),
+    ));
+
+    await updateRecord(result, sett.studyMode == StudyMode.test);
   }
 }
