@@ -163,11 +163,9 @@ class _StudySettingPageState extends State<StudySettingPage>
 
                             if (origQuestions.isEmpty) {
                               // 教科にあるすべての問題を取得
-                              final qIDs = await getMiQuestionsID(
-                                  origSections.map((e) => e.tableID).toList());
-                              for (final qID in qIDs) {
-                                origQuestions
-                                    .addAll(await getMiQuestionSummaries(qID));
+                              for (final sec in origSections) {
+                                origQuestions.addAll(
+                                    await getMiQuestionSummaries(sec.tableID));
                               }
                             }
 
