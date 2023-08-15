@@ -12,11 +12,29 @@ class SectionInfo {
   /// テーブルのID
   final int tableID;
 
+  /// 完了率 (データベース非対応)
+  double? completionRate;
+
   SectionInfo(
       {required this.subjectID,
       required this.title,
       required this.latestStudyMode,
-      required this.tableID});
+      required this.tableID,
+      completionRate});
+
+  SectionInfo copyWith(
+      {int? subjectID,
+      String? title,
+      String? latestStudyMode,
+      int? tableID,
+      double? completionRate}) {
+    return SectionInfo(
+        subjectID: subjectID ?? this.subjectID,
+        title: title ?? this.title,
+        latestStudyMode: latestStudyMode ?? this.latestStudyMode,
+        tableID: tableID ?? this.tableID,
+        completionRate: completionRate ?? this.completionRate);
+  }
 
   Map<String, Object?> toMap() {
     {

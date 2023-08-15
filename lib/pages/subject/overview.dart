@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../class/section.dart';
+import '../../class/study.dart';
 import '../../class/subject.dart';
-import '../../helper/question.dart';
 import '../../helper/section.dart';
 import '../../helper/subject.dart';
+import '../../widgets/dialog.dart';
 import '../../widgets/overview.dart';
 import 'section/overview.dart';
 import './study.dart';
+import 'study_setting.dart';
 
 class SubjectOverview extends StatefulWidget {
   final SubjectInfo subInfo;
@@ -19,7 +21,7 @@ class SubjectOverview extends StatefulWidget {
 }
 
 class _SubjectOverviewState extends State<SubjectOverview> {
-  late Map<int, MapEntry<String, double>> _sectionSummaries = {};
+  List<SectionInfo> _sectionInfos = [];
 
   bool loading = true;
 
@@ -33,7 +35,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 保存されているセクションをリストに追加
-      _sectionSummaries = await getSectionSummaries(widget.subInfo.id);
+      _sectionInfos = await getSectionInfos(widget.subInfo.id);
       setState(() => loading = false);
     });
   }
@@ -72,28 +74,23 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                 Padding(
                     padding: const EdgeInsets.all(7.0),
                     child: FilledButton(
-                        onPressed: _sectionSummaries.isNotEmpty
+                        onPressed: _sectionInfos.isNotEmpty
                             ? () async {
+                                // 学習設定を表示
+                                final sett = await showResponsiveDialog(
+                                    context,
+                                    StudySettingPage(
+                                        studyMode: StudyMode.test,
+                                        questionsOrSections: _sectionInfos),
+                                    barTitle: "学習設定") as StudySettings?;
+                                if (sett == null || !mounted) return;
+
                                 setState(() => loading = true);
-
-                                final qIDs = await getMiQuestionsID(
-                                    _sectionSummaries.keys.toList());
-                                if (!mounted) return;
-
-                                if (qIDs.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              '問題が1つも存在しません。テストを行うには、まずは問題を作成してください。')));
-                                  setState(() => loading = false);
-                                  return;
-                                }
-
                                 final record = await Navigator.of(context)
                                     .push<Map<int, bool>>(MaterialPageRoute(
                                   builder: (context) => SectionStudyPage(
-                                    questionIDs: qIDs,
-                                    testMode: true,
+                                    questionIDs: sett.questionIDs,
+                                    testMode: sett.studyMode == StudyMode.test,
                                   ),
                                 ));
                                 if (record == null) {
@@ -131,25 +128,25 @@ class _SubjectOverviewState extends State<SubjectOverview> {
               ],
             ),
             Text(
-              "セクション数:${_sectionSummaries.length}",
+              "セクション数:${_sectionInfos.length}",
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
             const Divider(),
-            _sectionSummaries.isNotEmpty
+            _sectionInfos.isNotEmpty
                 ? ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: _sectionSummaries.length,
+                    itemCount: _sectionInfos.length,
                     itemBuilder: ((context, index) {
                       // セクションID
-                      final id = _sectionSummaries.keys.elementAt(index);
+                      final id = _sectionInfos[index].tableID;
 
                       // セクションの完了率
-                      final vals = _sectionSummaries.values.elementAt(index);
-                      final ratio = vals.value.isNaN ? null : vals.value;
+                      double? ratio = _sectionInfos[index].completionRate;
+                      if (ratio != null && ratio.isNaN) ratio = null;
 
                       // セクションのタイトル
-                      final title = vals.key;
+                      final title = _sectionInfos[index].title;
                       // リスト用のタイトル (完了率を含む)
                       final exTitle =
                           "$title (${ratio != null ? '${(ratio * 100).ceil()}%完了' : '問題未作成'})";
@@ -158,9 +155,9 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                         key: Key(id.toString()),
                         confirmDismiss: (direction) async {
                           if (direction == DismissDirection.startToEnd) {
-                            await showRemoveDialog(title, id);
+                            await showRemoveDialog(title, index);
                           } else if (direction == DismissDirection.endToStart) {
-                            await showRenameDialog(title, id);
+                            await showRenameDialog(title, index);
                           }
                           return null;
                         },
@@ -198,7 +195,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                     ]),
                                     onTap: () => WidgetsBinding.instance
                                         .addPostFrameCallback((_) =>
-                                            showRenameDialog(title, id))),
+                                            showRenameDialog(title, index))),
                                 PopupMenuItem(
                                     value: 0,
                                     child: Row(children: [
@@ -208,8 +205,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                       const Text("削除")
                                     ]),
                                     onTap: () => WidgetsBinding.instance
-                                        .addPostFrameCallback(
-                                            (_) => showRemoveDialog(title, id)))
+                                        .addPostFrameCallback((_) =>
+                                            showRemoveDialog(title, index)))
                               ],
                             );
                           },
@@ -275,10 +272,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
 
                             // セクション一覧に追加
                             setState(() {
-                              _sectionSummaries.addAll({
-                                secInfo.tableID:
-                                    MapEntry(secInfo.title, double.nan)
-                              });
+                              _sectionInfos.add(secInfo);
                             });
                             Navigator.pop(context);
 
@@ -319,7 +313,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
   }
 
   /// セクション名を変更するダイアログを表示する
-  Future<void> showRenameDialog(String oldTitle, int id) async {
+  Future<void> showRenameDialog(String oldTitle, int index) async {
     final formKey = GlobalKey<FormState>();
     late String newTitle;
 
@@ -369,14 +363,15 @@ class _SubjectOverviewState extends State<SubjectOverview> {
       return;
     }
 
-    // 完了率を取得し、MapEntryを新しいタイトルのエントリーに置き換え
-    final oldEntry = _sectionSummaries[id]!.value;
+    // 更新を適用
     setState(() {
-      _sectionSummaries[id] = MapEntry(newTitle, oldEntry);
+      _sectionInfos[index] = _sectionInfos[index].copyWith(
+        title: newTitle,
+      );
     });
 
     // DB上の名前を変更
-    renameSectionName(id, newTitle).then((value) {
+    renameSectionName(_sectionInfos[index].tableID, newTitle).then((value) {
       _endLoading();
 
       ScaffoldMessenger.of(context)
@@ -385,7 +380,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     return;
   }
 
-  Future<void> showRemoveDialog(String title, int id) async {
+  Future<void> showRemoveDialog(String title, int index) async {
     setState(() => loading = true);
     final res = await showDialog<bool?>(
         context: context,
@@ -410,7 +405,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
       return;
     }
 
-    removeSection(widget.subInfo.id, id).then((value) {
+    removeSection(widget.subInfo.id, _sectionInfos[index].tableID)
+        .then((value) {
       _endLoading();
 
       ScaffoldMessenger.of(context)
@@ -418,7 +414,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     });
 
     setState(() {
-      _sectionSummaries.remove(id);
+      _sectionInfos.removeAt(index);
     });
     return;
   }
