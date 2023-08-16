@@ -5,12 +5,20 @@ import '../../class/section.dart';
 import '../../class/study.dart';
 import '../../helper/question.dart';
 
+/// 学習モードを選択するページ
 class StudySettingPage<T> extends StatefulWidget {
   const StudySettingPage(
-      {super.key, required this.studyMode, required this.questionsOrSections});
+      {super.key,
+      required this.studyMode,
+      required this.questionsOrSections,
+      this.endToDo});
 
+  // 最初に選択されている学習モード
   final StudyMode studyMode;
+  // セクション情報または問題情報
   final List<T> questionsOrSections;
+  // 学習が終了したときに実行する処理 (ページとして扱わない場合の処理)
+  final Function(StudySettings)? endToDo;
 
   @override
   State<StudySettingPage> createState() => _StudySettingPageState();
@@ -198,13 +206,23 @@ class _StudySettingPageState extends State<StudySettingPage>
                                 errorMassage = "条件に合う問題が見つかりませんでした。";
                               });
                               playAnimation();
+                              return;
+                            }
+
+                            setState(() {
+                              loading = false;
+                            });
+
+                            // 設定を所定の方向に送る
+                            final settings = StudySettings(selectedStudyMode,
+                                sendQuestions.map((e) => e.id).toList());
+                            if (widget.endToDo != null) {
+                              // ToDoを実行
+                              widget.endToDo!(settings);
                             } else {
                               // 前ページに結果を返す
                               if (!mounted) return;
-                              Navigator.pop(
-                                  context,
-                                  StudySettings(selectedStudyMode,
-                                      sendQuestions.map((e) => e.id).toList()));
+                              Navigator.pop(context, settings);
                             }
                           },
                     icon: loading

@@ -87,39 +87,42 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                             flex: 6,
                             child: Column(children: [
                               Container(
-                                  margin: const EdgeInsets.all(20),
-                                  child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                margin: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Text(widget.subInfo.title,
+                                        style: const TextStyle(
+                                          fontSize: 35,
+                                        )),
+                                    const SizedBox(height: 10),
+                                    Row(
                                       mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        Text(widget.subInfo.title,
-                                            style: const TextStyle(
-                                              fontSize: 35,
-                                            )),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                  "${(_completionRate * 100).floor()}%完了",
-                                                  style: const TextStyle(
-                                                      fontSize: 17)),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                  child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
-                                                      child: SizedBox(
-                                                          height: 13,
-                                                          child: LinearProgressIndicator(
-                                                              value:
-                                                                  _completionRate))))
-                                            ]),
-                                      ])),
+                                        Text(
+                                            "${(_completionRate * 100).floor()}%完了",
+                                            style:
+                                                const TextStyle(fontSize: 17)),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            child: SizedBox(
+                                              height: 13,
+                                              child: LinearProgressIndicator(
+                                                  value: _completionRate),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Container(
                                   margin: const EdgeInsets.all(10),
                                   padding: const EdgeInsets.all(10),
@@ -135,11 +138,13 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                       children: [
                                         const Expanded(
                                           child: Center(
-                                              child: Text("セクション一覧",
-                                                  style: TextStyle(
-                                                      fontSize: 19,
-                                                      fontWeight:
-                                                          FontWeight.bold))),
+                                            child: Text(
+                                              "セクション一覧",
+                                              style: TextStyle(
+                                                  fontSize: 19,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
                                         ),
                                         IconButton.filled(
                                           onPressed: showCreateSectionDialog,
@@ -162,27 +167,32 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                   subInfo.latestCorrect,
                                   subInfo.latestIncorrect),
                               Container(
-                                  margin: const EdgeInsets.all(10),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                      color: colorScheme.background,
-                                      border: Border.all(
-                                          color: colorScheme.outline),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(10))),
-                                  child: Column(
-                                    children: [
-                                      const Text("教科全体での学習を始める",
-                                          style: TextStyle(
-                                              fontSize: 19,
-                                              fontWeight: FontWeight.bold)),
-                                      const Divider(),
-                                      const SizedBox(height: 10),
-                                      StudySettingPage(
-                                          studyMode: StudyMode.study,
-                                          questionsOrSections: _sectionInfos)
-                                    ],
-                                  ))
+                                margin: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                    color: colorScheme.background,
+                                    border:
+                                        Border.all(color: colorScheme.outline),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10))),
+                                child: Column(
+                                  children: [
+                                    const Text("教科全体での学習を始める",
+                                        style: TextStyle(
+                                            fontSize: 19,
+                                            fontWeight: FontWeight.bold)),
+                                    const Divider(),
+                                    const SizedBox(height: 10),
+                                    _sectionInfos.isNotEmpty
+                                        ? StudySettingPage(
+                                            studyMode: StudyMode.study,
+                                            questionsOrSections: _sectionInfos,
+                                            endToDo: doStudy,
+                                          )
+                                        : const LinearProgressIndicator()
+                                  ],
+                                ),
+                              ),
                             ]),
                           ),
                         ],
@@ -216,47 +226,7 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                               return;
                                             }
 
-                                            setState(() => loading = true);
-                                            final record =
-                                                await Navigator.of(context)
-                                                    .push<Map<int, bool>>(
-                                                        MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SectionStudyPage(
-                                                questionIDs: sett.questionIDs,
-                                                testMode: sett.studyMode ==
-                                                    StudyMode.test,
-                                              ),
-                                            ));
-                                            if (record == null) {
-                                              setState(() => loading = false);
-                                              return;
-                                            }
-
-                                            // 記録を保存
-                                            final correct = record.values
-                                                .where((entry) => entry)
-                                                .length;
-                                            final inCorrect = record.values
-                                                .where((entry) => !(entry))
-                                                .length;
-
-                                            // UI更新
-                                            setState(() {
-                                              subInfo = SubjectInfo(
-                                                  title: subInfo.title,
-                                                  id: subInfo.id,
-                                                  latestCorrect: correct,
-                                                  latestIncorrect: inCorrect);
-                                            });
-
-                                            // 記録を保存
-                                            updateSubjectRecord(subInfo.id,
-                                                    correct, inCorrect)
-                                                .then((value) {
-                                              if (!mounted) return;
-                                              setState(() => loading = false);
-                                            });
+                                            await doStudy(sett);
                                           }
                                         : null,
                                     child: const Text("テストを開始する"))),
@@ -392,6 +362,44 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                     child: CircularProgressIndicator(),
                   ),
           ]));
+  }
+
+  /// 学習を開始する動作
+  Future<void> doStudy(StudySettings settings) async {
+    setState(() => loading = true);
+
+    // 学習を開始し、記録を取得
+    final record =
+        await Navigator.of(context).push<Map<int, bool>>(MaterialPageRoute(
+      builder: (context) => SectionStudyPage(
+        questionIDs: settings.questionIDs,
+        testMode: settings.studyMode == StudyMode.test,
+        title: settings.studyMode.toString(),
+      ),
+    ));
+    if (record == null) {
+      setState(() => loading = false);
+      return;
+    }
+
+    // 記録を保存
+    final correct = record.values.where((entry) => entry).length;
+    final inCorrect = record.values.where((entry) => !(entry)).length;
+
+    // UI更新
+    setState(() {
+      subInfo = SubjectInfo(
+          title: subInfo.title,
+          id: subInfo.id,
+          latestCorrect: correct,
+          latestIncorrect: inCorrect);
+    });
+
+    // 記録を保存
+    updateSubjectRecord(subInfo.id, correct, inCorrect).then((value) {
+      if (!mounted) return;
+      setState(() => loading = false);
+    });
   }
 
   /// セクションを作成するダイアログを表示する
