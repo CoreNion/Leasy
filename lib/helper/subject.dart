@@ -53,3 +53,27 @@ Future<void> updateSubjectRecord(
 
   await saveToCloud();
 }
+
+/// 教科の完了率を計算する
+Future<double> calcSubjectCompletionRate(int id) async {
+  int questionLen = 0;
+  int correctLen = 0;
+
+  // セクション一覧を取得
+  final secInfos = await getSectionInfos(id);
+  // 全問題数と正解数を収集
+  for (var secInfo in secInfos) {
+    final results = await studyDB.query('Questions',
+        columns: [
+          "latestCorrect",
+        ],
+        where: "sectionID = ?",
+        whereArgs: [secInfo.tableID]);
+
+    questionLen += results.length;
+    correctLen +=
+        results.where((element) => element["latestCorrect"] == 1).length;
+  }
+
+  return (correctLen / questionLen);
+}

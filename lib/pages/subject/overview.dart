@@ -23,6 +23,7 @@ class SubjectOverview extends StatefulWidget {
 
 class _SubjectOverviewState extends State<SubjectOverview> {
   List<SectionInfo> _sectionInfos = [];
+  double _completionRate = 0;
 
   bool loading = true;
   late ColorScheme colorScheme;
@@ -39,6 +40,10 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 保存されているセクションをリストに追加
       _sectionInfos = await getSectionInfos(widget.subInfo.id);
+      // 教科の完了率を計算
+      _completionRate = (await calcSubjectCompletionRate(widget.subInfo.id));
+
+      if (!mounted) return;
       setState(() => loading = false);
     });
   }
@@ -98,7 +103,8 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.center,
                                             children: [
-                                              Text("50%完了",
+                                              Text(
+                                                  "${(_completionRate * 100).floor()}%完了",
                                                   style: const TextStyle(
                                                       fontSize: 17)),
                                               const SizedBox(width: 10),
@@ -109,8 +115,9 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                                               20),
                                                       child: SizedBox(
                                                           height: 13,
-                                                          child:
-                                                              LinearProgressIndicator())))
+                                                          child: LinearProgressIndicator(
+                                                              value:
+                                                                  _completionRate))))
                                             ]),
                                       ])),
                               Container(
@@ -205,8 +212,9 @@ class _SubjectOverviewState extends State<SubjectOverview> {
                                                                 _sectionInfos),
                                                         barTitle: "学習設定")
                                                     as StudySettings?;
-                                            if (sett == null || !mounted)
+                                            if (sett == null || !mounted) {
                                               return;
+                                            }
 
                                             setState(() => loading = true);
                                             final record =
@@ -543,11 +551,13 @@ class _SubjectOverviewState extends State<SubjectOverview> {
     }
 
     removeSection(widget.subInfo.id, _sectionInfos[index].tableID)
-        .then((value) {
+        .then((value) async {
       _endLoading();
-
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('削除しました')));
+
+      _completionRate = (await calcSubjectCompletionRate(widget.subInfo.id));
+      setState(() {});
     });
 
     setState(() {
