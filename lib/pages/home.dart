@@ -270,7 +270,7 @@ class _HomeState extends State<Home> {
                           context,
                           MaterialPageRoute(
                               builder: ((context) =>
-                                  SubjectOverview(subInfo: subInfo!))));
+                                  SubSecOverview(info: subInfo!))));
                     }
                   }
                 } else {

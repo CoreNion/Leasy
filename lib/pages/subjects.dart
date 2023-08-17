@@ -186,7 +186,7 @@ class _SubjectListPageState extends State<SubjectListPage> {
                         context,
                         MaterialPageRoute(
                             builder: (builder) =>
-                                SubjectOverview(subInfo: currentInfo)));
+                                SubSecOverview(info: currentInfo)));
                   }),
                   onLongPress: () {
                     HapticFeedback.lightImpact();
