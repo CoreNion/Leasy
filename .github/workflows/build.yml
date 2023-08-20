@@ -26,7 +26,7 @@ jobs:
         run: flutter pub get
 
       - name: build ipa
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --dart-define=GOOGLE_CLIENT_ID_IOS=${{ secrets.GOOGLE_CLIENT_ID_IOS }} --dart-define=ICLOUD_CONTAINER_ID=${{ secrets.ICLOUD_CONTAINER_ID }}
       
       - name: mkdir payload and copy .app to Payload/
         run: |
@@ -71,3 +71,55 @@ jobs:
         with:
           name: android
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  build_macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter_mac
+          cache-path: ${{ runner.tool_cache }}/flutter_mac
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: build macos
+        run: flutter build macos --release --dart-define=GOOGLE_CLIENT_ID_DESKTOP=${{ secrets.GOOGLE_CLIENT_ID_DESKTOP }} --dart-define=GOOGLE_CLIENT_SECRET_DESKTOP=${{ secrets.GOOGLE_CLIENT_SECRET_DESKTOP }} --dart-define=ICLOUD_CONTAINER_ID=${{ secrets.ICLOUD_CONTAINER_ID }}
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos
+          path: build/macos/Build/Products/Release/Runner.app
+  
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter_windows
+          cache-path: ${{ runner.tool_cache }}/flutter_windows
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: build windows
+        run: flutter build windows --release --dart-define=GOOGLE_CLIENT_ID_DESKTOP=${{ secrets.GOOGLE_CLIENT_ID_DESKTOP }} --dart-define=GOOGLE_CLIENT_SECRET_DESKTOP=${{ secrets.GOOGLE_CLIENT_SECRET_DESKTOP }}
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: build/windows/runner/Release
