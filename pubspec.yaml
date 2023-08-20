@@ -41,7 +41,6 @@ dependencies:
   sqflite_common_ffi: ^2.2.5
   sqlite3_flutter_libs: ^0.5.13
   path: ^1.8.2
-  flutter_picker: ^2.0.5
   status_alert: ^1.0.1
   path_provider: ^2.0.15
   sqflite_common_ffi_web: ^0.4.0

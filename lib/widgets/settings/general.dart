@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_picker/Picker.dart';
 
 import '../../helper/common.dart';
 import '../../main.dart';
@@ -42,48 +41,42 @@ class _ScreenSettingsState extends State<ScreenSettings> {
           const Divider(),
           ListTile(
             title: const Text("ダークモード"),
-            subtitle: const Text("自動では、端末の設定により変化します。\n(対応していない端末ではライトモードで表示)"),
-            trailing: Text(
-              darkModeSelections[darkModeIndex],
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            onTap: () {
-              Picker(
-                      adapter:
-                          PickerDataAdapter(pickerData: darkModeSelections),
-                      changeToFirst: true,
-                      onConfirm: (Picker picker, List value) async {
-                        late String prefsStr;
-                        MyApp.rootSetState(context, () {
-                          switch (value.first) {
-                            case 0:
-                              MyApp.themeMode = ThemeMode.system;
-                              prefsStr = "system";
-                              break;
-                            case 1:
-                              MyApp.themeMode = ThemeMode.dark;
-                              prefsStr = "dark";
-                              break;
-                            case 2:
-                              MyApp.themeMode = ThemeMode.light;
-                              prefsStr = "light";
-                              break;
-                            default:
-                              break;
-                          }
-                        });
-                        setState(() {
-                          darkModeIndex = value.first;
-                        });
+            subtitle: const Text("自動では、端末の設定により変化します。"),
+            trailing: DropdownButton(
+              value: darkModeIndex,
+              items: darkModeSelections
+                  .map((e) => DropdownMenuItem(
+                        value: darkModeSelections.indexOf(e),
+                        child: Text(e),
+                      ))
+                  .toList(),
+              onChanged: (value) async {
+                late String prefsStr;
+                MyApp.rootSetState(context, () {
+                  switch (value) {
+                    case 0:
+                      MyApp.themeMode = ThemeMode.system;
+                      prefsStr = "system";
+                      break;
+                    case 1:
+                      MyApp.themeMode = ThemeMode.dark;
+                      prefsStr = "dark";
+                      break;
+                    case 2:
+                      MyApp.themeMode = ThemeMode.light;
+                      prefsStr = "light";
+                      break;
+                    default:
+                      break;
+                  }
+                });
+                setState(() {
+                  darkModeIndex = value!;
+                });
 
-                        await MyApp.prefs.setString("ThemeMode", prefsStr);
-                      },
-                      backgroundColor: colorScheme.background,
-                      textStyle: Theme.of(context).textTheme.titleLarge,
-                      cancelText: "キャンセル",
-                      confirmText: "決定")
-                  .showModal(context);
-            },
+                await MyApp.prefs.setString("ThemeMode", prefsStr);
+              },
+            ),
           ),
           ListTile(
             title: const Text("テーマ色"),
