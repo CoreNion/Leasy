@@ -1,3 +1,4 @@
+import 'package:dictionaryx/dictionary_sa.dart';
 import 'package:flutter/material.dart';
 
 import '../../../class/question.dart';
@@ -25,6 +26,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
   final List<String> fieldChoices = List.filled(4, "");
   late List<TextEditingController> fieldTextEdits = [];
   late int fieldAnswerNum;
+  String? errorMessage;
 
   final shape = const RoundedRectangleBorder(
     borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
@@ -44,7 +46,7 @@ class _SectionManagePageState extends State<SectionManagePage> {
             onChanged: (value) {
               formChanged = true;
               setState(() {
-                fieldAnswerNum = value as int;
+                fieldAnswerNum = value!;
               });
             },
           ),
@@ -236,6 +238,62 @@ class _SectionManagePageState extends State<SectionManagePage> {
                             _selectField(2),
                             _selectField(3),
                             _selectField(4),
+                            const SizedBox(height: 10),
+                            FilledButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    errorMessage = null;
+                                    formChanged = true;
+                                  });
+
+                                  final answer =
+                                      fieldTextEdits[fieldAnswerNum].text;
+                                  final dSAJson = DictionarySA();
+                                  if (!(dSAJson.hasEntry(answer))) {
+                                    setState(() {
+                                      errorMessage =
+                                          "この単語は辞書に存在しないため、選択肢に追加できませんでした。";
+                                    });
+                                    return;
+                                  }
+
+                                  // 辞書から類義語を取得
+                                  final dict = dSAJson.getEntry(answer);
+                                  final choices = dict.synonyms;
+                                  if (choices.isEmpty) {
+                                    setState(() {
+                                      errorMessage =
+                                          "類義語が見つからなかったため、選択肢に追加できませんでした。";
+                                    });
+                                    return;
+                                  }
+
+                                  // 選択肢に追加 (正解の選択肢/問題文はパス)
+                                  int passed = 1;
+                                  for (int i = 1;
+                                      i < fieldTextEdits.length;
+                                      i++) {
+                                    if (i == fieldAnswerNum) {
+                                      passed++;
+                                      continue;
+                                    } else if (choices.length < i) {
+                                      errorMessage = "類義語が足りませんでした。";
+                                      break;
+                                    }
+
+                                    fieldTextEdits[i].text =
+                                        choices[i - passed];
+                                  }
+
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text("不正解の選択肢の単語を補充")),
+                            const SizedBox(height: 10),
+                            errorMessage != null
+                                ? Text(errorMessage!,
+                                    style: const TextStyle(color: Colors.red))
+                                : Container(),
                           ],
                         ),
                       ),
