@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_picker/flutter_picker.dart';
 
 import '../../../class/question.dart';
 import '../../../utility.dart';
@@ -37,8 +36,18 @@ class _SectionManagePageState extends State<SectionManagePage> {
         formChanged = true;
       },
       decoration: InputDecoration(
-          labelText: "$number番目の選択肢",
-          icon: const Icon(Icons.dashboard),
+          labelText:
+              "$number番目の選択肢 (${fieldAnswerNum == number ? "正解" : "不正解"})",
+          icon: Radio(
+            value: number,
+            groupValue: fieldAnswerNum,
+            onChanged: (value) {
+              formChanged = true;
+              setState(() {
+                fieldAnswerNum = value as int;
+              });
+            },
+          ),
           hintText: "選択肢に表示される文を入力"),
       controller: fieldTextEdits[number],
       validator: (value) {
@@ -227,40 +236,6 @@ class _SectionManagePageState extends State<SectionManagePage> {
                             _selectField(2),
                             _selectField(3),
                             _selectField(4),
-                            Container(
-                              margin: const EdgeInsets.only(top: 15, bottom: 5),
-                              child: FilledButton.icon(
-                                onPressed: () {
-                                  Picker(
-                                          adapter: NumberPickerAdapter(data: [
-                                            const NumberPickerColumn(
-                                                begin: 1, end: 4),
-                                          ]),
-                                          changeToFirst: true,
-                                          onConfirm:
-                                              (Picker picker, List value) {
-                                            setState(() {
-                                              fieldAnswerNum = picker
-                                                  .getSelectedValues()
-                                                  .first;
-                                            });
-                                          },
-                                          backgroundColor: Theme.of(context)
-                                              .dialogBackgroundColor,
-                                          textStyle: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge,
-                                          cancelText: "キャンセル",
-                                          confirmText: "決定")
-                                      .showModal(context);
-                                },
-                                icon: const Icon(Icons.check),
-                                label: Text(
-                                  "正解の選択肢: $fieldAnswerNum番",
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ),
-                            )
                           ],
                         ),
                       ),
