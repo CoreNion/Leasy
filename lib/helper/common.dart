@@ -11,14 +11,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:sqlite3/common.dart';
 
 import '../class/cloud.dart';
 import '../main.dart';
 import 'cloud/common.dart';
 import 'dummy.dart' if (dart.library.js) 'dart:js';
 import 'dummy.dart' if (dart.library.html) 'dart:html';
-import 'dummy.dart'
-    if (dart.library.js) 'package:sqlite3/src/wasm/file_system/indexed_db.dart';
+import 'dummy.dart' if (dart.library.js) 'package:sqlite3/wasm.dart';
 
 late Database studyDB;
 
@@ -100,11 +100,14 @@ Future<bool> backupDataBase() async {
   // 保存処理
   if (kIsWeb) {
     // study.dbが入っているIndexedDbFileSystemをロード
-    final fs = AsynchronousIndexedDbFileSystem("sqflite_databases");
-    await fs.open();
+    final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+    // ファイルを開く
+    final file = fs.xOpen(Sqlite3Filename("/study.db"), 1);
 
     // study.dbの生データを取得し、ダウンロードさせる
-    final data = await fs.readFully((await fs.fileIdForPath("/study.db"))!);
+    final data = Uint8List(file.file.xFileSize());
+    file.file.xRead(data, 0);
+
     AnchorElement(
         href:
             "data:application/octet-stream;charset=utf-16le;base64,${base64Encode(data)}")
@@ -180,8 +183,9 @@ Future<bool> importDataBase() async {
 
     // IndexedDbFileSystemでデータベースをを開く
     final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+    final file = fs.xOpen(Sqlite3Filename("/study.db"), 1);
     // 上書き
-    fs.write("/study.db", pFile.bytes!, 0);
+    file.file.xWrite(pFile.bytes!, 0);
   } else {
     // 既存ファイル削除
     await deleteStudyDataBase();
@@ -214,8 +218,9 @@ Future<void> useDemoFile() async {
   if (kIsWeb) {
     // IndexedDbFileSystemでデータベースをを開く
     final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+    final file = fs.xOpen(Sqlite3Filename("/study.db"), 1);
     // 上書き
-    fs.write("/study.db", data, 0);
+    file.file.xWrite(data, 0);
   } else {
     // 既存ファイル削除
     await deleteStudyDataBase();
