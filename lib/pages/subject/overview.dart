@@ -168,7 +168,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                            "${(_completionRate * 100).floor()}%完了",
+                                            "${(_completionRate.isNaN ? 0 : _completionRate * 100).floor()}%完了",
                                             style:
                                                 const TextStyle(fontSize: 17)),
                                         const SizedBox(width: 10),
@@ -179,7 +179,9 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                             child: SizedBox(
                                               height: 13,
                                               child: LinearProgressIndicator(
-                                                  value: _completionRate),
+                                                  value: _completionRate.isNaN
+                                                      ? 0
+                                                      : _completionRate),
                                             ),
                                           ),
                                         ),
