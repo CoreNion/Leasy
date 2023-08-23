@@ -1,6 +1,9 @@
-import 'package:dictionaryx/dictionary_sa.dart';
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+import '../../../class/dictonary/english.dart';
 import '../../../class/question.dart';
 import '../../../utility.dart';
 
@@ -21,11 +24,26 @@ class _SectionManagePageState extends State<SectionManagePage> {
 
   /// フォームが初期値から変化されたか
   bool formChanged = false;
+
+  /// 選択肢の入力形式 (4択問題/入力問題)
   late List<bool> selectedInputType;
+
+  /// 問題文
   late String fieldQuestion;
+
+  /// 選択肢
   final List<String> fieldChoices = List.filled(4, "");
+
+  /// 問題文/選択肢のテキスト保存用コントローラー
   late List<TextEditingController> fieldTextEdits = [];
+
+  /// 正解の選択肢の番号
   late int fieldAnswerNum;
+
+  /// 単語補充がロード中か
+  bool loading = false;
+
+  /// 単語補充のエラーメッセージ
   String? errorMessage;
 
   final shape = const RoundedRectangleBorder(
@@ -240,54 +258,65 @@ class _SectionManagePageState extends State<SectionManagePage> {
                             _selectField(4),
                             const SizedBox(height: 10),
                             FilledButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    errorMessage = null;
-                                    formChanged = true;
-                                  });
+                                onPressed: !loading
+                                    ? () async {
+                                        setState(() {
+                                          loading = true;
+                                          errorMessage = null;
+                                          formChanged = true;
+                                        });
 
-                                  final answer =
-                                      fieldTextEdits[fieldAnswerNum].text;
-                                  final dSAJson = DictionarySA();
-                                  if (!(dSAJson.hasEntry(answer))) {
-                                    setState(() {
-                                      errorMessage =
-                                          "この単語は辞書に存在しないため、選択肢に追加できませんでした。";
-                                    });
-                                    return;
-                                  }
+                                        // 辞書の形式に合うように、検索用の単語はすべて小文字にする
+                                        final answer =
+                                            fieldTextEdits[fieldAnswerNum]
+                                                .text
+                                                .toLowerCase();
 
-                                  // 辞書から類義語を取得
-                                  final dict = dSAJson.getEntry(answer);
-                                  final choices = dict.synonyms;
-                                  if (choices.isEmpty) {
-                                    setState(() {
-                                      errorMessage =
-                                          "類義語が見つからなかったため、選択肢に追加できませんでした。";
-                                    });
-                                    return;
-                                  }
+                                        // 英語の辞書を読み込む
+                                        final json = await rootBundle.loadString(
+                                            "assets/dictonary/english_sortby_pos.json");
+                                        final dict = EnglishDictonary.fromJson(
+                                            jsonDecode(json));
 
-                                  // 選択肢に追加 (正解の選択肢/問題文はパス)
-                                  int passed = 1;
-                                  for (int i = 1;
-                                      i < fieldTextEdits.length;
-                                      i++) {
-                                    if (i == fieldAnswerNum) {
-                                      passed++;
-                                      continue;
-                                    } else if (choices.length < i) {
-                                      errorMessage = "類義語が足りませんでした。";
-                                      break;
-                                    }
+                                        if (!(dict.search(answer))) {
+                                          setState(() {
+                                            errorMessage =
+                                                "この単語は辞書に存在しないため、選択肢に追加できませんでした。";
+                                            loading = false;
+                                          });
+                                          return;
+                                        }
 
-                                    fieldTextEdits[i].text =
-                                        choices[i - passed];
-                                  }
+                                        // 品詞を取得
+                                        final partOfSpeech =
+                                            dict.partOfSpeech(answer);
 
-                                  setState(() {});
-                                },
-                                icon: const Icon(Icons.add),
+                                        // 選択肢に追加 (正解の選択肢/問題文はパス)
+                                        for (int i = 1;
+                                            i < fieldTextEdits.length;
+                                            i++) {
+                                          if (i == fieldAnswerNum) {
+                                            continue;
+                                          }
+
+                                          fieldTextEdits[i].text =
+                                              dict.randomWord(partOfSpeech);
+                                        }
+
+                                        setState(() {
+                                          loading = false;
+                                        });
+                                      }
+                                    : null,
+                                icon: !loading
+                                    ? const Icon(Icons.add)
+                                    : const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
                                 label: const Text("不正解の選択肢の単語を補充")),
                             const SizedBox(height: 10),
                             errorMessage != null
