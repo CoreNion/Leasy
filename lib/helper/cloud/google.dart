@@ -8,6 +8,12 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:sqlite3/common.dart';
+import '../common.dart';
+import '../dummy.dart' if (dart.library.js) 'package:sqlite3/wasm.dart';
+import 'dummy.dart'
+    if (dart.library.js) 'package:googleapis_auth/auth_browser.dart'
+    as authBrowser;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -20,6 +26,7 @@ const _iosEnv = "GOOGLE_CLIENT_ID_IOS";
 const _desktopClientID = String.fromEnvironment("GOOGLE_CLIENT_ID_DESKTOP");
 const _desktopClientSecret =
     String.fromEnvironment("GOOGLE_CLIENT_SECRET_DESKTOP");
+const _webClientID = String.fromEnvironment("GOOGLE_CLIENT_ID_WEB");
 
 googleSignIn.GoogleSignIn? _signIn;
 googleSignIn.GoogleSignInAccount? _account;
@@ -36,7 +43,9 @@ void _deleteMemoryData() {
 
 ///  google_sign_inの端末か
 bool _gsiSupported() {
-  return Platform.isIOS || Platform.isAndroid || kIsWeb;
+  if (kIsWeb) return false;
+
+  return Platform.isIOS || Platform.isAndroid;
 }
 
 /// GoogleSignInの初期化
@@ -72,6 +81,14 @@ Future<AuthClient> _initAuth() async {
       throw SignInException("アカウント情報がありません、再ログインしてください");
     }
     _authClient ??= await _signIn!.authenticatedClient();
+  } else if (kIsWeb) {
+    final cred = MyApp.prefs.getString("google_cred");
+    if (cred == null) {
+      throw SignInException("ログインされていません");
+    }
+
+    final credential = authBrowser.AccessCredentials.fromJson(jsonDecode(cred));
+    _authClient = authBrowser.authenticatedClient(http.Client(), credential);
   } else {
     // 保存されている認証情報を利用
     final credFile = File(p.join(
@@ -127,6 +144,16 @@ class MiGoogleService {
       if (_account == null) {
         return false;
       }
+    } else if (kIsWeb) {
+      // Webの場合はGoogle認証を行う
+      final cred = await authBrowser
+          .requestAccessCredentials(clientId: _webClientID, scopes: [
+        "https://www.googleapis.com/auth/drive.appdata",
+      ]);
+      _authClient = authBrowser.authenticatedClient(http.Client(), cred);
+
+      // 認証情報を保存
+      await MyApp.prefs.setString("google_cred", jsonEncode(cred.toJson()));
     } else {
       // Authを取得する (googleapis_auth)
       final refAuth = await clientViaUserConsent(
@@ -182,10 +209,14 @@ class MiGoogleService {
     _deleteMemoryData();
 
     if (!_gsiSupported()) {
-      final credFile = File(p.join(
-          (await getApplicationSupportDirectory()).path, "google_cred.json"));
-      if (credFile.existsSync()) {
-        await credFile.delete();
+      if (kIsWeb) {
+        await MyApp.prefs.remove("google_cred");
+      } else {
+        final credFile = File(p.join(
+            (await getApplicationSupportDirectory()).path, "google_cred.json"));
+        if (credFile.existsSync()) {
+          await credFile.delete();
+        }
       }
     }
 
@@ -242,11 +273,32 @@ class MiGoogleService {
             q: "name = '$uploadName'",
             $fields: 'files(id, name, createdTime)'))
         .files;
+
+    // ファイルのストリームを作成
+    late Stream<List<int>> fileStream;
+    late int fileLength;
+    if (kIsWeb) {
+      // IndexedDbFileSystemでデータベースを開く
+      final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+      final vFile = fs.xOpen(Sqlite3Filename("/${file.path}"), 1);
+
+      // データをメモリに展開
+      fileLength = vFile.file.xFileSize();
+      final data = Uint8List(fileLength);
+      vFile.file.xRead(data, 0);
+
+      // メモリからストリームを作成
+      fileStream = Stream.value(data);
+    } else {
+      fileStream = file.openRead();
+      fileLength = file.lengthSync();
+    }
+
     if (studyList == null || studyList.isEmpty) {
       // 存在しない場合、ドライブにファイルを新規作成
       await driveAPI.files.create(
         uploadedFile,
-        uploadMedia: drive.Media(file.openRead(), file.lengthSync()),
+        uploadMedia: drive.Media(fileStream, fileLength),
       );
     } else {
       // 存在する場合、そのデータを上書き保存
@@ -254,7 +306,7 @@ class MiGoogleService {
       await driveAPI.files.update(
         drive.File(),
         studyList.first.id!,
-        uploadMedia: drive.Media(file.openRead(), file.lengthSync()),
+        uploadMedia: drive.Media(fileStream, fileLength),
       );
     }
   }
@@ -278,7 +330,27 @@ class MiGoogleService {
       // 存在する場合はダウンロード
       final media = await driveAPI.files.get(fileList.first.id!,
           downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media?;
-      await media!.stream.pipe(file.openWrite());
+      if (kIsWeb) {
+        // DataBaseが開かれている場合は閉じる
+        if (isDbLoaded) {
+          await studyDB.close();
+          isDbLoaded = false;
+        }
+
+        // データをメモリにダウンロード
+        List<int> data = [];
+        await media!.stream.listen((event) {
+          data.addAll(event);
+        }).asFuture();
+
+        // IndexedDbFileSystemでデータベースを開き、上書き
+        final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
+        final vFile = fs.xOpen(Sqlite3Filename("/${file.path}"), 1);
+        // 上書き
+        vFile.file.xWrite(Uint8List.fromList(data), 0);
+      } else {
+        await media!.stream.pipe(file.openWrite());
+      }
     }
   }
 

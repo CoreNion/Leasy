@@ -21,6 +21,7 @@ import 'dummy.dart' if (dart.library.html) 'dart:html';
 import 'dummy.dart' if (dart.library.js) 'package:sqlite3/wasm.dart';
 
 late Database studyDB;
+bool isDbLoaded = false;
 
 /// データベースのデフォルトのパスを取得する関数
 Future<String> getDataBasePath() async {
@@ -58,28 +59,31 @@ Future<void> loadStudyDataBase() async {
       },
       version: 4);
 
+  final dbPath = await getDataBasePath();
+
+  if (!(MyApp.cloudType == CloudType.none)) {
+    // クラウドのstudy.dbをダウンロード
+    final file = io.File(dbPath);
+    await CloudService.downloadFile("study.db", file);
+  }
+
+  // データベースを開く
   if (kIsWeb) {
     studyDB =
-        await databaseFactoryFfiWeb.openDatabase("study.db", options: options);
+        await databaseFactoryFfiWeb.openDatabase(dbPath, options: options);
   } else {
-    final path = (await getApplicationSupportDirectory()).path;
-    if (!(MyApp.cloudType == CloudType.none)) {
-      final file = io.File(p.join(path, "study.db"));
-
-      // クラウドのstudy.dbをダウンロード
-      await CloudService.downloadFile("study.db", file);
-    }
-
-    studyDB = await databaseFactoryFfi.openDatabase(p.join(path, "study.db"),
-        options: options);
+    studyDB = await databaseFactoryFfi.openDatabase(dbPath, options: options);
   }
+
+  isDbLoaded = true;
 }
 
 /// データベースを削除する関数
 Future<void> deleteStudyDataBase() async {
   // DataBaseが開かれている場合は閉じる
-  if (studyDB.isOpen) {
+  if (isDbLoaded) {
     await studyDB.close();
+    isDbLoaded = false;
   }
 
   if (!kIsWeb) {
@@ -145,8 +149,9 @@ Future<bool> importDataBase() async {
 
   if (kIsWeb) {
     // DataBaseが開かれている場合は閉じる
-    if (studyDB.isOpen) {
+    if (isDbLoaded) {
       await studyDB.close();
+      isDbLoaded = false;
     }
 
     // Web版ではloadStudyDataBase()で再読み込みできないため、ヘッダーからデータベースかを判定
@@ -209,8 +214,9 @@ Future<bool> importDataBase() async {
 /// データベースファイルにデモファイルを利用する関数
 Future<void> useDemoFile() async {
   // データベースが開かれている場合は閉じる
-  if (studyDB.isOpen) {
+  if (isDbLoaded) {
     await studyDB.close();
+    isDbLoaded = false;
   }
   // デモファイルを読み込む
   final data = (await rootBundle.load('assets/demo.db')).buffer.asUint8List();
