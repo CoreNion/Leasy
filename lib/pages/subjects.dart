@@ -148,6 +148,10 @@ class _SubjectListPageState extends State<SubjectListPage> {
                           }));
 
                       if (confirm ?? false) {
+                        setState(() {
+                          subjects.removeAt(e.key);
+                        });
+
                         await removeSubject(currentInfo.id);
 
                         if (context.mounted) {
