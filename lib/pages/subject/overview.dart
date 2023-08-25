@@ -221,7 +221,15 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                       ],
                                     ),
                                     const Divider(),
-                                    listCard(),
+                                    sectionInfos.isNotEmpty ||
+                                            questionSummaries.isNotEmpty
+                                        ? listCard()
+                                        : Container(
+                                            margin: const EdgeInsets.all(20),
+                                            child: Text(
+                                                "$listTypeStrが一つもありません！\n右上の+ボタンから作成してください。",
+                                                style: const TextStyle(
+                                                    fontSize: 20))),
                                   ]))
                             ]),
                           ),
@@ -454,8 +462,8 @@ class _SubSecOverviewState extends State<SubSecOverview> {
             child: Column(children: [
             const SizedBox(height: 20),
             !loading
-                ? dialogLikeMessage(colorScheme, "セクションが一つもありません！",
-                    "Leasyでは、問題(覚えたい単語類など)を、セクションを通してジャンルや範囲別などに分類できるように設計されています。\n右下の+ボタンからセクションを作成してください。")
+                ? dialogLikeMessage(colorScheme, "$listTypeStrが一つもありません！",
+                    "${type == OverviewType.subject ? "Leasyでは、問題(覚えたい単語など)を、セクションを通してジャンルや範囲別などに分類できるように設計されています。\n" : ""}右下の+ボタンから$listTypeStrを作成してください。")
                 : const SizedBox(
                     height: 70,
                     width: 70,
