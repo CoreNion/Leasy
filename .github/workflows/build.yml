@@ -26,10 +26,12 @@ jobs:
           cache-path: ${{ runner.tool_cache }}/flutter_linux
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter pub get
+          dart run sqflite_common_ffi_web:setup --force
 
       - name: build pwa
-        run: flutter build web --base-href "/leasy/pwa/beta/" --output build/web/beta --dart-define=GOOGLE_CLIENT_ID_WEB=${{ secrets.GOOGLE_CLIENT_ID_WEB }} --dart-define=GOOGLE_CLIENT_SECRET_WEB=${{ secrets.GOOGLE_CLIENT_SECRET_WEB }}
+        run: flutter build web --base-href "/Leasy/beta/" --output build/web/beta --dart-define=GOOGLE_CLIENT_ID_WEB=${{ secrets.GOOGLE_CLIENT_ID_WEB }} --dart-define=GOOGLE_CLIENT_SECRET_WEB=${{ secrets.GOOGLE_CLIENT_SECRET_WEB }}
 
       - name: upload page artifact
         uses: actions/upload-pages-artifact@v2
