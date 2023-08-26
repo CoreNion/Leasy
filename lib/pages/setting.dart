@@ -31,15 +31,14 @@ class _SettingPageState extends State<SettingPage> {
                 const DataSettings(),
                 const SizedBox(height: 25),
                 Container(
-                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                      color: colorScheme.background,
                       border: Border.all(color: colorScheme.outline),
                       borderRadius:
                           const BorderRadius.all(Radius.circular(10))),
                   child: ListTile(
                       title: const Text("チュートリアルを開く"),
                       subtitle: const Text("初回起動時に表示されたチュートリアルを開きます。"),
+                      tileColor: colorScheme.background,
                       trailing: Icon(Icons.support, color: colorScheme.primary),
                       onTap: () async {
                         if (checkLargeSC(context)) {
@@ -74,14 +73,13 @@ class _SettingPageState extends State<SettingPage> {
                 ),
                 const SizedBox(height: 25),
                 Container(
-                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                      color: colorScheme.background,
                       border: Border.all(color: colorScheme.outline),
                       borderRadius:
                           const BorderRadius.all(Radius.circular(10))),
                   child: ListTile(
                     title: const Text("アプリ情報"),
+                    tileColor: colorScheme.background,
                     subtitle: Text("v${MyApp.packageInfo.version}"),
                     trailing: Icon(Icons.info, color: colorScheme.primary),
                     onTap: () => showAboutDialog(

@@ -435,25 +435,28 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                       ],
                     );
                   },
-                  child: ListTile(
-                    title: Text(exTitle),
-                    subtitle: LinearProgressIndicator(value: ratio ?? 0),
-                    leading: leading,
-                    onTap: () async {
-                      if (type == OverviewType.subject) {
-                        // セクションの概要ページに移動
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: ((context) {
-                          return SubSecOverview(
-                            info: sectionInfos[index],
-                          );
-                        })));
-                      } else {
-                        // 問題概要ページを表示
-                        await editQuestion(id, index);
-                      }
-                      if (!mounted) return;
-                    },
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: ListTile(
+                      title: Text(exTitle),
+                      subtitle: LinearProgressIndicator(value: ratio ?? 0),
+                      leading: leading,
+                      onTap: () async {
+                        if (type == OverviewType.subject) {
+                          // セクションの概要ページに移動
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: ((context) {
+                            return SubSecOverview(
+                              info: sectionInfos[index],
+                            );
+                          })));
+                        } else {
+                          // 問題概要ページを表示
+                          await editQuestion(id, index);
+                        }
+                        if (!mounted) return;
+                      },
+                    ),
                   ),
                 ),
               );

@@ -32,8 +32,10 @@ class _ScreenSettingsState extends State<ScreenSettings> {
           color: colorScheme.background,
           border: Border.all(color: colorScheme.outline),
           borderRadius: const BorderRadius.all(Radius.circular(10))),
-      child: Column(
-        children: [
+      child: Material(
+        // ListTileの効果がContainerで上書きされないようにする
+        type: MaterialType.transparency,
+        child: Column(children: [
           const Text(
             "外観",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -43,6 +45,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
             title: const Text("ダークモード"),
             subtitle: const Text("自動では、端末の設定により変化します。"),
             trailing: DropdownButton(
+              focusColor: Colors.transparent,
               value: darkModeIndex,
               items: darkModeSelections
                   .map((e) => DropdownMenuItem(
@@ -146,7 +149,7 @@ class _ScreenSettingsState extends State<ScreenSettings> {
               );
             },
           ),
-        ],
+        ]),
       ),
     );
   }
@@ -171,8 +174,10 @@ class _DataSettingsState extends State<DataSettings> {
         borderRadius: const BorderRadius.all(Radius.circular(10)));
 
     return Container(
-        padding: const EdgeInsets.all(5),
-        decoration: boxDeco,
+      padding: const EdgeInsets.all(5),
+      decoration: boxDeco,
+      child: Material(
+        type: MaterialType.transparency,
         child: Column(
           children: [
             const Text(
@@ -310,7 +315,9 @@ class _DataSettingsState extends State<DataSettings> {
                   willReset("削除しました。3秒後にアプリを再起動します...");
                 }),
           ],
-        ));
+        ),
+      ),
+    );
   }
 
   /// 削除しましたというダイアログを出して、3秒後にリセットする関数
