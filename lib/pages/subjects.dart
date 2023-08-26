@@ -15,15 +15,25 @@ class SubjectListPage extends StatefulWidget {
   const SubjectListPage({super.key});
 
   @override
-  State<SubjectListPage> createState() => _SubjectListPageState();
+  State<SubjectListPage> createState() => SubjectListPageState();
 }
 
-class _SubjectListPageState extends State<SubjectListPage> {
+class SubjectListPageState extends State<SubjectListPage> {
+  late Future<List<SubjectInfo>> getSubjectInfoTask;
+
   /// 教科Widgetのリスト
-  static List<Widget> subejctWidgetList = [];
+  List<Widget> subejctWidgetList = [];
 
   /// ボタンが押された時のタップ位置
   late Offset tapPosition;
+
+  bool _demoLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getSubjectInfoTask = getSubjectInfos();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +41,7 @@ class _SubjectListPageState extends State<SubjectListPage> {
     final screenSize = MediaQuery.of(context).size;
 
     return FutureBuilder(
-      future: getSubjectInfos(),
+      future: getSubjectInfoTask,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final subjects = snapshot.data!;
@@ -150,11 +160,15 @@ class _SubjectListPageState extends State<SubjectListPage> {
                       if (confirm ?? false) {
                         setState(() {
                           subjects.removeAt(e.key);
+                          _demoLoading = true;
                         });
 
                         await removeSubject(currentInfo.id);
 
                         if (context.mounted) {
+                          setState(() {
+                            _demoLoading = false;
+                          });
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('削除しました')));
                         }
@@ -228,25 +242,44 @@ class _SubjectListPageState extends State<SubjectListPage> {
                   child: dialogLikeMessage(colorScheme, "教科が一つもありません！",
                       "学習を開始するには、最初に教科を作成してください。\n初めて利用する方は、まずはデモ教科を作成し操作に慣れることをおすすめします。",
                       actions: [
-                        OutlinedButton(
-                            onPressed: () async {
-                              await useDemoFile();
+                        OutlinedButton.icon(
+                            icon: _demoLoading
+                                ? Container(
+                                    width: 24,
+                                    height: 24,
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: CircularProgressIndicator(
+                                      color: colorScheme.onSurface,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : const Icon(Icons.add),
+                            onPressed: _demoLoading
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      _demoLoading = true;
+                                    });
+                                    await useDemoFile();
 
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'デモ教科を作成しました！${kIsWeb ? "\n読み込みのために、数秒後にサイトを再読み込みします。" : ""}')));
-                              setState(() {});
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'デモ教科を作成しました！${kIsWeb ? "\n読み込みのために、数秒後にサイトを再読み込みします。" : ""}')));
+                                    setState(() {
+                                      _demoLoading = false;
+                                    });
 
-                              // Web版の場合はデータベースを完全に読み込むためにリロード
-                              if (kIsWeb) {
-                                Future.delayed(const Duration(seconds: 3), () {
-                                  html.window.location.reload();
-                                });
-                              }
-                            },
-                            child: const Text("デモ教科を作成"))
+                                    // Web版の場合はデータベースを完全に読み込むためにリロード
+                                    if (kIsWeb) {
+                                      Future.delayed(const Duration(seconds: 3),
+                                          () {
+                                        html.window.location.reload();
+                                      });
+                                    }
+                                  },
+                            label: const Text("デモ教科を作成"))
                       ])),
               Column(
                 mainAxisSize: MainAxisSize.min,

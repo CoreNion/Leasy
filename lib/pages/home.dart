@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../class/cloud.dart';
 import '../class/subject.dart';
 import '../helper/common.dart';
+import '../helper/subject.dart';
 import '../main.dart';
 import '../utility.dart';
 import '../widgets/account_button.dart';
@@ -24,13 +25,14 @@ class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<Home> createState() => HomeState();
 }
 
-class _HomeState extends State<Home> {
+class HomeState extends State<Home> {
   int pageIndex = 0;
 
-  GlobalKey subjectListKey = GlobalKey();
+  GlobalKey<SubjectListPageState> subjectListKey =
+      GlobalKey<SubjectListPageState>();
 
   void firstInit() async {
     // 初回セットアップ(初期画面)を表示
@@ -235,6 +237,7 @@ class _HomeState extends State<Home> {
           : NavigationBar(
               onDestinationSelected: (selectedIndex) async {
                 HapticFeedback.mediumImpact();
+                final state = subjectListKey.currentState;
 
                 // 作成ボタンが押されたらダイアログ/モーダルを表示
                 if (selectedIndex == 1) {
@@ -262,7 +265,9 @@ class _HomeState extends State<Home> {
 
                   if (subInfo != null) {
                     // 教科一覧を更新
-                    subjectListKey.currentState!.setState(() {});
+                    state?.setState(() {
+                      state.getSubjectInfoTask = getSubjectInfos();
+                    });
 
                     // 教科ページへ移動
                     if (context.mounted) {

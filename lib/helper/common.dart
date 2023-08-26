@@ -213,6 +213,8 @@ Future<bool> importDataBase() async {
 
 /// データベースファイルにデモファイルを利用する関数
 Future<void> useDemoFile() async {
+  final file = io.File(await getDataBasePath());
+
   // データベースが開かれている場合は閉じる
   if (isDbLoaded) {
     await studyDB.close();
@@ -232,9 +234,11 @@ Future<void> useDemoFile() async {
     await deleteStudyDataBase();
 
     // デモファイルをコピー
-    final path = (await getApplicationSupportDirectory()).path;
-    await io.File(p.join(path, "study.db")).writeAsBytes(data);
+    await file.writeAsBytes(data);
   }
+
+  // ファイルをクラウドにアップロード
+  await CloudService.uploadFile("study.db", file);
 
   // データベースを再読み込み
   await loadStudyDataBase();
