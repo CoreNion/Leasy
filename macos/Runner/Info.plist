@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>画像を利用するには、写真ライブラリへの権限の許可が必要です。</string>
 </dict>
 </plist>
