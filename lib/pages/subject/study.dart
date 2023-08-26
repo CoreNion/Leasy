@@ -37,6 +37,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
   late List<MapEntry<int, bool?>> records;
   // 入力問題にするか
   late bool setInputQuestion;
+  // 入力を受け付けないか
+  bool inputDisabled = false;
 
   final _formKey = GlobalKey<FormState>();
   late String inputAnswer;
@@ -101,6 +103,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
   ///
   /// [requestNum] 0: 戻る, 1: 進む
   Future<void> requestMoveQuestion(int requestNum) async {
+    if (inputDisabled) return;
+
     late int questionIndex;
     if (requestNum == 0 && currentQuestionIndex != 0) {
       // 戻る処理、最初の問題ではない場合のみ実行
@@ -262,6 +266,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
   /// 正解時の処理
   void onCorrect(BuildContext context) {
+    inputDisabled = true;
+
     const duration = Duration(seconds: 1);
     StatusAlert.show(
       context,
@@ -280,12 +286,16 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
+      StatusAlert.hide();
+      inputDisabled = false;
       requestMoveQuestion(1);
     });
   }
 
   /// 不正解時の処理
   void onIncorrect(BuildContext context) {
+    inputDisabled = true;
+
     const duration = Duration(milliseconds: 1500);
     StatusAlert.show(
       context,
@@ -308,6 +318,8 @@ class _SectionStudyPageState extends State<SectionStudyPage> {
 
     // 次の問題に進む
     Future.delayed(duration).then((value) {
+      StatusAlert.hide();
+      inputDisabled = false;
       requestMoveQuestion(1);
     });
   }
