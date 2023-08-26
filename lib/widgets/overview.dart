@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// 前回の成績を表示するスコアボード
-Column scoreBoard(
-    ColorScheme colorScheme, bool isTestMode, int correct, int inCorrect) {
+Column scoreBoard(ColorScheme colorScheme, int correct, int inCorrect) {
   const boardRadius = Radius.circular(10);
   const boardPadding = EdgeInsets.all(10.0);
   const scoreTextStyle =
@@ -22,8 +21,8 @@ Column scoreBoard(
             border: boardBorder,
             borderRadius: const BorderRadius.only(
                 topLeft: boardRadius, topRight: boardRadius)),
-        child: Text(
-          isTestMode ? "前回のテストの結果" : "このセクションの学習状況",
+        child: const Text(
+          "前回の学習の結果",
           style: scoreTextStyle,
           textAlign: TextAlign.center,
         ),

@@ -222,8 +222,8 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                           Expanded(
                             flex: 4,
                             child: Column(children: [
-                              scoreBoard(colorScheme, true, latestCorrect,
-                                  latestIncorrect),
+                              scoreBoard(
+                                  colorScheme, latestCorrect, latestIncorrect),
                               Container(
                                 margin: const EdgeInsets.all(10),
                                 padding: const EdgeInsets.all(10),
@@ -267,8 +267,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                     ]))
                 : Column(
                     children: <Widget>[
-                      scoreBoard(
-                          colorScheme, true, latestCorrect, latestIncorrect),
+                      scoreBoard(colorScheme, latestCorrect, latestIncorrect),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
