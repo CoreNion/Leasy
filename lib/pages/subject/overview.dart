@@ -60,6 +60,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
   double _completionRate = 0;
 
   bool loading = true;
+  bool endInit = false;
   late ColorScheme colorScheme;
   late Size screenSize;
 
@@ -112,7 +113,10 @@ class _SubSecOverviewState extends State<SubSecOverview> {
       }
 
       if (!mounted) return;
-      setState(() => loading = false);
+      setState(() {
+        endInit = true;
+        loading = false;
+      });
     });
   }
 
@@ -221,15 +225,18 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                       ],
                                     ),
                                     const Divider(),
-                                    sectionInfos.isNotEmpty ||
-                                            questionSummaries.isNotEmpty
-                                        ? listCard()
-                                        : Container(
-                                            margin: const EdgeInsets.all(20),
-                                            child: Text(
-                                                "$listTypeStrが一つもありません！\n右上の+ボタンから作成してください。",
-                                                style: const TextStyle(
-                                                    fontSize: 20))),
+                                    !endInit
+                                        ? const CircularProgressIndicator()
+                                        : sectionInfos.isNotEmpty ||
+                                                questionSummaries.isNotEmpty
+                                            ? listCard()
+                                            : Container(
+                                                margin:
+                                                    const EdgeInsets.all(20),
+                                                child: Text(
+                                                    "$listTypeStrが一つもありません！\n右上の+ボタンから作成してください。",
+                                                    style: const TextStyle(
+                                                        fontSize: 20))),
                                   ]))
                             ]),
                           ),
@@ -255,17 +262,22 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                             fontWeight: FontWeight.bold)),
                                     const Divider(),
                                     const SizedBox(height: 10),
-                                    sectionInfos.isNotEmpty ||
-                                            questionSummaries.isNotEmpty
-                                        ? StudySettingPage(
-                                            studyMode: StudyMode.study,
-                                            questionsOrSections:
-                                                type == OverviewType.subject
-                                                    ? sectionInfos
-                                                    : questionSummaries,
-                                            endToDo: doStudy,
-                                          )
-                                        : const LinearProgressIndicator()
+                                    !endInit
+                                        ? const LinearProgressIndicator()
+                                        : sectionInfos.isNotEmpty ||
+                                                questionSummaries.isNotEmpty
+                                            ? StudySettingPage(
+                                                studyMode: StudyMode.study,
+                                                questionsOrSections:
+                                                    type == OverviewType.subject
+                                                        ? sectionInfos
+                                                        : questionSummaries,
+                                                endToDo: doStudy,
+                                              )
+                                            : Text("$listTypeStrが一つもありません",
+                                                style: const TextStyle(
+                                                    fontSize: 20)),
+                                    const SizedBox(height: 10),
                                   ],
                                 ),
                               ),
@@ -638,7 +650,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
 
                         // セクション一覧に追加
                         sectionInfos.add(secInfo);
-                        updateLength();
+                        updateMetaData();
 
                         // 作成したセクションに移動
                         Navigator.pop(context);
@@ -734,7 +746,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
       });
     }
 
-    updateLength();
+    updateMetaData();
   }
 
   /// セクション・問題を削除する
@@ -775,17 +787,26 @@ class _SubSecOverviewState extends State<SubSecOverview> {
     type == OverviewType.subject
         ? sectionInfos.removeAt(index)
         : questionSummaries.removeAt(index);
-    updateLength();
+    updateMetaData();
 
     return;
   }
 
-  /// sectionInfosやquestionSummariesの新規作成要素をUIに反映させる
-  void updateLength() {
+  /// sectionInfosやquestionSummariesの長さなどのメタデータを更新する
+  void updateMetaData() {
     setState(() {
       listLength = type == OverviewType.subject
           ? sectionInfos.length
           : questionSummaries.length;
+
+      if (type == OverviewType.section) {
+        latestIncorrect = questionSummaries
+            .where((qs) => !(qs.latestCorrect ?? false))
+            .length;
+        latestCorrect =
+            questionSummaries.where((qs) => qs.latestCorrect ?? false).length;
+        _completionRate = latestCorrect / (latestCorrect + latestIncorrect);
+      }
     });
   }
 
