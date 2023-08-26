@@ -127,9 +127,12 @@ class _SubSecOverviewState extends State<SubSecOverview> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(checkLargeSC(context)
-            ? "${type.toString()}の概要"
-            : widget.info.title),
+        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(checkLargeSC(context)
+              ? "${type.toString()}の概要"
+              : widget.info.title),
+          checkLargeSC(context) ? Container() : completionRateBar()
+        ]),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 10),
@@ -166,31 +169,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                                           fontSize: 35,
                                         )),
                                     const SizedBox(height: 10),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                            "${(_completionRate.isNaN ? 0 : _completionRate * 100).floor()}%完了",
-                                            style:
-                                                const TextStyle(fontSize: 17)),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            child: SizedBox(
-                                              height: 13,
-                                              child: LinearProgressIndicator(
-                                                  value: _completionRate.isNaN
-                                                      ? 0
-                                                      : _completionRate),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    completionRateBar(),
                                   ],
                                 ),
                               ),
@@ -325,6 +304,30 @@ class _SubSecOverviewState extends State<SubSecOverview> {
         foregroundColor: colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  /// 完了率を表示するバー
+  Widget completionRateBar() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+            "${(_completionRate.isNaN ? 0 : _completionRate * 100).floor()}%完了",
+            style: TextStyle(fontSize: checkLargeSC(context) ? 17 : 14)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              height: checkLargeSC(context) ? 12 : 10,
+              child: LinearProgressIndicator(
+                  value: _completionRate.isNaN ? 0 : _completionRate),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
