@@ -29,7 +29,7 @@ jobs:
         run: flutter pub get
 
       - name: build pwa
-        run: flutter build web --base-href "/leasy/pwa/beta" --output build/web/beta --dart-define=GOOGLE_CLIENT_ID_WEB=${{ secrets.GOOGLE_CLIENT_ID_WEB }} --dart-define=GOOGLE_CLIENT_SECRET_WEB=${{ secrets.GOOGLE_CLIENT_SECRET_WEB }}
+        run: flutter build web --base-href "/leasy/pwa/beta/" --output build/web/beta --dart-define=GOOGLE_CLIENT_ID_WEB=${{ secrets.GOOGLE_CLIENT_ID_WEB }} --dart-define=GOOGLE_CLIENT_SECRET_WEB=${{ secrets.GOOGLE_CLIENT_SECRET_WEB }}
 
       - name: upload page artifact
         uses: actions/upload-pages-artifact@v2
