@@ -47,7 +47,7 @@ class MiiCloudService {
       filePath: file.path,
       onProgress: (stream) {
         stream.listen((event) {
-          if (event >= 1) {
+          if (event >= 1 && !completer.isCompleted) {
             completer.complete();
           }
         });
@@ -60,14 +60,12 @@ class MiiCloudService {
   static Future<void> downloadFile(String downloadName, File file) async {
     final completer = Completer();
 
-    final tmpPath = p.join((await getTemporaryDirectory()).path, downloadName);
     await ICloudStorage.download(
         containerId: _containerId,
-        destinationFilePath: tmpPath,
+        destinationFilePath: file.path,
         onProgress: (stream) {
           stream.listen((event) {
-            if (event >= 1) {
-              File(tmpPath).copySync(file.path);
+            if (event >= 1 && !completer.isCompleted) {
               completer.complete();
             }
           });

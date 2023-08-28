@@ -143,8 +143,13 @@ class AccountButtonState extends State<AccountButton> {
                                 ));
                         if (res == true) {
                           try {
-                            await CloudService.downloadFile(
-                                "study.db", File(await getDataBasePath()));
+                            if (isDbLoaded) {
+                              // DataBaseが開かれている場合は閉じる
+                              await studyDB.close();
+                              isDbLoaded = false;
+                            }
+
+                            await loadStudyDataBase();
                           } catch (e) {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
