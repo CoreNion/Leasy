@@ -269,6 +269,7 @@ class SubjectListPageState extends State<SubjectListPage> {
                                                 'デモ教科を作成しました！${kIsWeb ? "\n読み込みのために、数秒後にサイトを再読み込みします。" : ""}')));
                                     setState(() {
                                       _demoLoading = false;
+                                      getSubjectInfoTask = getSubjectInfos();
                                     });
 
                                     // Web版の場合はデータベースを完全に読み込むためにリロード
