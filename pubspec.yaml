@@ -50,7 +50,7 @@ dependencies:
   flex_color_picker: ^3.2.1
   package_info_plus: ^4.0.0
   url_launcher: ^6.1.11
-  file_picker: ^5.3.0
+  file_picker: ^6.0.0
   flutter_file_dialog: ^3.0.0
   sqlite3: ^2.1.0
   googleapis: ^11.2.0
