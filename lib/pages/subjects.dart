@@ -68,48 +68,70 @@ class SubjectListPageState extends State<SubjectListPage> {
                       final formKey = GlobalKey<FormState>();
 
                       late String newTitle;
+                      bool loading = false;
                       final res = await showDialog<bool?>(
                           context: context,
+                          barrierDismissible: false,
                           builder: (builder) {
-                            return AlertDialog(
-                              title: const Text("新しい名前を入力"),
-                              actions: [
-                                TextButton(
-                                    onPressed: (() =>
-                                        Navigator.pop(context, false)),
-                                    child: const Text("キャンセル")),
-                                TextButton(
-                                    onPressed: (() {
-                                      if (formKey.currentState!.validate()) {
-                                        Navigator.pop(context, true);
+                            return StatefulBuilder(
+                                builder: (context, setState) {
+                              return AlertDialog(
+                                title: const Text("新しい名前を入力"),
+                                actions: [
+                                  TextButton(
+                                      onPressed: !loading
+                                          ? (() =>
+                                              Navigator.pop(context, false))
+                                          : null,
+                                      child: const Text("キャンセル")),
+                                  !loading
+                                      ? TextButton(
+                                          onPressed: (() async {
+                                            if (formKey.currentState!
+                                                .validate()) {
+                                              setState(() => loading = true);
+
+                                              await renameSubjectName(
+                                                  currentInfo.id, newTitle);
+                                              if (!context.mounted) return;
+
+                                              Navigator.pop(context, true);
+                                            }
+                                          }),
+                                          child: const Text("決定"))
+                                      : Container(
+                                          width: 24,
+                                          height: 24,
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: CircularProgressIndicator(
+                                            color: colorScheme.onSurface,
+                                            strokeWidth: 3,
+                                          ),
+                                        ),
+                                ],
+                                content: Form(
+                                  key: formKey,
+                                  child: TextFormField(
+                                    decoration: const InputDecoration(
+                                        labelText: "教科名",
+                                        icon: Icon(Icons.book),
+                                        hintText: "教科名を入力"),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "教科名を入力してください";
+                                      } else if (value == currentInfo.title) {
+                                        return "新しい教科名を入力してください";
+                                      } else {
+                                        newTitle = value;
+                                        return null;
                                       }
-                                    }),
-                                    child: const Text("決定")),
-                              ],
-                              content: Form(
-                                key: formKey,
-                                child: TextFormField(
-                                  decoration: const InputDecoration(
-                                      labelText: "教科名",
-                                      icon: Icon(Icons.book),
-                                      hintText: "教科名を入力"),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return "教科名を入力してください";
-                                    } else if (value == currentInfo.title) {
-                                      return "新しい教科名を入力してください";
-                                    } else {
-                                      newTitle = value;
-                                      return null;
-                                    }
-                                  },
+                                    },
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            });
                           });
                       if (!(res ?? false)) return;
-
-                      await renameSubjectName(currentInfo.id, newTitle);
 
                       setState(() {
                         currentInfo = SubjectInfo(
@@ -117,8 +139,8 @@ class SubjectListPageState extends State<SubjectListPage> {
                             id: currentInfo.id,
                             latestCorrect: currentInfo.latestCorrect,
                             latestIncorrect: currentInfo.latestIncorrect);
+                        getSubjectInfoTask = getSubjectInfos();
                       });
-
                       BotToast.showSimpleNotification(title: "教科名を変更しました");
                     });
                   },
