@@ -35,65 +35,6 @@ class HomeState extends State<Home> {
       GlobalKey<SubjectListPageState>();
 
   void firstInit() async {
-    // 初回セットアップ(初期画面)を表示
-    if (!(MyApp.prefs.getBool("setup") ?? false)) {
-      // 大画面デバイスではDialogで表示
-      if (checkLargeSC(context)) {
-        await showDialog(
-            barrierDismissible: false,
-            context: context,
-            builder: (builder) {
-              return WillPopScope(
-                  onWillPop: () async => false,
-                  child: const Dialog(
-                    child: SizedBox(
-                      height: 600,
-                      width: 700,
-                      child: SetupPage(),
-                    ),
-                  ));
-            });
-      } else {
-        await showModalBottomSheet(
-            isDismissible: false,
-            context: context,
-            isScrollControlled: true,
-            enableDrag: false,
-            backgroundColor: Colors.transparent,
-            useSafeArea: true,
-            builder: (builder) => WillPopScope(
-                onWillPop: () async => false,
-                child: const SizedBox(height: 650, child: SetupPage())));
-      }
-      await MyApp.prefs.setBool("setup", true);
-
-      // Web版の場合はデータベースなどを完全に読み込むためにリロード
-      if (kIsWeb) html.window.location.reload();
-    } else if (MyApp.updated) {
-      ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
-        padding: const EdgeInsets.all(10),
-        content: Text(
-            "アプリはv${MyApp.packageInfo.version}に更新されました。\nアップデートの内容は、サイトをご覧ください。"),
-        leading: const Icon(Icons.upgrade),
-        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-            },
-            child: const Text('閉じる'),
-          ),
-          TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-              launchUrl(Uri.https("github.com",
-                  "/CoreNion/Leasy/releases/tag/v${MyApp.packageInfo.version}"));
-            },
-            child: const Text('サイトを開く'),
-          ),
-        ],
-      ));
-    }
     // データベース読み込み
     try {
       await loadStudyDataBase();
@@ -188,6 +129,66 @@ class HomeState extends State<Home> {
         },
       );
       return;
+    }
+
+    // 初回セットアップ(初期画面)を表示
+    if (!(MyApp.prefs.getBool("setup") ?? false)) {
+      // 大画面デバイスではDialogで表示
+      if (checkLargeSC(context)) {
+        await showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (builder) {
+              return WillPopScope(
+                  onWillPop: () async => false,
+                  child: const Dialog(
+                    child: SizedBox(
+                      height: 600,
+                      width: 700,
+                      child: SetupPage(),
+                    ),
+                  ));
+            });
+      } else {
+        await showModalBottomSheet(
+            isDismissible: false,
+            context: context,
+            isScrollControlled: true,
+            enableDrag: false,
+            backgroundColor: Colors.transparent,
+            useSafeArea: true,
+            builder: (builder) => WillPopScope(
+                onWillPop: () async => false,
+                child: const SizedBox(height: 650, child: SetupPage())));
+      }
+      await MyApp.prefs.setBool("setup", true);
+
+      // Web版の場合はデータベースなどを完全に読み込むためにリロード
+      if (kIsWeb) html.window.location.reload();
+    } else if (MyApp.updated) {
+      ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+        padding: const EdgeInsets.all(10),
+        content: Text(
+            "アプリはv${MyApp.packageInfo.version}に更新されました。\nアップデートの内容は、サイトをご覧ください。"),
+        leading: const Icon(Icons.upgrade),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
+            child: const Text('閉じる'),
+          ),
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              launchUrl(Uri.https("github.com",
+                  "/CoreNion/Leasy/releases/tag/v${MyApp.packageInfo.version}"));
+            },
+            child: const Text('サイトを開く'),
+          ),
+        ],
+      ));
     }
 
     setState(() {

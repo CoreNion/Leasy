@@ -151,10 +151,12 @@ class AccountButtonState extends State<AccountButton> {
 
                             await loadStudyDataBase();
                           } catch (e) {
+                            await CloudService.signOut();
+
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text(
-                                    "ログインには成功しましたが、クラウドからのダウンロードに失敗しました。\n詳細: $e")));
+                                content:
+                                    Text("クラウドからのダウンロードに失敗しました。\n詳細: $e")));
                             setState(() {
                               loading = false;
                             });
@@ -164,18 +166,19 @@ class AccountButtonState extends State<AccountButton> {
                         }
                       }
 
-                      // クラウドにデータをアップロード
-                      try {
-                        await saveToCloud();
-                      } catch (e) {
-                        await CloudService.signOut();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  "ログインには成功しましたが、クラウドへの保存に失敗しました。\n詳細: $e")));
-                          setState(() {
-                            loading = false;
-                          });
+                      if (File(await getDataBasePath()).existsSync()) {
+                        // 既存データをクラウドにアップロード
+                        try {
+                          await saveToCloud();
+                        } catch (e) {
+                          await CloudService.signOut();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text("クラウドへの保存に失敗しました。\n詳細: $e")));
+                            setState(() {
+                              loading = false;
+                            });
+                          }
                         }
                       }
                     }

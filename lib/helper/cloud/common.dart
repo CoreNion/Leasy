@@ -80,7 +80,7 @@ Future<void> saveToCloud() async {
   final cloudType = MyApp.cloudType;
 
   if (cloudType != CloudType.none) {
-    final file = File(studyDB.path);
+    final file = File(await getDataBasePath());
 
     try {
       await CloudService.uploadFile("study.db", file);
