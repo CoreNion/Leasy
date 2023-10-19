@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -101,27 +102,26 @@ class AccountButtonState extends State<AccountButton> {
 
                     try {
                       if (!(await CloudService.signIn(cloudType))) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("ログインがキャンセルされました")));
-                          setState(() {
-                            loading = false;
-                          });
-                        }
+                        BotToast.showSimpleNotification(
+                            title: "ログインがキャンセルされました");
+                        setState(() {
+                          loading = false;
+                        });
                         return;
                       }
                     } catch (e) {
                       await CloudService.signOut();
-                      if (mounted) {
-                        final text = cloudType == CloudType.icloud
-                            ? "ログインに失敗しました。端末でApple IDに正しくログインされているか、iCloud Driveが有効化されているかを確認してください。\n詳細: $e"
-                            : "ログインに失敗しました。後でもう一度お試しください。\n詳細: $e";
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text(text)));
-                        setState(() {
-                          loading = false;
-                        });
-                      }
+
+                      final text = cloudType == CloudType.icloud
+                          ? "ログインに失敗しました。端末でApple IDに正しくログインされているか、iCloud Driveが有効化されているかを確認してください。"
+                          : "ログインに失敗しました。後でもう一度お試しください。\n詳細: $e";
+                      BotToast.showSimpleNotification(
+                          title: text,
+                          subTitle: "詳細: $e",
+                          duration: const Duration(seconds: 7));
+                      setState(() {
+                        loading = false;
+                      });
                       return;
                     }
 
@@ -153,10 +153,10 @@ class AccountButtonState extends State<AccountButton> {
                           } catch (e) {
                             await CloudService.signOut();
 
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content:
-                                    Text("クラウドからのダウンロードに失敗しました。\n詳細: $e")));
+                            BotToast.showSimpleNotification(
+                                title: "クラウドからのダウンロードに失敗しました。",
+                                subTitle: "詳細: $e",
+                                duration: const Duration(seconds: 7));
                             setState(() {
                               loading = false;
                             });
@@ -172,13 +172,14 @@ class AccountButtonState extends State<AccountButton> {
                           await saveToCloud();
                         } catch (e) {
                           await CloudService.signOut();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text("クラウドへの保存に失敗しました。\n詳細: $e")));
-                            setState(() {
-                              loading = false;
-                            });
-                          }
+
+                          BotToast.showSimpleNotification(
+                              title: "クラウドへの保存に失敗しました。",
+                              subTitle: "詳細: $e",
+                              duration: const Duration(seconds: 7));
+                          setState(() {
+                            loading = false;
+                          });
                         }
                       }
                     }
@@ -186,11 +187,10 @@ class AccountButtonState extends State<AccountButton> {
                     setState(() {
                       loading = false;
                     });
+
                     widget.parentSetState();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("ログインに成功し、クラウド同期が有効になりました！")));
-                    }
+                    BotToast.showSimpleNotification(
+                        title: "ログインに成功し、クラウド同期が有効になりました！");
                   }
                 : null,
             icon: loading
@@ -213,8 +213,7 @@ class AccountButtonState extends State<AccountButton> {
 
                     widget.parentSetState();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("ログアウトしました")));
+                    BotToast.showSimpleNotification(title: "ログアウトしました");
                   }
                 : null,
             icon: loading
@@ -282,8 +281,9 @@ class _RemoveDataButtonState extends State<RemoveDataButton> {
                     });
                     widget.parentSetState();
 
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("クラウド上のデータを削除し、ログアウトしました。")));
+                    BotToast.showSimpleNotification(
+                        title: "クラウド上のデータを削除し、ログアウトしました。",
+                        duration: const Duration(seconds: 5));
                   }
                 : null,
             style: ElevatedButton.styleFrom(

@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mimosa/utility.dart';
@@ -632,8 +633,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
                             .then(
                           (value) {
                             endLoading();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('名前を変更しました')));
+                            BotToast.showSimpleNotification(title: '名前を変更しました');
                           },
                         );
 
@@ -782,8 +782,7 @@ class _SubSecOverviewState extends State<SubSecOverview> {
         : removeQuestion(questionSummaries[index].id);
     removeTask.then((value) {
       endLoading();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('削除しました')));
+      BotToast.showSimpleNotification(title: '削除しました');
     });
 
     type == OverviewType.subject

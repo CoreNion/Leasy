@@ -59,6 +59,7 @@ dependencies:
   extension_google_sign_in_as_googleapis_auth: ^2.0.10
   icloud_storage: ^2.2.0
   http: ^1.1.0
+  bot_toast: ^4.1.3
 
 flutter_native_splash:
   color: '#d3edfb'

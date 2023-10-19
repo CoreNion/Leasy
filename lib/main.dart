@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -189,6 +190,8 @@ class _MyAppState extends State<MyApp> {
                 return MaterialApp(
                   title: 'Leasy',
                   navigatorKey: MyApp.navigatorKey,
+                  builder: BotToastInit(),
+                  navigatorObservers: [BotToastNavigatorObserver()],
                   theme: ThemeData(
                       colorScheme: lightScheme,
                       useMaterial3: true,

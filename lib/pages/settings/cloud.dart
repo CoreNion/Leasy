@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 import '../../class/cloud.dart';
@@ -95,11 +96,7 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
                                         _loadCloudData =
                                             CloudService.getCloudInfo();
                                       });
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text("同期が完了しました")));
-                                      }
+                                      BotToast.showText(text: "同期が完了しました");
                                     },
                               icon: loading
                                   ? Container(

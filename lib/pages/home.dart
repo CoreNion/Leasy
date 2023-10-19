@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -116,10 +117,9 @@ class HomeState extends State<Home> {
                                     ));
                             return false;
                           });
-                          if (!res || !mounted) return;
+                          if (!res) return;
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("データを保存しました。")));
+                          BotToast.showSimpleNotification(title: "データを保存しました。");
                         },
                       )
                     : Container(),

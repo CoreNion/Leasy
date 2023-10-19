@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -221,10 +222,10 @@ class _DataSettingsState extends State<DataSettings> {
                   await loadStudyDataBase();
                   return false;
                 });
-                if (!res || !mounted) return;
+                if (!res) return;
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text("データを保存しました。")));
+                BotToast.showSimpleNotification(
+                    title: "データを保存しました。", duration: const Duration(seconds: 4));
               },
             ),
             ListTile(
@@ -307,9 +308,11 @@ class _DataSettingsState extends State<DataSettings> {
                   try {
                     await deleteStudyDataBase();
                   } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('データは削除できませんでした。詳細: $e')));
+                    BotToast.showSimpleNotification(
+                        title: "データは削除できませんでした。",
+                        subTitle: "詳細: $e",
+                        duration: const Duration(seconds: 7));
+
                     return;
                   }
                   willReset("削除しました。3秒後にアプリを再起動します...");

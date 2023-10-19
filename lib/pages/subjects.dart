@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -118,10 +119,7 @@ class SubjectListPageState extends State<SubjectListPage> {
                             latestIncorrect: currentInfo.latestIncorrect);
                       });
 
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('名前を変更しました')));
-                      }
+                      BotToast.showSimpleNotification(title: "教科名を変更しました");
                     });
                   },
                 ),
@@ -169,8 +167,7 @@ class SubjectListPageState extends State<SubjectListPage> {
                           setState(() {
                             _demoLoading = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('削除しました')));
+                          BotToast.showSimpleNotification(title: "教科を削除しました");
                         }
                       }
                     });
@@ -262,11 +259,14 @@ class SubjectListPageState extends State<SubjectListPage> {
                                     });
                                     await useDemoFile();
 
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'デモ教科を作成しました！${kIsWeb ? "\n読み込みのために、数秒後にサイトを再読み込みします。" : ""}')));
+                                    BotToast.showSimpleNotification(
+                                        title: "デモ教科を作成しました！",
+                                        subTitle: kIsWeb
+                                            ? "読み込みのために、数秒後にサイトを再読み込みします。"
+                                            : null,
+                                        duration: kIsWeb
+                                            ? null
+                                            : const Duration(seconds: 7));
                                     setState(() {
                                       _demoLoading = false;
                                       getSubjectInfoTask = getSubjectInfos();
