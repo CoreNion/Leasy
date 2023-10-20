@@ -1,16 +1,13 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mimosa/widgets/overview.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 
 import '../class/subject.dart';
-import '../helper/common.dart';
+import '../helper/demo.dart';
 import '../helper/subject.dart';
 import './subject/overview.dart';
-
-import '../helper/dummy.dart' if (dart.library.html) 'dart:html' as html;
 
 class SubjectListPage extends StatefulWidget {
   const SubjectListPage({super.key});
@@ -279,28 +276,15 @@ class SubjectListPageState extends State<SubjectListPage> {
                                     setState(() {
                                       _demoLoading = true;
                                     });
-                                    await useDemoFile();
+                                    await generateSubjectDemo();
 
                                     BotToast.showSimpleNotification(
-                                        title: "デモ教科を作成しました！",
-                                        subTitle: kIsWeb
-                                            ? "読み込みのために、数秒後にサイトを再読み込みします。"
-                                            : null,
-                                        duration: kIsWeb
-                                            ? null
-                                            : const Duration(seconds: 7));
+                                      title: "デモ教科を作成しました！",
+                                    );
                                     setState(() {
                                       _demoLoading = false;
                                       getSubjectInfoTask = getSubjectInfos();
                                     });
-
-                                    // Web版の場合はデータベースを完全に読み込むためにリロード
-                                    if (kIsWeb) {
-                                      Future.delayed(const Duration(seconds: 3),
-                                          () {
-                                        html.window.location.reload();
-                                      });
-                                    }
                                   },
                             label: const Text("デモ教科を作成"))
                       ])),

@@ -3,7 +3,6 @@
 import 'dart:io' as io;
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -209,37 +208,4 @@ Future<bool> importDataBase() async {
     throw e;
   });
   return true;
-}
-
-/// データベースファイルにデモファイルを利用する関数
-Future<void> useDemoFile() async {
-  final file = io.File(await getDataBasePath());
-
-  // データベースが開かれている場合は閉じる
-  if (isDbLoaded) {
-    await studyDB.close();
-    isDbLoaded = false;
-  }
-  // デモファイルを読み込む
-  final data = (await rootBundle.load('assets/demo.db')).buffer.asUint8List();
-
-  if (kIsWeb) {
-    // IndexedDbFileSystemでデータベースをを開く
-    final fs = await IndexedDbFileSystem.open(dbName: "sqflite_databases");
-    final file = fs.xOpen(Sqlite3Filename("/study.db"), 1);
-    // 上書き
-    file.file.xWrite(data, 0);
-  } else {
-    // 既存ファイル削除
-    await deleteStudyDataBase();
-
-    // デモファイルをコピー
-    await file.writeAsBytes(data);
-  }
-
-  // ファイルをクラウドにアップロード
-  await CloudService.uploadFile("study.db", file);
-
-  // データベースを再読み込み
-  await loadStudyDataBase();
 }
