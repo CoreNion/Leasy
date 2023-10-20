@@ -53,6 +53,9 @@ Future<void> removeSection(int subjectID, int id) async {
   // セクション一覧から削除
   await studyDB.delete("Sections",
       where: "subjectID = ? AND tableID = ?", whereArgs: [subjectID, id]);
+
+  // 問題を削除
+  await studyDB.delete("Questions", where: "sectionID = ?", whereArgs: [id]);
   await saveToCloud();
 }
 
