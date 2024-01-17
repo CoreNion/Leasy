@@ -1,8 +1,9 @@
-name: every_build
+name: Publish release build
 
 on:
   push:
-    branches: [ main, dev ]
+    tags:
+      - v*
   workflow_dispatch:
 
 permissions:
@@ -38,6 +39,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: leasybeta
+          projectName: leasyprod
           directory: build/web
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
