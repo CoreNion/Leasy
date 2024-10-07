@@ -90,8 +90,7 @@ class _SettingPageState extends State<SettingPage> {
                         children: [
                           TextButton(
                               onPressed: () {
-                                launchUrl(
-                                    Uri.https("corenion.github.io", "/leasy"));
+                                launchUrl(Uri.https("cnion.dev", "/leasy"));
                               },
                               child: const Text("ホームページ")),
                         ],

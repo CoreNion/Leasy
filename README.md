@@ -1,7 +1,7 @@
 # Leasy
 シンプルで扱いやすい暗記帳アプリ。
 
-## [ホームページ](https://corenion.github.io/leasy/)
+## [ホームページ](https://cnion.dev/leasy/)
 
 # Features
 ## 使いやすい暗記帳！
@@ -12,7 +12,7 @@
 
 # Releases
 iOS / Androidに対応、リリースタブからダウンロードしてください。
-[Web(PWA)へはこちら](https://corenion.github.io/leasy/pwa/)
+[Web(PWA)へはこちら](https://leasy-pwa.cnion.dev/)
 # Build
 ## Web Support
 最初にWeb向けにビルドする前に、必ず以下のコマンドを実行してくだい！
